@@ -14,15 +14,13 @@
     { id:'nmea',     x:60,  y:80,  w:140, h:52, label:'NMEA 2000',     icon:'\u2693', color:'#1e3a5f', detail:'Industry-standard marine data bus. Connects engines, GPS, depth, wind, tanks, AIS, and more.', tags:['CAN bus','SAE J1939','Plug & Play'] },
     { id:'victron',  x:60,  y:165, w:140, h:52, label:'Victron',       icon:'\u26a1', color:'#1e3a5f', detail:'Battery monitors, inverters, solar chargers, and shore power. Commander reads all Victron devices automatically.', tags:['VE.Bus','MPPT','BMV'] },
     { id:'sensors',  x:60,  y:250, w:140, h:52, label:'Sensors',       icon:'\ud83c\udf21\ufe0f', color:'#1e3a5f', detail:'Temperature, humidity, bilge pump counters, tank levels, barometric pressure. Any sensor on your network is auto-detected.', tags:['OneWire','I2C','WiFi'] },
-    { id:'cameras',  x:60,  y:335, w:140, h:52, label:'Cameras / FLIR', icon:'\ud83d\udcf7', color:'#1e3a5f', detail:'Security cameras, FLIR thermal imaging, night vision. Monitor your vessel visually \u2014 on board or from shore.', tags:['IP Cameras','FLIR','Night Vision'] },
+    { id:'cameras',  x:60,  y:335, w:140, h:52, label:'Cameras', icon:'\ud83d\udcf7', color:'#1e3a5f', detail:'IP cameras for visual snapshots and security monitoring. Commander captures images on events and forwards to the cloud.', tags:['IP Cameras','Snapshots'] },
     { id:'signalk',  x:320, y:165, w:150, h:52, label:'SignalK Server', icon:'\ud83d\udd04', color:'#0e4a2f', detail:'Included with every Commander Unit. SignalK translates all marine protocols into a unified data stream \u2014 the universal translator for boats.', tags:['Included','Open Source','Universal'] },
     // Internet path
     { id:'starlink', x:730, y:185, w:155, h:46, label:'Starlink / WiFi', icon:'\ud83d\udce1', color:'#1e3a5f', detail:'Starlink, marina WiFi, or cellular. Commander queues data when offline and syncs when connectivity returns.', tags:['Starlink','Marina WiFi','Cellular','Store & Forward'] },
     { id:'whatsapp', x:950, y:185, w:155, h:46, label:'WhatsApp',        icon:'\ud83d\udcac', color:'#1a5c38', detail:'Commander sends alerts and reports directly to your WhatsApp. Send commands back in plain English. No subscription needed.', tags:['Included','E2E Encrypted','Two-Way'] },
     // Sub-modules (shared)
     { id:'autodiscovery', x:420, y:290, w:135, h:42, label:'Auto-Discovery', icon:'\ud83d\udd0d', color:'#374151', detail:'Commander scans your network and learns what sensors YOUR boat has. Twin engines? Two batteries? No config needed.', tags:['Zero Config','Adaptive'], sub:true },
-    { id:'alertengine',   x:570, y:290, w:125, h:42, label:'Alert Engine',   icon:'\ud83d\udea8', color:'#374151', detail:'Pure if/else code \u2014 no AI. Monitors thresholds 24/7. Battery low? Engine hot? Bilge pumping? You get alerted instantly.', tags:['Rule-Based','No AI','Reliable'], sub:true },
-    { id:'quickcmds',     x:420, y:350, w:125, h:42, label:'Quick Cmds',     icon:'\u26a1', color:'#374151', detail:'Instant responses: status, engines, battery, tanks, wind, anchor, position. Pre-built templates, no AI latency.', tags:['Instant','Templates'], sub:true },
   ];
 
   // Shared connections
@@ -36,18 +34,15 @@
     ['starlink','whatsapp'],
     ['whatsapp','phone'],
     ['commander','autodiscovery'],
-    ['commander','alertengine'],
-    ['commander','quickcmds'],
   ];
 
   // ---- Charter-specific ----
   const charterNodes = [
-    { id:'commander',x:500, y:190, w:160, h:52, label:'Raspberry Pi',    icon:'\ud83e\udde0', color:'#7c2d12', detail:'Compact, always-on Commander Unit for charter fleets. Low power (5W), cloud AI via Master, OTA updates. Monitors 24/7 and reaches you via WhatsApp or fleet dashboard.', tags:['Raspberry Pi','5W','24/7','Cloud AI'] },
+    { id:'commander',x:500, y:190, w:160, h:52, label:'Raspberry Pi',    icon:'\ud83e\udde0', color:'#7c2d12', detail:'Compact, always-on Commander Unit for charter fleets. Low power (5W), collects all sensor data and forwards to Master Cloud for AI processing. Monitors 24/7 and reaches you via WhatsApp or fleet dashboard.', tags:['Raspberry Pi 5','5W','24/7','Always-On'] },
     { id:'phone',    x:1160,y:185, w:130, h:46, label:'Your Phone',      icon:'\ud83d\udcf1', color:'#1e3a5f', detail:'WhatsApp alerts and commands. Fleet dashboard via any browser. No dedicated app needed \u2014 charterers and operators interact through WhatsApp and the web.', tags:['WhatsApp','Web Dashboard'] },
-    { id:'master',   x:730, y:325, w:155, h:46, label:'Master (Cloud)',   icon:'\u2601\ufe0f', color:'#4c1d95', detail:'Included with every charter fleet plan. Fleet dashboard, OTA updates, cloud AI processing, remote provisioning, historical analytics, FleetMind shared intelligence.', tags:['Included','Fleet Mgmt','Cloud AI','OTA'] },
+    { id:'master',   x:730, y:325, w:155, h:46, label:'Master (Cloud)',   icon:'\u2601\ufe0f', color:'#4c1d95', detail:'Included with every charter fleet plan. All AI processing happens here — natural language queries, trend analysis, predictive maintenance. Plus fleet dashboard, OTA updates, remote provisioning, and FleetMind shared intelligence.', tags:['Included','Fleet Mgmt','Cloud AI','OTA'] },
     { id:'push',     x:950, y:300, w:140, h:40, label:'Push Alerts',     icon:'\ud83d\udd14', color:'#4c1d95', detail:'Critical alerts via push notifications. Battery critical, anchor drag, bilge alarm \u2014 even if WhatsApp is closed.', tags:['Master','Push Notifications'], sub:true },
     { id:'dashboard',x:950, y:355, w:140, h:40, label:'Fleet Dashboard', icon:'\ud83d\udcca', color:'#4c1d95', detail:'Full fleet dashboard from any browser. Live telemetry, historical charts, cross-fleet analytics, camera feeds. Your fleet\u2019s control room.', tags:['Master','Fleet View','Analytics'], sub:true },
-    { id:'cloudai',  x:570, y:350, w:125, h:42, label:'Cloud AI',        icon:'\ud83e\udd16', color:'#4c1d95', detail:'AI processing runs in the cloud via Master. Natural language queries, trend analysis, predictive maintenance. No local model needed \u2014 keeps hardware simple and cheap.', tags:['Master','Cloud','NLP'], sub:true },
     { id:'fleetmind',x:730, y:400, w:140, h:40, label:'FleetMind',       icon:'\ud83c\udf10', color:'#4c1d95', detail:'Crowdsourced fleet intelligence. Wind field, depth, anchorage intel, passage conditions, hazard broadcasts. Every connected boat makes the network smarter.', tags:['Master','Crowdsourced','Real-Time'], sub:true },
   ];
 
@@ -56,11 +51,11 @@
     ['master','push'],
     ['master','dashboard'],
     ['master','fleetmind'],
-    ['commander','cloudai'],
   ];
 
   // ---- Private-specific ----
   const privateNodes = [
+    { id:'cameras',  x:60,  y:335, w:140, h:52, label:'Cameras / FLIR', icon:'\ud83d\udcf7', color:'#1e3a5f', detail:'Security cameras, FLIR thermal imaging, night vision. AI vision runs locally on the Mac Mini \u2014 intrusion detection, thermal anomalies, and deck monitoring processed on device.', tags:['IP Cameras','FLIR','AI Vision','Night Vision'] },
     { id:'commander',x:500, y:190, w:160, h:52, label:'Mac Mini M4',     icon:'\ud83e\udde0', color:'#7c2d12', detail:'Full-power Commander Unit for private yachts. Apple M4 chip runs Qwen 14B AI locally \u2014 fully offline capable. AI vision for cameras and FLIR. No internet needed for core functions.', tags:['Mac Mini M4','Local AI','Offline','AI Vision'] },
     { id:'localnet', x:730, y:55,  w:155, h:46, label:'Boat WiFi / BLE', icon:'\ud83d\udcf6', color:'#1e3a5f', detail:'When you\u2019re on board, the Commander App connects directly over the boat\u2019s local WiFi or Bluetooth. No internet needed. Full access to every system.', tags:['Local WiFi','Bluetooth','Zero Latency','No Internet'] },
     { id:'app',      x:950, y:55,  w:155, h:46, label:'Commander App',   icon:'\ud83d\udcf1', color:'#0e4a2f', detail:'Native app for iOS and Android. On board: connects directly via WiFi or Bluetooth. Real-time gauges, alerts, camera feeds, and full command interface \u2014 no internet required.', tags:['iOS','Android','Real-Time','Offline'] },
@@ -69,6 +64,7 @@
     { id:'push',     x:950, y:300, w:140, h:40, label:'Push Alerts',     icon:'\ud83d\udd14', color:'#374151', detail:'With Master subscription: critical alerts via push notifications through the Commander App.', tags:['Optional','Push Notifications'], sub:true },
     { id:'dashboard',x:950, y:355, w:140, h:40, label:'Web Dashboard',   icon:'\ud83d\udcca', color:'#374151', detail:'With Master subscription: full web dashboard. Historical charts, live telemetry, camera feeds. Access your boat from any browser.', tags:['Optional','Analytics','Live View'], sub:true },
     { id:'aibrain',  x:570, y:350, w:125, h:42, label:'AI Brain',        icon:'\ud83e\udd16', color:'#0e4a2f', detail:'Qwen 14B language model running locally on the Mac Mini M4. Ask about your boat in plain English. Fully offline \u2014 no internet, no cloud, no subscription. AI vision processes camera and FLIR feeds on device.', tags:['Qwen 14B','Local','Offline','AI Vision'], sub:true },
+    { id:'fleetmind',x:730, y:400, w:140, h:40, label:'FleetMind',       icon:'\ud83c\udf10', color:'#374151', detail:'With Master subscription: join the FleetMind network. Crowdsourced wind, depth, anchorage intel, hazard alerts, and weather warnings from every connected boat. Your local AI cross-references FleetMind data with on-board readings for smarter analysis.', tags:['Optional','Crowdsourced','Weather','Hazards'], sub:true },
   ];
 
   const privateConnections = [
@@ -78,6 +74,7 @@
     ['starlink','master'],
     ['master','push'],
     ['master','dashboard'],
+    ['master','fleetmind'],
     ['commander','aibrain'],
   ];
 
@@ -230,10 +227,7 @@
       dashboard:{ x:350, y:650, w:120, h:36 },
       fleetmind:{ x:220, y:700, w:140, h:36 },
       autodiscovery: { x:50,  y:330, w:130, h:38 },
-      alertengine:   { x:200, y:330, w:120, h:38 },
-      quickcmds:     { x:340, y:330, w:120, h:38 },
       aibrain:       { x:110, y:380, w:120, h:38 },
-      cloudai:       { x:110, y:380, w:120, h:38 },
     };
     return layouts[n.id] || { x:n.x*0.4, y:n.y, w:n.w*0.8, h:n.h*0.85 };
   }
