@@ -3,19 +3,293 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Master&Commander</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0a0a0a; color: #e0e0e0; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
-    .container { text-align: center; padding: 2rem; }
-    h1 { font-size: 3rem; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 0.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    p { font-size: 1.2rem; color: #888; }
-  </style>
+  <title>Master&amp;Commander — Talk to Your Boat via WhatsApp</title>
+  <meta name="description" content="AI boat monitor that connects marine electronics to WhatsApp. Auto-discovers sensors, sends alerts, answers questions in plain English. No cloud required.">
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#x2693;</text></svg>">
 </head>
 <body>
-  <div class="container">
-    <h1>Master&amp;Commander</h1>
-    <p>Coming soon.</p>
+
+<!-- Nav -->
+<nav>
+  <div class="logo"><span>&#x2693;</span> Master<span>&amp;</span>Commander</div>
+  <ul>
+    <li><a href="#how-it-works">How It Works</a></li>
+    <li><a href="#features">Features</a></li>
+    <li><a href="#alerts">Alerts</a></li>
+    <li><a href="#demo">Demo</a></li>
+    <li><a href="#fleet">Fleet</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <h1>Talk to your boat<br>via <span class="highlight">WhatsApp.</span></h1>
+  <p class="tagline">Commander is an AI boat monitor that runs aboard your vessel. It auto-discovers your sensors, monitors every system 24/7, and sends you WhatsApp alerts when something needs attention.</p>
+  <div class="badges">
+    <span class="badge"><span class="dot"></span> Offline-First</span>
+    <span class="badge"><span class="dot"></span> Zero Config</span>
+    <span class="badge"><span class="dot"></span> Real-Time Alerts</span>
+    <span class="badge"><span class="dot"></span> Local AI</span>
   </div>
+</section>
+
+<!-- Flow Diagram -->
+<section class="flow-section" id="architecture">
+  <h2>System Architecture</h2>
+  <p class="subtitle">Click any node to see how it works. Data flows from your marine electronics to your phone.</p>
+  <div id="flow-container">
+    <svg id="flow-svg"></svg>
+    <div id="detail-panel">
+      <button id="detail-close">&times;</button>
+      <h3 id="detail-title"></h3>
+      <p id="detail-desc"></p>
+      <div id="detail-tags" class="detail-tags"></div>
+    </div>
+  </div>
+</section>
+
+<!-- How It Works -->
+<section id="how-it-works">
+  <div class="section-header">
+    <h2>How It Works</h2>
+    <p>Three steps from installation to your first WhatsApp alert.</p>
+  </div>
+  <div class="steps">
+    <div class="step">
+      <span class="step-number">01</span>
+      <h3>Install SignalK</h3>
+      <p>SignalK is free, open-source software that translates your marine electronics into a standard JSON format. Runs on the same Mac Mini as Commander.</p>
+      <p style="margin-top:0.75rem"><code>signalk-server</code> auto-detects NMEA 2000 devices via USB gateway.</p>
+    </div>
+    <div class="step">
+      <span class="step-number">02</span>
+      <h3>Run Commander</h3>
+      <p>Commander connects to SignalK, auto-discovers every sensor on your boat, and starts monitoring. Twin engines? Two battery banks? It figures it out.</p>
+      <p style="margin-top:0.75rem"><code>node commander.js</code> &mdash; scan the QR code, done.</p>
+    </div>
+    <div class="step">
+      <span class="step-number">03</span>
+      <h3>Get WhatsApp Alerts</h3>
+      <p>Battery low? Engine overheating? Bilge pump cycling? You get a WhatsApp message instantly. Send commands back to check any system on board.</p>
+      <p style="margin-top:0.75rem">Text <code>status</code> anytime for a full report.</p>
+    </div>
+  </div>
+</section>
+
+<!-- Features -->
+<section id="features">
+  <div class="section-header">
+    <h2>Features</h2>
+    <p>Everything you need to monitor your boat from anywhere.</p>
+  </div>
+  <div class="features">
+    <div class="feature">
+      <div class="feature-icon">&#x1F50D;</div>
+      <h3>Auto-Discovery</h3>
+      <p>Commander scans SignalK and learns what sensors YOUR boat has. No configuration files, no device lists. Adapts to any vessel automatically.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">&#x1F6A8;</div>
+      <h3>Smart Alerts</h3>
+      <p>Rule-based alert engine &mdash; no AI, no hallucinations. Pure code monitoring thresholds 24/7. Battery, engines, bilge, anchor, depth, tanks.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">&#x26A1;</div>
+      <h3>Quick Commands</h3>
+      <p>Instant responses for status, engines, battery, tanks, wind, anchor, and position. Pre-built templates, no AI latency.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">&#x1F9E0;</div>
+      <h3>Local AI Brain</h3>
+      <p>Qwen 14B runs on-device via Ollama &mdash; fully offline. Ask questions in plain English. Optionally route to Claude via Starlink for deeper analysis.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">&#x1F4F6;</div>
+      <h3>Offline-First</h3>
+      <p>Designed to work with zero internet. Monitoring, alerts, and local AI all run without connectivity. Cloud is an enhancement, not a dependency.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">&#x2693;</div>
+      <h3>Anchor Watch</h3>
+      <p>Set your swing radius and Commander monitors GPS drift continuously. If your anchor drags, you know immediately via WhatsApp.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">&#x1F3AE;</div>
+      <h3>Built-In Simulator</h3>
+      <p>Test without a boat. Simulate catamaran, monohull, or powerboat profiles. Switch between motoring, sailing, anchored, and alarm scenarios on the fly.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">&#x1F30D;</div>
+      <h3>Fleet Management</h3>
+      <p>Multiple Commanders report to Master &mdash; the optional cloud layer. Fleet dashboard, maintenance tracking, cross-boat analytics for charter companies.</p>
+    </div>
+  </div>
+</section>
+
+<!-- Alerts -->
+<section id="alerts">
+  <div class="section-header">
+    <h2>Automatic Alerts</h2>
+    <p>Alerts fire automatically via WhatsApp. No need to ask. All thresholds are configurable.</p>
+  </div>
+  <div class="table-wrap">
+    <table class="alerts-table">
+      <thead>
+        <tr>
+          <th></th>
+          <th>Alert</th>
+          <th>Trigger</th>
+          <th>Requires</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="alert-icon">&#x1F50B;</td>
+          <td>Battery Low</td>
+          <td>SOC &lt; <code>20%</code></td>
+          <td>Any battery on SignalK</td>
+        </tr>
+        <tr>
+          <td class="alert-icon">&#x1F50B;</td>
+          <td>Battery Critical</td>
+          <td>SOC &lt; <code>10%</code></td>
+          <td>Any battery on SignalK</td>
+        </tr>
+        <tr>
+          <td class="alert-icon">&#x1F321;&#xFE0F;</td>
+          <td>Engine Overheat</td>
+          <td>Coolant &gt; <code>95&#176;C</code></td>
+          <td>Engine on NMEA 2000</td>
+        </tr>
+        <tr>
+          <td class="alert-icon">&#x1F6E2;&#xFE0F;</td>
+          <td>Low Oil Pressure</td>
+          <td>&lt; <code>25 PSI</code> while running</td>
+          <td>Engine on NMEA 2000</td>
+        </tr>
+        <tr>
+          <td class="alert-icon">&#x1F6B0;</td>
+          <td>Bilge Pump</td>
+          <td>&gt; <code>6 cycles</code> in 30 min</td>
+          <td>Bilge pump counter</td>
+        </tr>
+        <tr>
+          <td class="alert-icon">&#x2693;</td>
+          <td>Anchor Drag</td>
+          <td>GPS drift &gt; <code>set radius</code></td>
+          <td>GPS + anchor watch</td>
+        </tr>
+        <tr>
+          <td class="alert-icon">&#x1F30A;</td>
+          <td>Shallow Water</td>
+          <td>Depth &lt; <code>configured min</code></td>
+          <td>Depth sounder</td>
+        </tr>
+        <tr>
+          <td class="alert-icon">&#x26FD;</td>
+          <td>Low Fuel</td>
+          <td>&lt; <code>15%</code></td>
+          <td>Tank sensors</td>
+        </tr>
+        <tr>
+          <td class="alert-icon">&#x1F4A7;</td>
+          <td>Low Water</td>
+          <td>&lt; <code>15%</code></td>
+          <td>Tank sensors</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- WhatsApp Demo -->
+<section id="demo">
+  <div class="section-header">
+    <h2>WhatsApp Demo</h2>
+    <p>This is what it looks like. Real commands, real responses.</p>
+  </div>
+  <div class="wa-demo">
+    <div class="wa-header">
+      <div class="wa-avatar">&#x2693;</div>
+      <div>
+        <div class="wa-name">Commander</div>
+        <div class="wa-status">online</div>
+      </div>
+    </div>
+    <div class="wa-chat">
+      <div class="wa-msg sent">status <span class="time">9:41</span></div>
+      <div class="wa-msg recv"><pre>&#x2693; VESSEL STATUS
+
+&#x1F4CD; Position
+  18&#176;27.3'N  64&#176;37.1'W
+  At anchor &mdash; Virgin Gorda
+
+&#x2699;&#xFE0F; Engines
+  Port:  OFF  (1,847 hrs)
+  Stbd:  OFF  (1,832 hrs)
+
+&#x1F50B; Battery
+  House:  87%  25.4V  -2.1A
+  Start:  100%  13.2V
+  Solar:  +14.2A  (342W)
+
+&#x26FD; Tanks
+  Fuel:  72%  |  Water:  45%
+
+&#x1F32C;&#xFE0F; Wind  8kt NE  |  Depth 28ft</pre><span class="time">9:41</span></div>
+      <div class="wa-msg sent">anything I should worry about? <span class="time">9:42</span></div>
+      <div class="wa-msg recv">Looking good overall. Water tanks are at 45% &mdash; if you're staying at anchor a few more days, you might want to top up at the marina. Everything else is in normal range. Solar is keeping up with house loads, engines haven't been run today.<span class="time">9:42</span></div>
+      <div class="wa-msg sent">anchor <span class="time">14:30</span></div>
+      <div class="wa-msg recv"><pre>&#x2693; ANCHOR WATCH
+
+  Status:  SET &mdash; holding
+  Radius:  45m set  |  12m current
+  Drift:   0.3m in last hour
+  GPS:     18&#176;27.342'N  64&#176;37.089'W
+  Depth:   28ft  (stable)</pre><span class="time">14:30</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- Fleet -->
+<section id="fleet">
+  <div class="section-header">
+    <h2>Master &mdash; Fleet Management</h2>
+    <p>Commander is the on-boat system. Master is the optional cloud layer for fleet operators.</p>
+  </div>
+  <div class="fleet-grid">
+    <div class="fleet-card">
+      <span class="fleet-badge">CHARTER COMPANIES</span>
+      <h3>Fleet Dashboard</h3>
+      <p>See every boat in your fleet on one screen. Battery levels, engine hours, tank levels, positions. Know which boats need attention before check-in day.</p>
+    </div>
+    <div class="fleet-card">
+      <span class="fleet-badge">MARINAS</span>
+      <h3>Maintenance Scheduling</h3>
+      <p>Engine hours, oil change intervals, haul-out dates. Commander tracks the data, Master schedules the work. Never miss a service window.</p>
+    </div>
+    <div class="fleet-card">
+      <span class="fleet-badge">MANAGEMENT</span>
+      <h3>Cross-Boat Analytics</h3>
+      <p>Compare fuel consumption, battery health, and system reliability across your fleet. Identify problem boats before they become expensive.</p>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta" id="contact">
+  <h2>Ready to talk to your boat?</h2>
+  <p>Commander is currently in development. Get in touch to learn more or join the early access program.</p>
+  <a href="mailto:overlord.gil.ai@gmail.com" class="cta-btn">&#x2709;&#xFE0F; Get In Touch</a>
+</section>
+
+<!-- Footer -->
+<footer>
+  <p>&copy; 2026 Master&amp;Commander &mdash; Built for boats that talk back.</p>
+</footer>
+
+<script src="flow.js"></script>
 </body>
 </html>
