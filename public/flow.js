@@ -16,10 +16,6 @@
     { id:'sensors',  x:60,  y:250, w:140, h:52, label:'Sensors',       icon:'\ud83c\udf21\ufe0f', color:'#1e3a5f', detail:'Temperature, humidity, bilge pump counters, tank levels, barometric pressure. Any sensor on your network is auto-detected.', tags:['OneWire','I2C','WiFi'] },
     { id:'cameras',  x:60,  y:335, w:140, h:52, label:'Cameras / FLIR', icon:'\ud83d\udcf7', color:'#1e3a5f', detail:'Security cameras, FLIR thermal imaging, night vision. Monitor your vessel visually \u2014 on board or from shore.', tags:['IP Cameras','FLIR','Night Vision'] },
     { id:'signalk',  x:320, y:165, w:150, h:52, label:'SignalK Server', icon:'\ud83d\udd04', color:'#0e4a2f', detail:'Included with every Commander Unit. SignalK translates all marine protocols into a unified data stream \u2014 the universal translator for boats.', tags:['Included','Open Source','Universal'] },
-    // On-board path
-    { id:'localnet', x:730, y:55,  w:155, h:46, label:'Boat WiFi / BLE', icon:'\ud83d\udcf6', color:'#1e3a5f', detail:'When you\u2019re on board, the Commander App connects directly over the boat\u2019s local WiFi or Bluetooth. No internet needed.', tags:['Local WiFi','Bluetooth','Zero Latency','No Internet'] },
-    { id:'app',      x:950, y:55,  w:155, h:46, label:'Commander App',   icon:'\ud83d\udcf1', color:'#0e4a2f', detail:'Native app for iOS and Android. On board: connects directly via WiFi or Bluetooth. Real-time gauges, alerts, camera feeds, and full command interface.', tags:['iOS','Android','Real-Time','Offline'] },
-    { id:'phone',    x:1160,y:55,  w:130, h:46, label:'Your Phone',      icon:'\ud83d\udcf1', color:'#1e3a5f', detail:'On board: Commander App connects directly. With Starlink: WhatsApp alerts. With Master: full cloud dashboard and push notifications.', tags:['iOS','Android'] },
     // Internet path
     { id:'starlink', x:730, y:185, w:155, h:46, label:'Starlink / WiFi', icon:'\ud83d\udce1', color:'#1e3a5f', detail:'Starlink, marina WiFi, or cellular. Commander queues data when offline and syncs when connectivity returns.', tags:['Starlink','Marina WiFi','Cellular','Store & Forward'] },
     { id:'whatsapp', x:950, y:185, w:155, h:46, label:'WhatsApp',        icon:'\ud83d\udcac', color:'#1a5c38', detail:'Commander sends alerts and reports directly to your WhatsApp. Send commands back in plain English. No subscription needed.', tags:['Included','E2E Encrypted','Two-Way'] },
@@ -36,9 +32,6 @@
     ['sensors','signalk'],
     ['cameras','signalk'],
     ['signalk','commander'],
-    ['commander','localnet'],
-    ['localnet','app'],
-    ['app','phone'],
     ['commander','starlink'],
     ['starlink','whatsapp'],
     ['whatsapp','phone'],
@@ -49,7 +42,8 @@
 
   // ---- Charter-specific ----
   const charterNodes = [
-    { id:'commander',x:500, y:190, w:160, h:52, label:'Raspberry Pi',    icon:'\ud83e\udde0', color:'#7c2d12', detail:'Compact, always-on Commander Unit for charter fleets. Low power (5W), cloud AI via Master, OTA updates. Monitors 24/7 and reaches you via WhatsApp, app, or dashboard.', tags:['Raspberry Pi','5W','24/7','Cloud AI'] },
+    { id:'commander',x:500, y:190, w:160, h:52, label:'Raspberry Pi',    icon:'\ud83e\udde0', color:'#7c2d12', detail:'Compact, always-on Commander Unit for charter fleets. Low power (5W), cloud AI via Master, OTA updates. Monitors 24/7 and reaches you via WhatsApp or fleet dashboard.', tags:['Raspberry Pi','5W','24/7','Cloud AI'] },
+    { id:'phone',    x:1160,y:185, w:130, h:46, label:'Your Phone',      icon:'\ud83d\udcf1', color:'#1e3a5f', detail:'WhatsApp alerts and commands. Fleet dashboard via any browser. No dedicated app needed \u2014 charterers and operators interact through WhatsApp and the web.', tags:['WhatsApp','Web Dashboard'] },
     { id:'master',   x:730, y:325, w:155, h:46, label:'Master (Cloud)',   icon:'\u2601\ufe0f', color:'#4c1d95', detail:'Included with every charter fleet plan. Fleet dashboard, OTA updates, cloud AI processing, remote provisioning, historical analytics, FleetMind shared intelligence.', tags:['Included','Fleet Mgmt','Cloud AI','OTA'] },
     { id:'push',     x:950, y:300, w:140, h:40, label:'Push Alerts',     icon:'\ud83d\udd14', color:'#4c1d95', detail:'Critical alerts via push notifications. Battery critical, anchor drag, bilge alarm \u2014 even if WhatsApp is closed.', tags:['Master','Push Notifications'], sub:true },
     { id:'dashboard',x:950, y:355, w:140, h:40, label:'Fleet Dashboard', icon:'\ud83d\udcca', color:'#4c1d95', detail:'Full fleet dashboard from any browser. Live telemetry, historical charts, cross-fleet analytics, camera feeds. Your fleet\u2019s control room.', tags:['Master','Fleet View','Analytics'], sub:true },
@@ -68,6 +62,9 @@
   // ---- Private-specific ----
   const privateNodes = [
     { id:'commander',x:500, y:190, w:160, h:52, label:'Mac Mini M4',     icon:'\ud83e\udde0', color:'#7c2d12', detail:'Full-power Commander Unit for private yachts. Apple M4 chip runs Qwen 14B AI locally \u2014 fully offline capable. AI vision for cameras and FLIR. No internet needed for core functions.', tags:['Mac Mini M4','Local AI','Offline','AI Vision'] },
+    { id:'localnet', x:730, y:55,  w:155, h:46, label:'Boat WiFi / BLE', icon:'\ud83d\udcf6', color:'#1e3a5f', detail:'When you\u2019re on board, the Commander App connects directly over the boat\u2019s local WiFi or Bluetooth. No internet needed. Full access to every system.', tags:['Local WiFi','Bluetooth','Zero Latency','No Internet'] },
+    { id:'app',      x:950, y:55,  w:155, h:46, label:'Commander App',   icon:'\ud83d\udcf1', color:'#0e4a2f', detail:'Native app for iOS and Android. On board: connects directly via WiFi or Bluetooth. Real-time gauges, alerts, camera feeds, and full command interface \u2014 no internet required.', tags:['iOS','Android','Real-Time','Offline'] },
+    { id:'phone',    x:1160,y:55,  w:130, h:46, label:'Your Phone',      icon:'\ud83d\udcf1', color:'#1e3a5f', detail:'On board: Commander App connects directly \u2014 no internet. Away: WhatsApp alerts via Starlink. With Master: cloud dashboard and push notifications.', tags:['iOS','Android'] },
     { id:'master',   x:730, y:325, w:155, h:46, label:'Master (Cloud)',   icon:'\u2601\ufe0f', color:'#374151', detail:'Optional subscription for private yacht owners. Adds cloud dashboard, push notifications, historical analytics, and remote access. Commander works fully standalone without it.', tags:['Optional','Dashboard','Analytics','Remote'] },
     { id:'push',     x:950, y:300, w:140, h:40, label:'Push Alerts',     icon:'\ud83d\udd14', color:'#374151', detail:'With Master subscription: critical alerts via push notifications through the Commander App.', tags:['Optional','Push Notifications'], sub:true },
     { id:'dashboard',x:950, y:355, w:140, h:40, label:'Web Dashboard',   icon:'\ud83d\udcca', color:'#374151', detail:'With Master subscription: full web dashboard. Historical charts, live telemetry, camera feeds. Access your boat from any browser.', tags:['Optional','Analytics','Live View'], sub:true },
@@ -75,6 +72,9 @@
   ];
 
   const privateConnections = [
+    ['commander','localnet'],
+    ['localnet','app'],
+    ['app','phone'],
     ['starlink','master'],
     ['master','push'],
     ['master','dashboard'],
