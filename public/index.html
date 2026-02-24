@@ -16,7 +16,7 @@
   <ul>
     <li><a href="#how-it-works">How It Works</a></li>
     <li><a href="#solutions">Solutions</a></li>
-    <li><a href="#delivery-puck">Delivery Puck</a></li>
+    <li><a href="#delivery-puck">Delivery Captain</a></li>
     <li><a href="#diagnostics">Diagnostics</a></li>
     <li><a href="#hardware">Hardware</a></li>
     <li><a href="#pricing">Pricing</a></li>
@@ -95,26 +95,96 @@
 <section id="how-it-works">
   <div class="section-header">
     <h2>How It Works</h2>
-    <p>You install it. It learns your boat. You get WhatsApp alerts.</p>
+    <p>Download the app. Order the parts. Follow the guide. Your boat is connected.</p>
   </div>
-  <div class="steps">
-    <div class="step">
-      <span class="step-number">01</span>
-      <h3>Get the Hardware, Flash the Image</h3>
-      <p>Buy a Raspberry Pi 5 and Actisense NGX-1 from Amazon or any marine chandlery. Download the Commander OS image from our site, flash it to an SD card with Raspberry Pi Imager, and plug it into your NMEA 2000 network. Mac Mini owners get a pre-configured disk image with the AI model included.</p>
-      <p style="margin-top:0.75rem">Installation by owner. No wiring changes. No hardware to ship.</p>
+  <div class="hiw-tabs">
+    <button class="hiw-tab-btn active" onclick="switchHIW('pi')">Raspberry Pi</button>
+    <button class="hiw-tab-btn" onclick="switchHIW('mac')">Mac Mini M4</button>
+  </div>
+
+  <!-- Raspberry Pi flow -->
+  <div class="hiw-panel active" id="hiw-pi">
+    <div class="hw-flow-diagram compact">
+      <div class="hw-flow-row">
+        <div class="hw-flow-box accent-green"><div class="hw-flow-icon">⛵</div><div class="hw-flow-label">Commander</div><div class="hw-flow-sub">Monitors your boat</div></div>
+        <div class="hw-flow-connector">WiFi →</div>
+        <div class="hw-flow-box accent-purple"><div class="hw-flow-icon">☁️</div><div class="hw-flow-label">Master Cloud</div><div class="hw-flow-sub">AI · Fleet Dashboard</div></div>
+        <div class="hw-flow-connector">→</div>
+        <div class="hw-flow-box accent-orange"><div class="hw-flow-icon">👤</div><div class="hw-flow-label">You</div><div class="hw-flow-sub">Web · WhatsApp · App</div></div>
+      </div>
     </div>
-    <div class="step">
-      <span class="step-number">02</span>
-      <h3>Boot &amp; Auto-Discover</h3>
-      <p>Power on, scan the QR code to pair with your Commander account. The unit auto-discovers every sensor on the NMEA 2000 bus &mdash; twin engines, battery banks, solar, shore power. It reports what it finds and you name your boat. No configuration needed.</p>
-      <p style="margin-top:0.75rem">Boots generic. Discovers everything. Configures itself.</p>
+    <div class="steps">
+      <div class="step">
+        <span class="step-number">01</span>
+        <div class="step-content">
+          <h3>Download the App &amp; Create Your Account</h3>
+          <p>Get the Commander app on your phone. Sign up, choose your plan (Charter Fleet or Delivery), and the app generates your personalized hardware shopping list with direct Amazon links. Raspberry Pi 5, Actisense NGX-1, case, SD card, power cable &mdash; ~$280 total.</p>
+        </div>
+      </div>
+      <div class="step">
+        <span class="step-number">02</span>
+        <div class="step-content">
+          <h3>Flash the Commander OS</h3>
+          <p>Parts arrive. The app walks you through setup: download the Commander OS image, flash it to the SD card with Raspberry Pi Imager (one click). SignalK, Commander Relay, and secure VPN tunnel are all pre-installed.</p>
+        </div>
+      </div>
+      <div class="step">
+        <span class="step-number">03</span>
+        <div class="step-content">
+          <h3>Plug In &amp; Pair</h3>
+          <p>Connect the Actisense to your NMEA 2000 backbone. Plug the Pi into 12V boat power. It broadcasts a setup hotspot &mdash; connect your phone and scan the QR code. Enter your WiFi or Starlink credentials. Ten minutes, no wiring changes.</p>
+        </div>
+      </div>
+      <div class="step">
+        <span class="step-number">04</span>
+        <div class="step-content">
+          <h3>Auto-Discovery &amp; You're Live</h3>
+          <p>Commander finds every sensor on the NMEA 2000 bus. Master Cloud says: <em>"Found 14 devices. Name this boat?"</em> You type the name and you're live. <strong>On board:</strong> Commander App over WiFi, no internet needed. <strong>Remote:</strong> WhatsApp alerts via Starlink or WiFi.</p>
+        </div>
+      </div>
     </div>
-    <div class="step">
-      <span class="step-number">03</span>
-      <h3>You Stay Connected</h3>
-      <p>On board? Open the Commander App &mdash; no internet needed. Away with Starlink or WiFi? Get WhatsApp alerts. Add Master for the full cloud dashboard, push notifications, and historical analytics.</p>
-      <p style="margin-top:0.75rem">Text <code>status</code> or tap the app anytime for a full report.</p>
+  </div>
+
+  <!-- Mac Mini M4 flow -->
+  <div class="hiw-panel" id="hiw-mac">
+    <div class="hw-flow-diagram compact">
+      <div class="hw-flow-row">
+        <div class="hw-flow-box accent-green"><div class="hw-flow-icon">⛵</div><div class="hw-flow-label">Commander</div><div class="hw-flow-sub">On-board AI · offline</div></div>
+        <div class="hw-flow-connector">WiFi →</div>
+        <div class="hw-flow-box accent-cyan"><div class="hw-flow-icon">📱</div><div class="hw-flow-label">Commander App</div><div class="hw-flow-sub">Full dashboard on your phone</div></div>
+        <div class="hw-flow-connector">→</div>
+        <div class="hw-flow-box accent-orange"><div class="hw-flow-icon">👤</div><div class="hw-flow-label">You</div><div class="hw-flow-sub">On board · no internet</div></div>
+      </div>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <span class="step-number">01</span>
+        <div class="step-content">
+          <h3>Download the App &amp; Create Your Account</h3>
+          <p>Get the Commander app on your phone. Sign up, choose Private Yacht, and the app generates your hardware list: Mac Mini M4 and Actisense NGX-1. Optional: PoE cameras for AI Vision. ~$800 total.</p>
+        </div>
+      </div>
+      <div class="step">
+        <span class="step-number">02</span>
+        <div class="step-content">
+          <h3>Restore the Disk Image</h3>
+          <p>Download our pre-configured disk image from the app. Restore it to the Mac Mini using Apple Configurator or Disk Utility. Qwen 14B AI model, SignalK, Commander, and AI Vision are all pre-loaded &mdash; ready to boot.</p>
+        </div>
+      </div>
+      <div class="step">
+        <span class="step-number">03</span>
+        <div class="step-content">
+          <h3>Connect &amp; Pair</h3>
+          <p>Plug the Actisense into your NMEA 2000 backbone. Connect PoE cameras if you have them. Power on the Mac Mini. Open Commander App on your phone over the boat's WiFi &mdash; scan the QR code to pair. No internet needed.</p>
+        </div>
+      </div>
+      <div class="step">
+        <span class="step-number">04</span>
+        <div class="step-content">
+          <h3>Auto-Discovery &amp; Two Ways to Connect</h3>
+          <p>Commander maps every sensor and starts AI processing locally. <strong>On board:</strong> real-time gauges, alerts, and camera feeds over WiFi &mdash; no internet needed. <strong>Remote (optional):</strong> add Starlink or WiFi for WhatsApp alerts from anywhere and cloud analytics.</p>
+        </div>
+      </div>
     </div>
   </div>
 </section>
@@ -502,163 +572,224 @@
   </div>
 </section>
 
-<!-- The Delivery Puck -->
+<!-- The Delivery Captain -->
 <section id="delivery-puck">
   <div class="section-header">
-    <h2>The Delivery Puck</h2>
-    <p>Plug-and-play boat monitoring in 60 seconds. Internet required &mdash; Starlink, marina WiFi, or hotspot. Just plug in and go.</p>
+    <h2>How It Connects</h2>
+    <p>Four configurations &mdash; same NMEA 2000 backbone, different hardware and data paths.</p>
   </div>
 
-  <!-- Hardware Diagram -->
-  <div class="puck-diagram-wrap">
-    <svg viewBox="0 0 900 340" xmlns="http://www.w3.org/2000/svg" class="puck-diagram">
-      <defs>
-        <filter id="glow-orange"><feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="#f59e0b" flood-opacity="0.3"/></filter>
-        <filter id="glow-cyan"><feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="#0ea5e9" flood-opacity="0.3"/></filter>
-        <linearGradient id="case-grad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#1e293b"/><stop offset="100%" stop-color="#111827"/></linearGradient>
-      </defs>
+  <!-- 4-config tabs -->
+  <div class="config-tabs">
+    <button class="config-tab-btn active" onclick="switchConfig('charter')">Charter Fleet</button>
+    <button class="config-tab-btn" onclick="switchConfig('private')">Private Yacht</button>
+    <button class="config-tab-btn" onclick="switchConfig('delivery')">Delivery Captain</button>
+    <button class="config-tab-btn" onclick="switchConfig('diagnostic')">Diagnostic Scanner</button>
+  </div>
 
-      <!-- Waterproof Case outline -->
-      <rect x="40" y="30" width="260" height="280" rx="16" fill="url(#case-grad)" stroke="#334155" stroke-width="2" filter="url(#glow-cyan)"/>
-      <text x="170" y="22" text-anchor="middle" fill="#0ea5e9" font-size="12" font-family="monospace" font-weight="600">WATERPROOF CASE</text>
+  <!-- Charter Fleet -->
+  <div class="config-panel active" id="config-charter">
+    <div class="hw-flow-diagram">
+      <div class="hw-flow-row">
+        <div class="hw-flow-box accent-green">
+          <div class="hw-flow-icon">⛵</div>
+          <div class="hw-flow-label">Commander</div>
+          <div class="hw-flow-sub">Monitors every system on board</div>
+        </div>
+        <div class="hw-flow-connector">WiFi &rarr;</div>
+        <div class="hw-flow-box accent-purple">
+          <div class="hw-flow-icon">☁️</div>
+          <div class="hw-flow-label">Master Cloud</div>
+          <div class="hw-flow-sub">AI analysis &middot; fleet intelligence</div>
+        </div>
+        <div class="hw-flow-connector">&rarr;</div>
+        <div class="hw-flow-box accent-cyan">
+          <div class="hw-flow-icon">📊</div>
+          <div class="hw-flow-label">Fleet Dashboard</div>
+          <div class="hw-flow-sub">All boats &middot; one screen</div>
+        </div>
+        <div class="hw-flow-connector">&rarr;</div>
+        <div class="hw-flow-box accent-orange">
+          <div class="hw-flow-icon">👤</div>
+          <div class="hw-flow-label">Charter Operator</div>
+          <div class="hw-flow-sub">Web &middot; WhatsApp &middot; App</div>
+        </div>
+      </div>
+    </div>
+    <p class="config-desc">Commander monitors every boat in your fleet. You see all of them on one dashboard, get WhatsApp alerts, and manage turnarounds from anywhere. $499/yr per boat.</p>
+  </div>
 
-      <!-- Raspberry Pi 5 inside case -->
-      <rect x="65" y="60" width="210" height="120" rx="8" fill="#0f172a" stroke="#22c55e" stroke-width="1.5"/>
-      <text x="170" y="90" text-anchor="middle" fill="#e2e8f0" font-size="14" font-weight="700" font-family="system-ui">Raspberry Pi 5</text>
-      <text x="170" y="110" text-anchor="middle" fill="#64748b" font-size="11" font-family="monospace">ARM Cortex-A76 &bull; 8GB RAM</text>
-      <!-- GPIO pins visual -->
-      <g transform="translate(80,130)">
-        <rect x="0" y="0" width="4" height="10" rx="1" fill="#22c55e" opacity="0.6"/>
-        <rect x="8" y="0" width="4" height="10" rx="1" fill="#22c55e" opacity="0.6"/>
-        <rect x="16" y="0" width="4" height="10" rx="1" fill="#22c55e" opacity="0.6"/>
-        <rect x="24" y="0" width="4" height="10" rx="1" fill="#22c55e" opacity="0.6"/>
-        <rect x="32" y="0" width="4" height="10" rx="1" fill="#22c55e" opacity="0.6"/>
-        <rect x="40" y="0" width="4" height="10" rx="1" fill="#22c55e" opacity="0.6"/>
-        <rect x="48" y="0" width="4" height="10" rx="1" fill="#22c55e" opacity="0.6"/>
-        <rect x="56" y="0" width="4" height="10" rx="1" fill="#22c55e" opacity="0.6"/>
-      </g>
-      <!-- USB ports on Pi -->
-      <rect x="245" y="75" width="24" height="14" rx="2" fill="none" stroke="#94a3b8" stroke-width="1"/>
-      <rect x="245" y="95" width="24" height="14" rx="2" fill="none" stroke="#94a3b8" stroke-width="1"/>
-      <text x="280" y="87" fill="#64748b" font-size="8" font-family="monospace">USB</text>
-      <text x="280" y="107" fill="#64748b" font-size="8" font-family="monospace">USB</text>
+  <!-- Private Yacht -->
+  <div class="config-panel" id="config-private">
+    <div class="hw-flow-diagram">
+      <div class="hw-flow-row">
+        <div class="hw-flow-box accent-green">
+          <div class="hw-flow-icon">⛵</div>
+          <div class="hw-flow-label">Commander</div>
+          <div class="hw-flow-sub">On-board AI &middot; works offline</div>
+        </div>
+        <div class="hw-flow-connector">WiFi &rarr;</div>
+        <div class="hw-flow-box accent-cyan">
+          <div class="hw-flow-icon">📱</div>
+          <div class="hw-flow-label">Commander App</div>
+          <div class="hw-flow-sub">Full dashboard on your phone</div>
+        </div>
+        <div class="hw-flow-connector">&rarr;</div>
+        <div class="hw-flow-box accent-orange">
+          <div class="hw-flow-icon">👤</div>
+          <div class="hw-flow-label">Owner</div>
+          <div class="hw-flow-sub">On board &middot; no internet needed</div>
+        </div>
+      </div>
+    </div>
+    <p class="config-desc">Everything runs locally on your boat. Open the Commander App over WiFi &mdash; no internet, no subscription, no cloud required. Optional cloud sync when you want remote access.</p>
+  </div>
 
-      <!-- SignalK label inside case -->
-      <rect x="90" y="200" width="160" height="34" rx="6" fill="rgba(14,74,47,0.3)" stroke="#10b981" stroke-width="1"/>
-      <text x="170" y="222" text-anchor="middle" fill="#10b981" font-size="12" font-weight="600" font-family="system-ui">SignalK Server</text>
-      <text x="170" y="250" text-anchor="middle" fill="#475569" font-size="10" font-family="monospace">pre-installed &bull; auto-start</text>
+  <!-- Delivery Captain -->
+  <div class="config-panel" id="config-delivery">
+    <div class="hw-flow-diagram">
+      <div class="hw-flow-row">
+        <div class="hw-flow-box accent-green">
+          <div class="hw-flow-icon">⛵</div>
+          <div class="hw-flow-label">Commander</div>
+          <div class="hw-flow-sub">Plugs into any boat in 60 seconds</div>
+        </div>
+        <div class="hw-flow-connector">&rarr;</div>
+        <div class="hw-flow-box accent-cyan">
+          <div class="hw-flow-icon">📱</div>
+          <div class="hw-flow-label">Commander App</div>
+          <div class="hw-flow-sub">Captain &middot; on board</div>
+        </div>
+        <div class="hw-flow-connector">internet &rarr;</div>
+        <div class="hw-flow-box accent-purple">
+          <div class="hw-flow-icon">☁️</div>
+          <div class="hw-flow-label">Master Cloud</div>
+          <div class="hw-flow-sub">Live tracking &middot; alerts</div>
+        </div>
+        <div class="hw-flow-connector">&rarr;</div>
+        <div class="hw-flow-box accent-orange">
+          <div class="hw-flow-icon">👤</div>
+          <div class="hw-flow-label">Owner</div>
+          <div class="hw-flow-sub">WhatsApp &middot; Dashboard</div>
+        </div>
+      </div>
+    </div>
+    <p class="config-desc">Captain plugs it in and uses the Commander App on board. Owner gets live WhatsApp updates from anywhere. Moves between boats &mdash; no reconfiguration. ~$325 hardware.</p>
+  </div>
 
-      <!-- USB-C power port on case -->
-      <rect x="130" y="300" width="80" height="14" rx="4" fill="#0f172a" stroke="#f59e0b" stroke-width="1.5"/>
-      <text x="170" y="311" text-anchor="middle" fill="#f59e0b" font-size="9" font-family="monospace" font-weight="600">USB-C POWER</text>
-
-      <!-- Connection line: Case to Actisense -->
-      <line x1="300" y1="120" x2="380" y2="120" stroke="#334155" stroke-width="2" stroke-dasharray="6 3"/>
-      <polygon points="375,115 385,120 375,125" fill="#0ea5e9"/>
-      <text x="340" y="110" text-anchor="middle" fill="#475569" font-size="9" font-family="monospace">USB</text>
-
-      <!-- Actisense NGX-1 -->
-      <rect x="390" y="60" width="200" height="120" rx="12" fill="#1a2332" stroke="#0ea5e9" stroke-width="1.5" filter="url(#glow-cyan)"/>
-      <text x="490" y="95" text-anchor="middle" fill="#e2e8f0" font-size="14" font-weight="700" font-family="system-ui">Actisense NGX-1</text>
-      <text x="490" y="115" text-anchor="middle" fill="#64748b" font-size="11" font-family="monospace">NMEA 2000 &rarr; USB</text>
-      <!-- Connector indicators -->
-      <circle cx="420" cy="150" r="8" fill="none" stroke="#0ea5e9" stroke-width="1.5"/>
-      <text x="420" y="154" text-anchor="middle" fill="#0ea5e9" font-size="8" font-family="monospace">N</text>
-      <circle cx="560" cy="150" r="8" fill="none" stroke="#94a3b8" stroke-width="1.5"/>
-      <text x="560" y="154" text-anchor="middle" fill="#94a3b8" font-size="8" font-family="monospace">U</text>
-
-      <!-- Connection line: Actisense to T-connector -->
-      <line x1="490" y1="180" x2="490" y2="230" stroke="#334155" stroke-width="2" stroke-dasharray="6 3"/>
-      <polygon points="485,225 490,235 495,225" fill="#0ea5e9"/>
-
-      <!-- T-Connector + Drop Cable -->
-      <rect x="400" y="240" width="180" height="70" rx="10" fill="#1a2332" stroke="#1e3a5f" stroke-width="1.5"/>
-      <text x="490" y="268" text-anchor="middle" fill="#e2e8f0" font-size="13" font-weight="600" font-family="system-ui">T-Connector</text>
-      <text x="490" y="288" text-anchor="middle" fill="#64748b" font-size="10" font-family="monospace">+ 1m drop cable</text>
-      <!-- T-shape connector visual -->
-      <line x1="400" y1="252" x2="395" y2="252" stroke="#1e3a5f" stroke-width="3"/>
-      <line x1="580" y1="252" x2="585" y2="252" stroke="#1e3a5f" stroke-width="3"/>
-
-      <!-- Connection line: T-connector to NMEA backbone -->
-      <line x1="490" y1="310" x2="490" y2="335" stroke="#1e3a5f" stroke-width="3"/>
-      <text x="490" y="330" text-anchor="middle" fill="#1e3a5f" font-size="10" font-weight="700" font-family="monospace">&darr; NMEA 2000 BACKBONE</text>
-
-      <!-- Power adapter -->
-      <rect x="660" y="60" width="200" height="100" rx="12" fill="#1a2332" stroke="#f59e0b" stroke-width="1.5" filter="url(#glow-orange)"/>
-      <text x="760" y="92" text-anchor="middle" fill="#e2e8f0" font-size="13" font-weight="700" font-family="system-ui">Power Adapter</text>
-      <text x="760" y="112" text-anchor="middle" fill="#64748b" font-size="10" font-family="monospace">12V DC or 110/220V AC</text>
-      <text x="760" y="130" text-anchor="middle" fill="#f59e0b" font-size="10" font-family="monospace">&rarr; 5V USB-C out</text>
-
-      <!-- Connection line: Power to Case -->
-      <path d="M660,110 L350,110 L350,307 L130,307" fill="none" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="6 3"/>
-      <polygon points="135,302 125,307 135,312" fill="#f59e0b"/>
-
-      <!-- Internet connection (WiFi icon area) -->
-      <rect x="660" y="200" width="200" height="80" rx="12" fill="#1a2332" stroke="#334155" stroke-width="1.5"/>
-      <text x="760" y="232" text-anchor="middle" fill="#e2e8f0" font-size="13" font-weight="700" font-family="system-ui">Internet Source</text>
-      <text x="760" y="252" text-anchor="middle" fill="#64748b" font-size="10" font-family="monospace">Starlink &bull; WiFi &bull; Hotspot</text>
-      <text x="760" y="268" text-anchor="middle" fill="#475569" font-size="9" font-family="monospace">auto-connects via VPN</text>
-
-      <!-- WiFi waves visual -->
-      <path d="M730,205 Q735,198 740,205" fill="none" stroke="#94a3b8" stroke-width="1" opacity="0.5"/>
-      <path d="M725,200 Q735,190 745,200" fill="none" stroke="#94a3b8" stroke-width="1" opacity="0.4"/>
-      <path d="M720,195 Q735,182 750,195" fill="none" stroke="#94a3b8" stroke-width="1" opacity="0.3"/>
-    </svg>
+  <!-- Diagnostic Scanner -->
+  <div class="config-panel" id="config-diagnostic">
+    <div class="hw-flow-diagram">
+      <div class="hw-flow-row">
+        <div class="hw-flow-box accent-green">
+          <div class="hw-flow-icon">🔍</div>
+          <div class="hw-flow-label">Scanner</div>
+          <div class="hw-flow-sub">Plugs in &middot; scans 24&ndash;48h</div>
+        </div>
+        <div class="hw-flow-connector">upload &rarr;</div>
+        <div class="hw-flow-box accent-purple">
+          <div class="hw-flow-icon">☁️</div>
+          <div class="hw-flow-label">Master Cloud</div>
+          <div class="hw-flow-sub">AI analysis &middot; report generation</div>
+        </div>
+        <div class="hw-flow-connector">&rarr;</div>
+        <div class="hw-flow-box accent-cyan">
+          <div class="hw-flow-icon">📋</div>
+          <div class="hw-flow-label">Service Portal</div>
+          <div class="hw-flow-sub">Diagnostic report &middot; network map</div>
+        </div>
+        <div class="hw-flow-connector">&rarr;</div>
+        <div class="hw-flow-box accent-orange">
+          <div class="hw-flow-icon">👤</div>
+          <div class="hw-flow-label">Marine Tech</div>
+          <div class="hw-flow-sub">Share with boat owner</div>
+        </div>
+      </div>
+    </div>
+    <p class="config-desc">Plug the scanner in for 24&ndash;48 hours. It uploads to the cloud, generates a full diagnostic report, and you share it with the boat owner. $75/scan or $149/mo unlimited.</p>
   </div>
 
   <div class="puck-layout">
     <div class="puck-kit">
-      <h3>What's in the Box</h3>
+      <h3>What You'll Need</h3>
       <ul>
-        <li>Raspberry Pi 5 in waterproof case <span>~$80</span></li>
         <li>Actisense NGX-1 (NMEA 2000 USB) <span>~$200</span></li>
+        <li>Raspberry Pi 5 Model B (4GB) in waterproof case <span>~$80</span></li>
         <li>NMEA 2000 T-connector + 1m drop cable <span>~$30</span></li>
         <li>USB-C power adapter (12V DC or AC outlet) <span>~$15</span></li>
-        <li>Quick start card (4 steps, with pictures) <span></span></li>
+        <li>microSD card (32GB+) <span>~$10</span></li>
       </ul>
       <p class="puck-total">Total hardware: ~$325</p>
     </div>
 
-    <div class="puck-setup">
-      <h3>Captain's Setup: 60 Seconds</h3>
-      <div class="puck-steps">
-        <div class="puck-step">
-          <span>1</span>
-          <p>Plug the NMEA 2000 cable into any open T-connector on the backbone</p>
-        </div>
-        <div class="puck-step">
-          <span>2</span>
-          <p>Plug the USB-C power into any 12V outlet or AC socket</p>
-        </div>
-        <div class="puck-step">
-          <span>3</span>
-          <p>Wait for the green light (60 seconds)</p>
-        </div>
-        <div class="puck-step">
-          <span>4</span>
-          <p>Log into the Commander App on your phone &mdash; your boat appears automatically</p>
-        </div>
+    <div class="puck-setup" style="flex:1">
+      <div class="setup-tabs">
+        <button class="setup-tab-btn active" onclick="switchSetup('first')">First-Time Setup</button>
+        <button class="setup-tab-btn" onclick="switchSetup('newboat')">New Boat &mdash; 60 Seconds</button>
       </div>
-      <p class="puck-note">No configuration needed. Plug into any internet source &mdash; Starlink, marina WiFi, or hotspot. Master starts receiving data automatically via VPN Tunnel.</p>
+
+      <div class="setup-panel active" id="setup-first">
+        <div class="puck-steps">
+          <div class="puck-step">
+            <span>1</span>
+            <p><strong>Download Commander OS</strong> &mdash; From the Commander App, tap "New Unit" and download the disk image (~2 GB)</p>
+          </div>
+          <div class="puck-step">
+            <span>2</span>
+            <p><strong>Flash the SD Card</strong> &mdash; Insert your microSD card, open <a href="https://www.raspberrypi.com/software/" target="_blank" style="color:var(--accent)">Raspberry Pi Imager</a>, select the Commander OS image, and click Write. Takes about 5 minutes.</p>
+          </div>
+          <div class="puck-step">
+            <span>3</span>
+            <p><strong>Assemble &amp; Power On</strong> &mdash; Insert the SD card into your Pi, connect the Actisense via USB, and plug into power. The Pi boots and broadcasts a setup hotspot.</p>
+          </div>
+          <div class="puck-step">
+            <span>4</span>
+            <p><strong>Pair with the App</strong> &mdash; Connect your phone to the setup hotspot, scan the QR code, and enter your boat's WiFi or Starlink credentials. Commander links to your account and the VPN tunnel activates.</p>
+          </div>
+          <div class="puck-step">
+            <span>5</span>
+            <p><strong>Plug into the Backbone</strong> &mdash; Connect the Actisense to any open NMEA 2000 T-connector. Auto-Discovery finds every sensor on the bus. Name your boat &mdash; you're live.</p>
+          </div>
+        </div>
+        <p class="puck-note">One-time setup takes about 15 minutes. The app guides you through every step with pictures. No terminal commands, no configuration files.</p>
+      </div>
+
+      <div class="setup-panel" id="setup-newboat">
+        <div class="puck-steps">
+          <div class="puck-step">
+            <span>1</span>
+            <p>Unplug the unit from the previous boat and bring it aboard</p>
+          </div>
+          <div class="puck-step">
+            <span>2</span>
+            <p>Plug the NMEA 2000 cable into any open T-connector on the backbone</p>
+          </div>
+          <div class="puck-step">
+            <span>3</span>
+            <p>Plug the USB-C power into any 12V outlet or AC socket</p>
+          </div>
+          <div class="puck-step">
+            <span>4</span>
+            <p>Wait for the green light (60 seconds) &mdash; open the Commander App, the new boat appears automatically</p>
+          </div>
+        </div>
+        <p class="puck-note">No reconfiguration needed. The unit remembers your account, connects to any available internet source &mdash; Starlink, marina WiFi, or hotspot &mdash; and starts reporting via VPN tunnel.</p>
+      </div>
     </div>
   </div>
 
   <div class="puck-chain">
-    <h3>How Data Flows</h3>
+    <h3>How It Works for the Owner</h3>
     <div class="chain-flow">
-      <div class="chain-node"><span class="chain-icon">&#x2693;</span><span class="chain-label">NMEA 2000</span></div>
-      <span class="chain-arrow">&rarr;</span>
-      <div class="chain-node"><span class="chain-icon">&#x1F50C;</span><span class="chain-label">Actisense USB</span></div>
-      <span class="chain-arrow">&rarr;</span>
-      <div class="chain-node"><span class="chain-icon">&#x1F4BB;</span><span class="chain-label">Raspberry Pi</span></div>
-      <span class="chain-arrow">&rarr;</span>
-      <div class="chain-node"><span class="chain-icon">&#x1F4F6;</span><span class="chain-label">Internet</span></div>
-      <span class="chain-arrow">&rarr;</span>
-      <div class="chain-node"><span class="chain-icon">&#x1F510;</span><span class="chain-label">VPN Tunnel</span></div>
+      <div class="chain-node"><span class="chain-icon">&#x26F5;</span><span class="chain-label">Commander</span></div>
       <span class="chain-arrow">&rarr;</span>
       <div class="chain-node"><span class="chain-icon">&#x2601;&#xFE0F;</span><span class="chain-label">Master Cloud</span></div>
       <span class="chain-arrow">&rarr;</span>
       <div class="chain-node"><span class="chain-icon">&#x1F4AC;</span><span class="chain-label">WhatsApp</span></div>
+      <span class="chain-arrow">+</span>
+      <div class="chain-node"><span class="chain-icon">&#x1F4F1;</span><span class="chain-label">App</span></div>
+      <span class="chain-arrow">+</span>
+      <div class="chain-node"><span class="chain-icon">&#x1F4CA;</span><span class="chain-label">Dashboard</span></div>
     </div>
   </div>
 
@@ -688,12 +819,41 @@
     <p>Portable diagnostic scanning for marine professionals. Plug into any boat, scan for 24&ndash;48 hours, deliver a comprehensive report.</p>
   </div>
 
+  <!-- Diagnostic flow — user-facing -->
+  <div class="hw-flow-diagram">
+    <div class="hw-flow-row">
+      <div class="hw-flow-box accent-green">
+        <div class="hw-flow-icon">🔍</div>
+        <div class="hw-flow-label">Plug In Scanner</div>
+        <div class="hw-flow-sub">Any boat &middot; 60 seconds</div>
+      </div>
+      <div class="hw-flow-connector">24&ndash;48h &rarr;</div>
+      <div class="hw-flow-box accent-purple">
+        <div class="hw-flow-icon">☁️</div>
+        <div class="hw-flow-label">AI Analysis</div>
+        <div class="hw-flow-sub">Deep patterns &middot; anomalies</div>
+      </div>
+      <div class="hw-flow-connector">&rarr;</div>
+      <div class="hw-flow-box accent-cyan">
+        <div class="hw-flow-icon">📋</div>
+        <div class="hw-flow-label">Diagnostic Report</div>
+        <div class="hw-flow-sub">Network map &middot; benchmarks</div>
+      </div>
+      <div class="hw-flow-connector">&rarr;</div>
+      <div class="hw-flow-box accent-orange">
+        <div class="hw-flow-icon">👤</div>
+        <div class="hw-flow-label">Share with Owner</div>
+        <div class="hw-flow-sub">PDF &middot; Service Portal</div>
+      </div>
+    </div>
+  </div>
+
   <div class="diag-layout">
     <div class="diag-steps">
       <h3>How It Works</h3>
       <div class="diag-step">
         <span>1</span>
-        <p><strong>Plug In</strong> &mdash; Connect the Diagnostic Scanner to any open T-connector on the boat's NMEA 2000 backbone. Same 60-second setup as the Delivery Puck.</p>
+        <p><strong>Plug In</strong> &mdash; Connect the Diagnostic Scanner to any open T-connector on the boat's NMEA 2000 backbone. Same 60-second setup as the Delivery Captain.</p>
       </div>
       <div class="diag-step">
         <span>2</span>
@@ -754,7 +914,7 @@
       <div class="ribbon-count">4 USE CASES</div>
       <p>Verified monitoring data for claims. Continuous engine logs, GPS tracks, and maintenance records reduce risk profiles.</p>
     </div>
-    <div class="ribbon-card" style="cursor:pointer" onclick="document.getElementById('diagnostics').scrollIntoView({behavior:'smooth'})">
+    <div class="ribbon-card" style="cursor:pointer" onclick="document.querySelector('.tab-btn[data-tab=&quot;marinepros&quot;]').click(); document.getElementById('solutions').scrollIntoView({behavior:'smooth'})">
       <div class="ribbon-icon">&#x1F527;</div>
       <h4>Marine Professionals</h4>
       <div class="ribbon-count">14 USE CASES</div>
@@ -769,28 +929,17 @@
     <h2>Choose Your Hardware</h2>
     <p>Four Commander Unit options &mdash; matched to how you use your boat.</p>
   </div>
-  <div class="hw-grid">
-    <div class="hw-card">
+  <div class="config-tabs" id="hw-tabs">
+    <button class="config-tab-btn active" onclick="switchHW('charter')">Charter Fleet</button>
+    <button class="config-tab-btn" onclick="switchHW('private')">Private Yacht</button>
+    <button class="config-tab-btn" onclick="switchHW('delivery')">Delivery Captain</button>
+    <button class="config-tab-btn" onclick="switchHW('diag')">Diagnostic Scanner</button>
+  </div>
+
+  <div class="hw-tab-panel active" id="hw-charter">
+    <div class="hw-card" style="max-width:600px;margin:0 auto">
       <span class="hw-badge">Charter Fleets</span>
       <h3>Raspberry Pi</h3>
-      <svg viewBox="0 0 320 80" class="hw-diagram" xmlns="http://www.w3.org/2000/svg">
-        <rect x="0" y="18" width="80" height="44" rx="6" fill="#0f172a" stroke="#22c55e" stroke-width="1"/>
-        <text x="40" y="36" text-anchor="middle" fill="#22c55e" font-size="8" font-weight="600">Raspberry Pi 5</text>
-        <text x="40" y="50" text-anchor="middle" fill="#64748b" font-size="7">SignalK built-in</text>
-        <line x1="80" y1="40" x2="100" y2="40" stroke="#334155" stroke-width="1.5" stroke-dasharray="4 2"/>
-        <rect x="100" y="18" width="65" height="44" rx="6" fill="#0f172a" stroke="#0ea5e9" stroke-width="1"/>
-        <text x="132" y="36" text-anchor="middle" fill="#0ea5e9" font-size="8" font-weight="600">Actisense</text>
-        <text x="132" y="50" text-anchor="middle" fill="#64748b" font-size="7">NMEA &rarr; USB</text>
-        <line x1="165" y1="40" x2="185" y2="40" stroke="#334155" stroke-width="1.5" stroke-dasharray="4 2"/>
-        <rect x="185" y="18" width="55" height="44" rx="6" fill="#0f172a" stroke="#334155" stroke-width="1"/>
-        <text x="212" y="36" text-anchor="middle" fill="#94a3b8" font-size="8" font-weight="600">Internet</text>
-        <text x="212" y="50" text-anchor="middle" fill="#64748b" font-size="7">WiFi/Starlink</text>
-        <line x1="240" y1="40" x2="260" y2="40" stroke="#334155" stroke-width="1.5" stroke-dasharray="4 2"/>
-        <rect x="260" y="18" width="55" height="44" rx="6" fill="#0f172a" stroke="#7c3aed" stroke-width="1"/>
-        <text x="287" y="36" text-anchor="middle" fill="#a78bfa" font-size="8" font-weight="600">Master</text>
-        <text x="287" y="50" text-anchor="middle" fill="#64748b" font-size="7">Cloud AI</text>
-        <text x="40" y="12" text-anchor="middle" fill="#475569" font-size="7">&darr; NMEA 2000</text>
-      </svg>
       <p class="hw-desc">You source the hardware, we provide the software. Download the Commander OS image, flash to SD card, plug in. Cloud AI processing via internet.</p>
       <ul>
         <li>Downloadable OS image &mdash; flash &amp; boot</li>
@@ -801,29 +950,12 @@
         <li>OTA updates &amp; remote management</li>
       </ul>
     </div>
-    <div class="hw-card">
+  </div>
+
+  <div class="hw-tab-panel" id="hw-delivery">
+    <div class="hw-card" style="max-width:600px;margin:0 auto">
       <span class="hw-badge">Delivery &amp; Marinas</span>
-      <h3>Delivery Puck</h3>
-      <svg viewBox="0 0 320 80" class="hw-diagram" xmlns="http://www.w3.org/2000/svg">
-        <rect x="0" y="8" width="100" height="55" rx="6" fill="#0f172a" stroke="#0ea5e9" stroke-width="1"/>
-        <text x="50" y="22" text-anchor="middle" fill="#0ea5e9" font-size="7" font-weight="600">WATERPROOF CASE</text>
-        <rect x="8" y="28" width="84" height="28" rx="4" fill="#111827" stroke="#22c55e" stroke-width="0.8"/>
-        <text x="50" y="40" text-anchor="middle" fill="#22c55e" font-size="7" font-weight="600">Pi 5 + SignalK</text>
-        <text x="50" y="52" text-anchor="middle" fill="#64748b" font-size="6">Actisense NGX-1</text>
-        <line x1="100" y1="36" x2="120" y2="36" stroke="#334155" stroke-width="1.5" stroke-dasharray="4 2"/>
-        <rect x="120" y="18" width="55" height="44" rx="6" fill="#0f172a" stroke="#334155" stroke-width="1"/>
-        <text x="147" y="36" text-anchor="middle" fill="#94a3b8" font-size="8" font-weight="600">Internet</text>
-        <text x="147" y="50" text-anchor="middle" fill="#64748b" font-size="7">Any source</text>
-        <line x1="175" y1="36" x2="195" y2="36" stroke="#334155" stroke-width="1.5" stroke-dasharray="4 2"/>
-        <rect x="195" y="18" width="55" height="44" rx="6" fill="#0f172a" stroke="#7c3aed" stroke-width="1"/>
-        <text x="222" y="36" text-anchor="middle" fill="#a78bfa" font-size="8" font-weight="600">Master</text>
-        <text x="222" y="50" text-anchor="middle" fill="#64748b" font-size="7">Cloud</text>
-        <line x1="250" y1="36" x2="270" y2="36" stroke="#334155" stroke-width="1.5" stroke-dasharray="4 2"/>
-        <rect x="270" y="18" width="45" height="44" rx="6" fill="#0f172a" stroke="#1a5c38" stroke-width="1"/>
-        <text x="292" y="36" text-anchor="middle" fill="#22c55e" font-size="7" font-weight="600">WhatsApp</text>
-        <text x="292" y="49" text-anchor="middle" fill="#64748b" font-size="6">+ App</text>
-        <text x="50" y="76" text-anchor="middle" fill="#f59e0b" font-size="7">&uarr; NMEA 2000 backbone</text>
-      </svg>
+      <h3>The Pulse</h3>
       <p class="hw-desc">Plug-and-play monitoring. Internet required &mdash; Starlink, marina WiFi, or hotspot. Ideal for deliveries, marinas, and seasonal storage.</p>
       <ul>
         <li>Raspberry Pi 5 + Actisense NGX-1</li>
@@ -834,36 +966,12 @@
         <li>~$325 hardware</li>
       </ul>
     </div>
-    <div class="hw-card">
+  </div>
+
+  <div class="hw-tab-panel" id="hw-private">
+    <div class="hw-card" style="max-width:600px;margin:0 auto">
       <span class="hw-badge">Private Yachts</span>
       <h3>Mac Mini M4</h3>
-      <svg viewBox="0 0 320 90" class="hw-diagram" xmlns="http://www.w3.org/2000/svg">
-        <rect x="0" y="18" width="90" height="50" rx="6" fill="#0f172a" stroke="#22c55e" stroke-width="1"/>
-        <text x="45" y="34" text-anchor="middle" fill="#22c55e" font-size="8" font-weight="600">Mac Mini M4</text>
-        <text x="45" y="46" text-anchor="middle" fill="#64748b" font-size="6.5">SignalK + AI Brain</text>
-        <text x="45" y="58" text-anchor="middle" fill="#10b981" font-size="6">Qwen 14B local</text>
-        <line x1="90" y1="43" x2="110" y2="43" stroke="#334155" stroke-width="1.5" stroke-dasharray="4 2"/>
-        <rect x="110" y="18" width="65" height="50" rx="6" fill="#0f172a" stroke="#0ea5e9" stroke-width="1"/>
-        <text x="142" y="34" text-anchor="middle" fill="#0ea5e9" font-size="8" font-weight="600">Actisense</text>
-        <text x="142" y="46" text-anchor="middle" fill="#64748b" font-size="7">NMEA &rarr; USB</text>
-        <text x="142" y="58" text-anchor="middle" fill="#64748b" font-size="6">+ Cameras</text>
-        <!-- Two paths out -->
-        <line x1="90" y1="28" x2="205" y2="10" stroke="#334155" stroke-width="1" stroke-dasharray="4 2"/>
-        <rect x="205" y="0" width="60" height="32" rx="5" fill="#0f172a" stroke="#334155" stroke-width="0.8"/>
-        <text x="235" y="13" text-anchor="middle" fill="#94a3b8" font-size="7" font-weight="600">WiFi / BLE</text>
-        <text x="235" y="24" text-anchor="middle" fill="#64748b" font-size="6">On-board</text>
-        <line x1="265" y1="16" x2="280" y2="16" stroke="#334155" stroke-width="1" stroke-dasharray="4 2"/>
-        <rect x="280" y="4" width="38" height="24" rx="5" fill="#0f172a" stroke="#0e4a2f" stroke-width="0.8"/>
-        <text x="299" y="20" text-anchor="middle" fill="#10b981" font-size="7" font-weight="600">App</text>
-        <line x1="90" y1="58" x2="205" y2="70" stroke="#334155" stroke-width="1" stroke-dasharray="4 2"/>
-        <rect x="205" y="55" width="60" height="32" rx="5" fill="#0f172a" stroke="#374151" stroke-width="0.8"/>
-        <text x="235" y="68" text-anchor="middle" fill="#94a3b8" font-size="7" font-weight="600">Internet</text>
-        <text x="235" y="79" text-anchor="middle" fill="#64748b" font-size="6">Optional</text>
-        <line x1="265" y1="71" x2="280" y2="71" stroke="#334155" stroke-width="1" stroke-dasharray="4 2"/>
-        <rect x="280" y="59" width="38" height="24" rx="5" fill="#0f172a" stroke="#7c3aed" stroke-width="0.8"/>
-        <text x="299" y="74" text-anchor="middle" fill="#a78bfa" font-size="6.5" font-weight="600">Cloud</text>
-        <text x="45" y="12" text-anchor="middle" fill="#475569" font-size="7">&darr; NMEA 2000</text>
-      </svg>
       <p class="hw-desc">You buy the Mac Mini, we provide a pre-configured disk image with Qwen 14B AI model, SignalK, and Commander &mdash; ready to boot.</p>
       <ul>
         <li>Pre-built disk image with LLM included</li>
@@ -874,30 +982,13 @@
         <li>Optional Master Cloud subscription</li>
       </ul>
     </div>
-    <div class="hw-card">
+  </div>
+
+  <div class="hw-tab-panel" id="hw-diag">
+    <div class="hw-card" style="max-width:600px;margin:0 auto">
       <span class="hw-badge" style="background:rgba(245,158,11,0.1);border-color:rgba(245,158,11,0.2);color:var(--orange)">Marine Professionals</span>
       <h3>Diagnostic Scanner</h3>
-      <svg viewBox="0 0 320 80" class="hw-diagram" xmlns="http://www.w3.org/2000/svg">
-        <rect x="0" y="8" width="100" height="55" rx="6" fill="#0f172a" stroke="#f59e0b" stroke-width="1"/>
-        <text x="50" y="22" text-anchor="middle" fill="#f59e0b" font-size="7" font-weight="600">PORTABLE SCANNER</text>
-        <rect x="8" y="28" width="84" height="28" rx="4" fill="#111827" stroke="#22c55e" stroke-width="0.8"/>
-        <text x="50" y="40" text-anchor="middle" fill="#22c55e" font-size="7" font-weight="600">Pi 5 + SignalK</text>
-        <text x="50" y="52" text-anchor="middle" fill="#64748b" font-size="6">Actisense NGX-1</text>
-        <line x1="100" y1="36" x2="120" y2="36" stroke="#334155" stroke-width="1.5" stroke-dasharray="4 2"/>
-        <rect x="120" y="18" width="55" height="44" rx="6" fill="#0f172a" stroke="#334155" stroke-width="1"/>
-        <text x="147" y="36" text-anchor="middle" fill="#94a3b8" font-size="8" font-weight="600">Internet</text>
-        <text x="147" y="50" text-anchor="middle" fill="#64748b" font-size="7">Upload</text>
-        <line x1="175" y1="36" x2="195" y2="36" stroke="#334155" stroke-width="1.5" stroke-dasharray="4 2"/>
-        <rect x="195" y="18" width="55" height="44" rx="6" fill="#0f172a" stroke="#7c3aed" stroke-width="1"/>
-        <text x="222" y="36" text-anchor="middle" fill="#a78bfa" font-size="8" font-weight="600">Master</text>
-        <text x="222" y="50" text-anchor="middle" fill="#64748b" font-size="7">Analysis</text>
-        <line x1="250" y1="36" x2="270" y2="36" stroke="#334155" stroke-width="1.5" stroke-dasharray="4 2"/>
-        <rect x="270" y="18" width="48" height="44" rx="6" fill="#0f172a" stroke="#f59e0b" stroke-width="1"/>
-        <text x="294" y="33" text-anchor="middle" fill="#f59e0b" font-size="7" font-weight="600">Service</text>
-        <text x="294" y="46" text-anchor="middle" fill="#f59e0b" font-size="7" font-weight="600">Portal</text>
-        <text x="50" y="76" text-anchor="middle" fill="#f59e0b" font-size="7">&uarr; NMEA 2000 backbone</text>
-      </svg>
-      <p class="hw-desc">Same hardware as the Delivery Puck, configured for portable diagnostic scans. Moves between boats &mdash; plug in, scan, retrieve.</p>
+      <p class="hw-desc">Same hardware as the Delivery Captain, configured for portable diagnostic scans. Moves between boats &mdash; plug in, scan, retrieve.</p>
       <ul>
         <li>Raspberry Pi 5 + Actisense NGX-1</li>
         <li>Portable &mdash; moves between boats</li>
@@ -947,8 +1038,15 @@
     <h2>Pricing</h2>
     <p>Simple, transparent pricing. No hidden fees.</p>
   </div>
-  <div class="pricing-grid">
-    <div class="price-card">
+  <div class="config-tabs" id="price-tabs">
+    <button class="config-tab-btn active" onclick="switchPrice('charter')">Charter Fleet</button>
+    <button class="config-tab-btn" onclick="switchPrice('private')">Private Yacht</button>
+    <button class="config-tab-btn" onclick="switchPrice('delivery')">Delivery Captain</button>
+    <button class="config-tab-btn" onclick="switchPrice('diag')">Diagnostic Scanner</button>
+  </div>
+
+  <div class="price-tab-panel active" id="price-charter">
+    <div class="price-card" style="max-width:600px;margin:0 auto">
       <span class="price-badge">Most Popular</span>
       <h3>Charter Fleet</h3>
       <div class="price-amount">Custom <span class="price-period">per fleet</span></div>
@@ -962,38 +1060,47 @@
         <li>Cross-fleet analytics</li>
         <li>Maintenance scheduling</li>
         <li>Compliance reporting</li>
-        <li>FleetMind &mdash; shared intelligence</li>
+        <li>BigBlue &mdash; shared intelligence</li>
       </ul>
     </div>
-    <div class="price-card">
+  </div>
+
+  <div class="price-tab-panel" id="price-delivery">
+    <div class="price-card" style="max-width:600px;margin:0 auto">
       <span class="price-badge">Plug &amp; Play</span>
-      <h3>Delivery Puck</h3>
-      <div class="price-amount">~$325 <span class="price-period">one-time hardware</span></div>
-      <p class="price-desc">Buy or rent for deliveries, marina monitoring, or seasonal storage.</p>
+      <h3>Delivery Captain</h3>
+      <div class="price-amount">$50 <span class="price-period">/ boat</span></div>
+      <p class="price-desc">~$325 one-time hardware + $50 per boat monitored. For deliveries, marina monitoring, or seasonal storage.</p>
       <ul>
-        <li>Raspberry Pi 5 + Actisense NGX-1</li>
-        <li>Pre-configured &mdash; zero setup</li>
+        <li>You buy hardware (~$325 one-time)</li>
+        <li>$50 per boat monitoring fee</li>
         <li>Internet required (Starlink, WiFi, hotspot)</li>
         <li>VPN Tunnel &mdash; phones home automatically</li>
         <li>Master Cloud dashboard included</li>
         <li>WhatsApp updates to owner</li>
       </ul>
     </div>
-    <div class="price-card">
+  </div>
+
+  <div class="price-tab-panel" id="price-private">
+    <div class="price-card" style="max-width:600px;margin:0 auto">
       <span class="price-badge">Flexible</span>
       <h3>Private Yacht</h3>
-      <div class="price-amount">Custom</div>
-      <p class="price-desc">Software subscription. You buy the Mac Mini, we provide the disk image with AI model pre-loaded.</p>
+      <div class="price-amount">$250 <span class="price-period">/ year</span></div>
+      <p class="price-desc">~$800 one-time hardware + $250/yr software subscription. You buy the Mac Mini, we provide the disk image with AI pre-loaded.</p>
       <ul>
+        <li>You buy hardware (~$800 one-time)</li>
         <li>Pre-built disk image with Qwen 14B</li>
-        <li>You buy hardware (~$800)</li>
         <li>Local AI &mdash; works fully offline</li>
-        <li>WhatsApp alerts &mdash; no subscription</li>
         <li>Commander App for on-board access</li>
+        <li>WhatsApp alerts included</li>
         <li>Optional Master Cloud add-on</li>
       </ul>
     </div>
-    <div class="price-card">
+  </div>
+
+  <div class="price-tab-panel" id="price-diag">
+    <div class="price-card" style="max-width:600px;margin:0 auto">
       <span class="price-badge" style="background:rgba(245,158,11,0.1);border-color:rgba(245,158,11,0.2);color:var(--orange)">Per Scan</span>
       <h3>Commander Diagnostic</h3>
       <div class="price-amount">$75 <span class="price-period">/ scan</span></div>
@@ -1064,34 +1171,34 @@
     </div>
     <div class="feature">
       <div class="feature-icon">&#x1F310;</div>
-      <h3>FleetMind</h3>
+      <h3>BigBlue</h3>
       <p>Every connected boat feeds the network. Crowdsourced wind, depth, anchorage intel, hazard alerts, and real-time passage conditions &mdash; shared across the fleet.</p>
     </div>
   </div>
 </section>
 
-<!-- FleetMind -->
+<!-- BigBlue -->
 <section id="fleetmind">
   <div class="section-header">
-    <h2>FleetMind</h2>
+    <h2>BigBlue</h2>
     <p>Every Commander is a sensor. Master connects them into a shared intelligence network.</p>
   </div>
 
   <div class="fleetmind-hero">
     <h3>Your fleet is a <span>sensor mesh.</span></h3>
-    <p>Every boat pushes real-time telemetry to Master &mdash; position, wind, depth, barometric pressure, sea state. FleetMind aggregates this data and pushes relevant insights back to every vessel in the network. No extra hardware. Pure cloud logic.</p>
+    <p>Every boat pushes real-time telemetry to Master &mdash; position, wind, depth, barometric pressure, sea state. BigBlue aggregates this data and pushes relevant insights back to every vessel in the network. No extra hardware. Pure cloud logic.</p>
   </div>
 
   <div class="fleetmind-grid">
     <div class="fm-card">
       <div class="fm-icon">&#x1F32C;&#xFE0F;</div>
       <h4>Live Wind Field</h4>
-      <p>20 boats spread across the cruising ground, all reporting wind. FleetMind builds a real-time wind map &mdash; not forecast, actual measured conditions. "15kt gusts reported by 3 boats in the channel."</p>
+      <p>20 boats spread across the cruising ground, all reporting wind. BigBlue builds a real-time wind map &mdash; not forecast, actual measured conditions. "15kt gusts reported by 3 boats in the channel."</p>
     </div>
     <div class="fm-card">
       <div class="fm-icon">&#x1F30A;</div>
       <h4>Crowdsourced Depth</h4>
-      <p>Every boat with a depth sounder is ground-truthing the chart. FleetMind aggregates depth readings + GPS into a live depth overlay. "Boat ahead of you just measured 4ft in that channel."</p>
+      <p>Every boat with a depth sounder is ground-truthing the chart. BigBlue aggregates depth readings + GPS into a live depth overlay. "Boat ahead of you just measured 4ft in that channel."</p>
     </div>
     <div class="fm-card">
       <div class="fm-icon">&#x2693;</div>
@@ -1106,7 +1213,7 @@
     <div class="fm-card">
       <div class="fm-icon">&#x26A0;&#xFE0F;</div>
       <h4>Hazard Broadcasts</h4>
-      <p>One boat finds an uncharted obstruction, lobster pots, or debris. FleetMind broadcasts to all boats in the area automatically.</p>
+      <p>One boat finds an uncharted obstruction, lobster pots, or debris. BigBlue broadcasts to all boats in the area automatically.</p>
     </div>
     <div class="fm-card">
       <div class="fm-icon">&#x1F326;&#xFE0F;</div>
@@ -1115,7 +1222,7 @@
     </div>
   </div>
 
-  <p class="fleetmind-note">FleetMind is included with all Master Cloud plans. Every connected boat makes the network smarter. Data is anonymized and opt-in.</p>
+  <p class="fleetmind-note">BigBlue is included with all Master Cloud plans. Every connected boat makes the network smarter. Data is anonymized and opt-in.</p>
 </section>
 
 <!-- Alerts -->
@@ -1207,40 +1314,91 @@
         <div class="wa-name">Commander</div>
         <div class="wa-status">online</div>
       </div>
+      <a class="wa-clear" onclick="demoClear()" title="Reset chat">&#x21bb;</a>
     </div>
-    <div class="wa-chat">
-      <div class="wa-msg sent">status <span class="time">9:41</span></div>
-      <div class="wa-msg recv"><pre>&#x2693; VESSEL STATUS
-
-&#x1F4CD; Position
-  18&#176;27.3'N  64&#176;37.1'W
-  At anchor &mdash; Virgin Gorda
-
-&#x2699;&#xFE0F; Engines
-  Port:  OFF  (1,847 hrs)
-  Stbd:  OFF  (1,832 hrs)
-
-&#x1F50B; Battery
-  House:  87%  25.4V  -2.1A
-  Start:  100%  13.2V
-  Solar:  +14.2A  (342W)
-
-&#x26FD; Tanks
-  Fuel:  72%  |  Water:  45%
-
-&#x1F32C;&#xFE0F; Wind  8kt NE  |  Depth 28ft</pre><span class="time">9:41</span></div>
-      <div class="wa-msg sent">anything I should worry about? <span class="time">9:42</span></div>
-      <div class="wa-msg recv">Looking good overall. Water tanks are at 45% &mdash; if you're staying at anchor a few more days, you might want to top up at the marina. Everything else is in normal range. Solar is keeping up with house loads, engines haven't been run today.<span class="time">9:42</span></div>
-      <div class="wa-msg sent">anchor <span class="time">14:30</span></div>
-      <div class="wa-msg recv"><pre>&#x2693; ANCHOR WATCH
-
-  Status:  SET &mdash; holding
-  Radius:  45m set  |  12m current
-  Drift:   0.3m in last hour
-  GPS:     18&#176;27.342'N  64&#176;37.089'W
-  Depth:   28ft  (stable)</pre><span class="time">14:30</span></div>
+    <div class="wa-chat" id="demo-chat">
+      <div class="wa-msg recv">&#x2693; Welcome aboard! I'm Commander — your AI boat monitor. Try a command below or type one in.<span class="time" id="demo-welcome-time"></span></div>
+    </div>
+    <div class="wa-typing" id="demo-typing">Commander is typing<span class="typing-dots"></span></div>
+    <div class="wa-quick-replies">
+      <button onclick="demoSend('status')">status</button>
+      <button onclick="demoSend('anchor')">anchor</button>
+      <button onclick="demoSend('engines')">engines</button>
+      <button onclick="demoSend('batteries')">batteries</button>
+      <button onclick="demoSend('weather')">weather</button>
+      <button onclick="demoSend('alerts')">alerts</button>
+    </div>
+    <div class="wa-input-bar">
+      <input type="text" id="demo-input" placeholder="Type a command..." onkeydown="if(event.key==='Enter')demoSendInput()">
+      <button onclick="demoSendInput()">&#x27A4;</button>
     </div>
   </div>
+
+  <script>
+  (function(){
+    var responses = {
+      status: '<pre>\u2693 VESSEL STATUS\n\n\uD83D\uDCCD Position\n  18\u00B027.3\'N  64\u00B037.1\'W\n  At anchor \u2014 Virgin Gorda\n\n\u2699\uFE0F Engines\n  Port:  OFF  (1,847 hrs)\n  Stbd:  OFF  (1,832 hrs)\n\n\uD83D\uDD0B Battery\n  House:  87%  25.4V  -2.1A\n  Start:  100%  13.2V\n  Solar:  +14.2A  (342W)\n\n\u26FD Tanks\n  Fuel:  72%  |  Water:  45%\n\n\uD83C\uDF2C\uFE0F Wind  8kt NE  |  Depth 28ft</pre>',
+
+      anchor: '<pre>\u2693 ANCHOR WATCH\n\n  Status:  SET \u2014 holding\n  Radius:  45m set  |  12m current\n  Drift:   0.3m in last hour\n  GPS:     18\u00B027.342\'N  64\u00B037.089\'W\n  Depth:   28ft  (stable)</pre>',
+
+      engines: '<pre>\u2699\uFE0F ENGINE DIAGNOSTICS\n\n  PORT ENGINE\n  Hours:    1,847\n  RPM:      idle (OFF)\n  Oil:      42 psi  \u2714\n  Coolant:  176\u00B0F  \u2714\n  Alt:      14.1V  \u2714\n\n  STBD ENGINE\n  Hours:    1,832\n  RPM:      idle (OFF)\n  Oil:      44 psi  \u2714\n  Coolant:  174\u00B0F  \u2714\n  Alt:      14.2V  \u2714\n\nAll readings normal.</pre>',
+
+      batteries: '<pre>\uD83D\uDD0B BATTERY &amp; CHARGING\n\n  HOUSE BANK\n  Capacity: 87%  (520/600 Ah)\n  Voltage:  25.4V\n  Current:  -2.1A (discharging)\n  Temp:     78\u00B0F\n\n  START BATTERY\n  Voltage:  13.2V  \u2714\n  Status:   Full\n\n  SOLAR\n  Output:   342W  (+14.2A)\n  Today:    1.8 kWh harvested\n\n  SHORE POWER\n  Status:   Disconnected</pre>',
+
+      weather: '<pre>\uD83C\uDF24\uFE0F LOCAL WEATHER\n\n  Now:   82\u00B0F  Partly cloudy\n  Wind:  8kt NE\n  Seas:  1-2ft\n  Baro:  30.12 inHg (steady)\n\n  3-DAY FORECAST\n  Today:  82\u00B0F  Scattered clouds  5-10kt E\n  Tue:    84\u00B0F  Mostly sunny      8-12kt E\n  Wed:    80\u00B0F  Showers likely   15-20kt SE\n          \u26A0\uFE0F Small craft advisory possible</pre>',
+
+      alerts: '<pre>\uD83D\uDD14 RECENT ALERTS (last 5)\n\n  14:22  \u2714  Anchor watch check \u2014 holding\n  11:05  \u26A0\uFE0F  Water tank below 50%\n  08:30  \u2714  Solar charging resumed\n  06:15  \u2139\uFE0F  Overnight report sent\n  22:41  \u2714  Bilge pump cycled (normal)</pre>'
+    };
+
+    var hint = "I didn't recognize that command. Try one of the quick reply buttons: <b>status</b>, <b>anchor</b>, <b>engines</b>, <b>batteries</b>, <b>weather</b>, or <b>alerts</b>.";
+
+    function getTime() {
+      var d = new Date();
+      return d.getHours() + ':' + String(d.getMinutes()).padStart(2,'0');
+    }
+
+    function scrollChat() {
+      var c = document.getElementById('demo-chat');
+      c.scrollTop = c.scrollHeight;
+    }
+
+    function addMsg(type, html) {
+      var c = document.getElementById('demo-chat');
+      var m = document.createElement('div');
+      m.className = 'wa-msg ' + type;
+      m.innerHTML = html + '<span class="time">' + getTime() + '</span>';
+      c.appendChild(m);
+      scrollChat();
+    }
+
+    window.demoSend = function(cmd) {
+      addMsg('sent', cmd);
+      var typing = document.getElementById('demo-typing');
+      typing.classList.add('visible');
+      scrollChat();
+      setTimeout(function(){
+        typing.classList.remove('visible');
+        addMsg('recv', responses[cmd] || hint);
+      }, 800);
+    };
+
+    window.demoSendInput = function() {
+      var inp = document.getElementById('demo-input');
+      var val = inp.value.trim().toLowerCase();
+      if (!val) return;
+      inp.value = '';
+      demoSend(val);
+    };
+
+    window.demoClear = function() {
+      var c = document.getElementById('demo-chat');
+      c.innerHTML = '<div class="wa-msg recv">\u2693 Welcome aboard! I\'m Commander \u2014 your AI boat monitor. Try a command below or type one in.<span class="time">' + getTime() + '</span></div>';
+    };
+
+    // Set welcome time
+    document.getElementById('demo-welcome-time').textContent = getTime();
+  })();
+  </script>
 </section>
 
 <!-- Master Cloud -->
@@ -1270,11 +1428,11 @@
 
 <!-- CTA -->
 <section class="cta" id="contact">
-  <h2>Ready to monitor your fleet?</h2>
+  <h2>Ready to sleep easy?</h2>
   <p>Commander is currently in development. Get in touch to learn more or join the early access program.</p>
   <div class="cta-buttons">
-    <a href="https://wa.me/13055601031?text=Hi%2C%20I'm%20interested%20in%20Master%26Commander%20for%20my%20charter%20fleet" class="cta-btn" target="_blank">Chat on WhatsApp</a>
-    <a href="https://wa.me/13055601031?text=Hi%2C%20I'm%20interested%20in%20Master%26Commander%20for%20my%20private%20yacht" class="cta-btn secondary" target="_blank">Private Yacht Inquiry</a>
+    <a href="#demo" class="cta-btn">Chat Online Now</a>
+    <a href="https://wa.me/13055601031?text=Hi%2C%20I'm%20interested%20in%20Master%26Commander" class="cta-btn secondary" target="_blank">WhatsApp</a>
   </div>
 </section>
 
@@ -1285,6 +1443,44 @@
 
 <script src="flow.js"></script>
 <script>
+// How It Works tab switching
+function switchHIW(mode) {
+  document.querySelectorAll('.hiw-tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.hiw-panel').forEach(p => p.classList.remove('active'));
+  document.querySelector('.hiw-tab-btn[onclick*="' + mode + '"]').classList.add('active');
+  document.getElementById('hiw-' + mode).classList.add('active');
+}
+
+function switchSetup(mode) {
+  document.querySelectorAll('.setup-tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.setup-panel').forEach(p => p.classList.remove('active'));
+  document.querySelector('.setup-tab-btn[onclick*="' + mode + '"]').classList.add('active');
+  document.getElementById('setup-' + mode).classList.add('active');
+}
+
+function switchConfig(mode) {
+  document.querySelectorAll('.config-tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.config-panel').forEach(p => p.classList.remove('active'));
+  document.querySelector('.config-tab-btn[onclick*="' + mode + '"]').classList.add('active');
+  document.getElementById('config-' + mode).classList.add('active');
+}
+
+function switchHW(mode) {
+  var container = document.getElementById('hw-tabs').parentElement;
+  container.querySelectorAll('.config-tab-btn').forEach(b => b.classList.remove('active'));
+  container.querySelectorAll('.hw-tab-panel').forEach(p => p.classList.remove('active'));
+  container.querySelector('.config-tab-btn[onclick*="' + mode + '"]').classList.add('active');
+  document.getElementById('hw-' + mode).classList.add('active');
+}
+
+function switchPrice(mode) {
+  var container = document.getElementById('price-tabs').parentElement;
+  container.querySelectorAll('.config-tab-btn').forEach(b => b.classList.remove('active'));
+  container.querySelectorAll('.price-tab-panel').forEach(p => p.classList.remove('active'));
+  container.querySelector('.config-tab-btn[onclick*="' + mode + '"]').classList.add('active');
+  document.getElementById('price-' + mode).classList.add('active');
+}
+
 // Tab switching
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {

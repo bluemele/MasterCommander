@@ -106,11 +106,11 @@
         </div>
       </div>`,
 
-    // FleetMind — Crowdsourced intelligence
+    // BigBlue — Crowdsourced intelligence
     fleetmind: `
       <div class="mockup-screen">
         <div class="mockup-topbar">
-          <span class="mockup-logo">🌐 FleetMind</span>
+          <span class="mockup-logo">🌐 BigBlue</span>
           <span class="mockup-nav">Live Intel</span>
           <span class="mockup-user">Ionian Sea</span>
         </div>
@@ -419,7 +419,7 @@
         { id:'cmdapp', icon:'📊', label:'Commander App', sub:'Fleet dashboard · Any browser', color:'#4c1d95',
           detail:'Full fleet view from any browser. Live telemetry, historical charts, cross-fleet analytics, camera feeds. Your fleet\'s control room — accessible from any device.',
           tags:['Web App','Fleet View','Analytics'], mockup:'cmdapp' },
-        { id:'fleetmind', icon:'🌐', label:'FleetMind', sub:'Crowdsourced fleet intel', color:'#4c1d95',
+        { id:'fleetmind', icon:'🌐', label:'BigBlue', sub:'Crowdsourced fleet intel', color:'#4c1d95',
           detail:'Crowdsourced fleet intelligence. Wind field, depth, anchorage intel, passage conditions, hazard broadcasts. Every connected boat makes the network smarter.',
           tags:['Crowdsourced','Real-Time'], mockup:'fleetmind' },
       ]
@@ -443,8 +443,8 @@
           detail:'When you\'re on board, the Commander App connects directly over the boat\'s local WiFi or Bluetooth. Real-time gauges, alerts, camera feeds — no internet required. Full access to every system.',
           tags:['Local WiFi','Bluetooth','Zero Latency','Offline'], mockup:'localpath' },
         { id:'remotepath', icon:'☁️', label:'Remote (Master Cloud)', sub:'Internet → Cloud → WhatsApp + App', color:'#374151', optional:true,
-          detail:'Optional subscription. Adds remote access via WhatsApp alerts, Commander App from anywhere, historical analytics, and FleetMind. Commander works fully standalone without it.',
-          tags:['Optional','WhatsApp','Remote Access','Analytics','FleetMind'], mockup:'remotepath' },
+          detail:'Optional subscription. Adds remote access via WhatsApp alerts, Commander App from anywhere, historical analytics, and BigBlue. Commander works fully standalone without it.',
+          tags:['Optional','WhatsApp','Remote Access','Analytics','BigBlue'], mockup:'remotepath' },
       ]
     },
 
