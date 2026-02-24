@@ -78,10 +78,25 @@
     ['commander','aibrain'],
   ];
 
+  // ---- Diagnostic-specific ----
+  const diagnosticNodes = [
+    { id:'commander',x:500, y:190, w:170, h:52, label:'Diagnostic Scanner', icon:'\ud83e\udde0', color:'#92400e', detail:'Same Raspberry Pi 5 hardware as the Delivery Puck, configured for diagnostic scans. Portable — moves between boats. Plugs into any NMEA 2000 backbone for 24-48 hour deep analysis.', tags:['Raspberry Pi 5','Portable','24-48h Scan'] },
+    { id:'phone',    x:1160,y:290, w:140, h:46, label:"Tech's Device",     icon:'\ud83d\udcf1', color:'#1e3a5f', detail:"Marine technician accesses diagnostic reports via the Service Portal on any device — laptop, tablet, or phone.", tags:['Web Portal','Any Device'] },
+    { id:'master',   x:730, y:290, w:155, h:52, label:'Master (Cloud)',     icon:'\u2601\ufe0f', color:'#4c1d95', detail:'Cloud processes the raw scan data into actionable diagnostic reports. Network topology mapping, anomaly detection, benchmark comparisons, and maintenance flags.', tags:['AI Analysis','Benchmarks','Reports'] },
+    { id:'portal',   x:950, y:290, w:155, h:46, label:'Service Portal',    icon:'\ud83d\udcca', color:'#4c1d95', detail:'Dedicated web portal for marine professionals. View diagnostic reports, network topology maps, anomaly flags, and comparison benchmarks. Share reports with boat owners.', tags:['Reports','Network Map','Share'], sub:false },
+    { id:'autodiscovery', x:420, y:290, w:135, h:42, label:'Deep Analysis', icon:'\ud83d\udd0d', color:'#374151', detail:'Extended 24-48 hour scan captures full operating patterns — charging cycles, parasitic draw, intermittent faults, and usage patterns that a short test would miss.', tags:['24-48h','Pattern Analysis','Deep Scan'], sub:true },
+  ];
+
+  const diagnosticConnections = [
+    ['starlink','master'],
+    ['master','portal'],
+    ['portal','phone'],
+  ];
+
   // ---- Build functions ----
 
   function getNodes() {
-    const modeNodes = currentMode === 'charter' ? charterNodes : privateNodes;
+    const modeNodes = currentMode === 'charter' ? charterNodes : currentMode === 'private' ? privateNodes : diagnosticNodes;
     // Merge: mode-specific nodes override shared by id
     const merged = new Map();
     sharedNodes.forEach(n => merged.set(n.id, n));
@@ -90,7 +105,7 @@
   }
 
   function getConnections() {
-    const modeConns = currentMode === 'charter' ? charterConnections : privateConnections;
+    const modeConns = currentMode === 'charter' ? charterConnections : currentMode === 'private' ? privateConnections : diagnosticConnections;
     return [...sharedConnections, ...modeConns];
   }
 
@@ -228,6 +243,7 @@
       fleetmind:{ x:220, y:700, w:140, h:36 },
       autodiscovery: { x:50,  y:330, w:130, h:38 },
       aibrain:       { x:110, y:380, w:120, h:38 },
+      portal:        { x:220, y:650, w:150, h:42 },
     };
     return layouts[n.id] || { x:n.x*0.4, y:n.y, w:n.w*0.8, h:n.h*0.85 };
   }

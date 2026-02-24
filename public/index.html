@@ -17,6 +17,7 @@
     <li><a href="#how-it-works">How It Works</a></li>
     <li><a href="#solutions">Solutions</a></li>
     <li><a href="#delivery-puck">Delivery Puck</a></li>
+    <li><a href="#diagnostics">Diagnostics</a></li>
     <li><a href="#hardware">Hardware</a></li>
     <li><a href="#pricing">Pricing</a></li>
     <li><a href="#alerts">Alerts</a></li>
@@ -44,7 +45,7 @@
 <!-- Social Proof Bar -->
 <div class="proof-bar">
   <div class="proof-item">
-    <div class="proof-number">67+</div>
+    <div class="proof-number">76+</div>
     <div class="proof-label">Use Cases</div>
   </div>
   <div class="proof-item">
@@ -68,6 +69,7 @@
   <div class="flow-tabs">
     <button class="flow-tab-btn active" data-mode="charter" onclick="setFlowMode('charter')">Charter Fleet <span>Raspberry Pi + Cloud AI</span></button>
     <button class="flow-tab-btn" data-mode="private" onclick="setFlowMode('private')">Private Yacht <span>Mac Mini M4 + Local AI</span></button>
+    <button class="flow-tab-btn" data-mode="diagnostic" onclick="setFlowMode('diagnostic')">Diagnostic <span>Scanner + Service Portal</span></button>
   </div>
   <div id="flow-container">
     <svg id="flow-svg"></svg>
@@ -112,13 +114,14 @@
 <section id="solutions">
   <div class="section-header">
     <h2>Solutions</h2>
-    <p>67+ use cases across charter operations, private yacht ownership, deliveries, and marinas.</p>
+    <p>76+ use cases across charter operations, private yacht ownership, marine professionals, deliveries, and marinas.</p>
   </div>
 
   <!-- Main tabs -->
   <div class="solutions-tabs">
     <button class="tab-btn active" data-tab="charter">Charter Fleets</button>
     <button class="tab-btn" data-tab="private">Private Yachts</button>
+    <button class="tab-btn" data-tab="marinepros">Marine Pros</button>
   </div>
 
   <!-- CHARTER TAB -->
@@ -397,13 +400,74 @@
       </div>
     </div>
   </div>
+
+  <!-- MARINE PROS TAB -->
+  <div class="tab-panel" id="tab-marinepros">
+    <div class="sub-pills">
+      <button class="pill-btn active" data-pill="diag-diagnostics">Diagnostics (5)</button>
+      <button class="pill-btn" data-pill="diag-reports">Service Reports (4)</button>
+    </div>
+
+    <!-- Diagnostics -->
+    <div class="pill-panel uc-grid active" id="pill-diag-diagnostics">
+      <div class="uc-card">
+        <div class="uc-icon">&#x1F50D;</div>
+        <h4>Network Scan</h4>
+        <p>Full NMEA 2000 backbone discovery &mdash; every device, every address, every PGN. Map the boat's entire data network in 24 hours.</p>
+      </div>
+      <div class="uc-card">
+        <div class="uc-icon">&#x1F50B;</div>
+        <h4>Battery Analysis</h4>
+        <p>Charging patterns, parasitic draw detection, state of health, depth of discharge cycles. Find the drain your customer can't explain.</p>
+      </div>
+      <div class="uc-card">
+        <div class="uc-icon">&#x2699;&#xFE0F;</div>
+        <h4>Engine Diagnostics</h4>
+        <p>Engine hours, error codes, coolant trends, oil pressure patterns, alternator output. Full engine health report from NMEA data.</p>
+      </div>
+      <div class="uc-card">
+        <div class="uc-icon">&#x1F321;&#xFE0F;</div>
+        <h4>Sensor Audit</h4>
+        <p>Identify out-of-spec readings, intermittent connections, and phantom sensors. Find the flaky transducer before your customer does.</p>
+      </div>
+      <div class="uc-card">
+        <div class="uc-icon">&#x26A0;&#xFE0F;</div>
+        <h4>Anomaly Detection</h4>
+        <p>AI compares readings against benchmarks for the boat class. Flags anything unusual &mdash; from voltage sags to temperature spikes.</p>
+      </div>
+    </div>
+
+    <!-- Service Reports -->
+    <div class="pill-panel uc-grid" id="pill-diag-reports">
+      <div class="uc-card">
+        <div class="uc-icon">&#x1F4CB;</div>
+        <h4>Pre-Arrival Scan</h4>
+        <p>Drop the scanner on the boat before you visit. Know what tools and parts to bring before you drive to the marina.</p>
+      </div>
+      <div class="uc-card">
+        <div class="uc-icon">&#x1F4C8;</div>
+        <h4>Maintenance History</h4>
+        <p>48 hours of continuous data reveals patterns that a 30-minute sea trial never will. Intermittent faults, charging anomalies, slow leaks.</p>
+      </div>
+      <div class="uc-card">
+        <div class="uc-icon">&#x1F4CA;</div>
+        <h4>Comparison Benchmarks</h4>
+        <p>How does this boat compare to others in its class? Battery health, fuel efficiency, engine hours vs. age. Data-driven context for your diagnosis.</p>
+      </div>
+      <div class="uc-card">
+        <div class="uc-icon">&#x1F4C4;</div>
+        <h4>Compliance Documentation</h4>
+        <p>Generate professional reports for insurance surveys, pre-purchase inspections, and annual certifications. Verified sensor data, not estimates.</p>
+      </div>
+    </div>
+  </div>
 </section>
 
 <!-- The Delivery Puck -->
 <section id="delivery-puck">
   <div class="section-header">
     <h2>The Delivery Puck</h2>
-    <p>Plug-and-play boat monitoring in 60 seconds. No configuration, no WiFi, no app. Just plug in and go.</p>
+    <p>Plug-and-play boat monitoring in 60 seconds. Internet required &mdash; Starlink, marina WiFi, or hotspot. Just plug in and go.</p>
   </div>
 
   <div class="puck-layout">
@@ -411,13 +475,12 @@
       <h3>What's in the Box</h3>
       <ul>
         <li>Raspberry Pi 5 in waterproof case <span>~$80</span></li>
-        <li>4G cellular HAT + antenna + SIM <span>~$45</span></li>
         <li>Actisense NGX-1 (NMEA 2000 USB) <span>~$200</span></li>
         <li>NMEA 2000 T-connector + 1m drop cable <span>~$30</span></li>
         <li>12V to USB-C power cable (3m) <span>~$15</span></li>
-        <li>Quick start card (3 steps, with pictures) <span></span></li>
+        <li>Quick start card (4 steps, with pictures) <span></span></li>
       </ul>
-      <p class="puck-total">Total hardware: ~$370</p>
+      <p class="puck-total">Total hardware: ~$325</p>
     </div>
 
     <div class="puck-setup">
@@ -435,8 +498,12 @@
           <span>3</span>
           <p>Wait for the green light (60 seconds)</p>
         </div>
+        <div class="puck-step">
+          <span>4</span>
+          <p>Log into the Commander App on your phone &mdash; your boat appears automatically</p>
+        </div>
       </div>
-      <p class="puck-note">No app. No WiFi passwords. No login. Master starts receiving data automatically via cellular + Tailscale VPN.</p>
+      <p class="puck-note">No app. No passwords. No login. Plug into any internet source &mdash; Starlink, marina WiFi, or hotspot. Master starts receiving data automatically via VPN Tunnel.</p>
     </div>
   </div>
 
@@ -449,9 +516,9 @@
       <span class="chain-arrow">&rarr;</span>
       <div class="chain-node"><span class="chain-icon">&#x1F4BB;</span><span class="chain-label">Raspberry Pi</span></div>
       <span class="chain-arrow">&rarr;</span>
-      <div class="chain-node"><span class="chain-icon">&#x1F4F6;</span><span class="chain-label">4G Cellular</span></div>
+      <div class="chain-node"><span class="chain-icon">&#x1F4F6;</span><span class="chain-label">Internet</span></div>
       <span class="chain-arrow">&rarr;</span>
-      <div class="chain-node"><span class="chain-icon">&#x1F510;</span><span class="chain-label">Tailscale VPN</span></div>
+      <div class="chain-node"><span class="chain-icon">&#x1F510;</span><span class="chain-label">VPN Tunnel</span></div>
       <span class="chain-arrow">&rarr;</span>
       <div class="chain-node"><span class="chain-icon">&#x2601;&#xFE0F;</span><span class="chain-label">Master Cloud</span></div>
       <span class="chain-arrow">&rarr;</span>
@@ -478,6 +545,61 @@
   </div>
 </section>
 
+<!-- Commander Diagnostic -->
+<section id="diagnostics">
+  <div class="section-header">
+    <h2>Commander Diagnostic</h2>
+    <p>Portable diagnostic scanning for marine professionals. Plug into any boat, scan for 24&ndash;48 hours, deliver a comprehensive report.</p>
+  </div>
+
+  <div class="diag-layout">
+    <div class="diag-steps">
+      <h3>How It Works</h3>
+      <div class="diag-step">
+        <span>1</span>
+        <p><strong>Plug In</strong> &mdash; Connect the Diagnostic Scanner to any open T-connector on the boat's NMEA 2000 backbone. Same 60-second setup as the Delivery Puck.</p>
+      </div>
+      <div class="diag-step">
+        <span>2</span>
+        <p><strong>Scan 24&ndash;48h</strong> &mdash; The scanner runs Auto-Discovery, then deep analysis. It captures full operating patterns &mdash; charging cycles, parasitic draw, intermittent faults, and usage data a short test would miss.</p>
+      </div>
+      <div class="diag-step">
+        <span>3</span>
+        <p><strong>Get Report</strong> &mdash; Data uploads to Master Cloud. You receive a comprehensive diagnostic report on the Service Portal &mdash; network map, anomaly flags, benchmarks, and maintenance recommendations.</p>
+      </div>
+    </div>
+
+    <div class="diag-report">
+      <h3>What You Get</h3>
+      <ul>
+        <li><strong>Network topology map</strong> &mdash; every device on the backbone, what's connected, what's missing, address conflicts</li>
+        <li><strong>Battery health &amp; charging patterns</strong> &mdash; state of health, parasitic draw, charging efficiency, depth of discharge cycles</li>
+        <li><strong>Engine hours, error codes, maintenance flags</strong> &mdash; coolant trends, oil pressure patterns, alternator output analysis</li>
+        <li><strong>Sensor anomaly detection</strong> &mdash; out-of-spec readings, intermittent connections, phantom sensors, data gaps</li>
+        <li><strong>Comparison benchmarks</strong> &mdash; how this boat compares to others in its class for battery, fuel, engine, and overall system health</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="diag-uses">
+    <div class="diag-use">
+      <div class="diag-use-icon">&#x1F527;</div>
+      <h4>Pre-Service Diagnostics</h4>
+      <p>Drop the scanner on the boat before you visit. Know exactly what's wrong, what tools and parts to bring, and show up prepared. No more wasted trips.</p>
+    </div>
+    <div class="diag-use">
+      <div class="diag-use-icon">&#x1F4CA;</div>
+      <h4>Annual Health Check</h4>
+      <p>Offer boat owners an annual "heartbeat" scan. 48 hours of continuous monitoring reveals trends, degradation, and maintenance items they can't see on a sea trial.</p>
+    </div>
+    <div class="diag-use">
+      <div class="diag-use-icon">&#x1F4C4;</div>
+      <h4>Insurance Surveys</h4>
+      <p>Verified monitoring data for marine underwriting. Continuous sensor logs, network health, and system benchmarks &mdash; professional documentation, not estimates.</p>
+    </div>
+  </div>
+</section>
+
 <!-- Also Built For -->
 <section id="also-built-for">
   <div class="section-header">
@@ -491,11 +613,11 @@
       <div class="ribbon-count">4 USE CASES</div>
       <p>Verified monitoring data for claims. Continuous engine logs, GPS tracks, and maintenance records reduce risk profiles.</p>
     </div>
-    <div class="ribbon-card">
+    <div class="ribbon-card" style="cursor:pointer" onclick="document.getElementById('diagnostics').scrollIntoView({behavior:'smooth'})">
       <div class="ribbon-icon">&#x1F527;</div>
-      <h4>Service Yards</h4>
-      <div class="ribbon-count">2 USE CASES</div>
-      <p>Remote diagnostics before the boat arrives. Commander shares sensor data with your mechanic &mdash; they show up prepared.</p>
+      <h4>Marine Professionals</h4>
+      <div class="ribbon-count">9 USE CASES</div>
+      <p>Portable diagnostic scanning for marine technicians. Plug into any boat, scan 24&ndash;48h, deliver a professional report via the Service Portal.</p>
     </div>
   </div>
 </section>
@@ -504,7 +626,7 @@
 <section id="hardware">
   <div class="section-header">
     <h2>Choose Your Hardware</h2>
-    <p>Three Commander Unit options &mdash; matched to how you use your boat.</p>
+    <p>Four Commander Unit options &mdash; matched to how you use your boat.</p>
   </div>
   <div class="hw-grid">
     <div class="hw-card">
@@ -523,14 +645,14 @@
     <div class="hw-card">
       <span class="hw-badge">Delivery &amp; Marinas</span>
       <h3>Delivery Puck</h3>
-      <p class="hw-desc">Plug-and-play monitoring via cellular. No WiFi, no config. Ideal for deliveries, marinas, and seasonal storage.</p>
+      <p class="hw-desc">Plug-and-play monitoring. Internet required &mdash; Starlink, marina WiFi, or hotspot. Ideal for deliveries, marinas, and seasonal storage.</p>
       <ul>
-        <li>Raspberry Pi 5 + 4G cellular modem</li>
-        <li>Actisense NGX-1 (NMEA 2000 USB)</li>
-        <li>Pre-provisioned Tailscale VPN</li>
-        <li>60-second setup &mdash; 3 steps</li>
+        <li>Raspberry Pi 5 + Actisense NGX-1</li>
+        <li>Internet required (Starlink, WiFi, hotspot)</li>
+        <li>Pre-provisioned VPN Tunnel</li>
+        <li>60-second setup &mdash; plug in and go</li>
         <li>Store &amp; forward when offline</li>
-        <li>~$370 hardware + data plan</li>
+        <li>~$325 hardware</li>
       </ul>
     </div>
     <div class="hw-card">
@@ -544,6 +666,19 @@
         <li>AI Vision for cameras &amp; FLIR</li>
         <li>Optional Master Cloud subscription</li>
         <li>Custom pricing &mdash; contact us</li>
+      </ul>
+    </div>
+    <div class="hw-card">
+      <span class="hw-badge" style="background:rgba(245,158,11,0.1);border-color:rgba(245,158,11,0.2);color:var(--orange)">Marine Professionals</span>
+      <h3>Diagnostic Scanner</h3>
+      <p class="hw-desc">Same hardware as the Delivery Puck, configured for portable diagnostic scans. Moves between boats &mdash; plug in, scan, retrieve.</p>
+      <ul>
+        <li>Raspberry Pi 5 + Actisense NGX-1</li>
+        <li>Portable &mdash; moves between boats</li>
+        <li>24&ndash;48 hour deep analysis scans</li>
+        <li>Internet required for report upload</li>
+        <li>Service Portal for diagnostic reports</li>
+        <li>Per-scan or subscription pricing</li>
       </ul>
     </div>
   </div>
@@ -576,16 +711,15 @@
     <div class="price-card">
       <span class="price-badge">Plug &amp; Play</span>
       <h3>Delivery Puck</h3>
-      <div class="price-amount">~$370 <span class="price-period">one-time hardware</span></div>
+      <div class="price-amount">~$325 <span class="price-period">one-time hardware</span></div>
       <p class="price-desc">Buy or rent for deliveries, marina monitoring, or seasonal storage.</p>
       <ul>
-        <li>Raspberry Pi 5 + 4G cellular</li>
-        <li>Actisense NMEA 2000 interface</li>
+        <li>Raspberry Pi 5 + Actisense NGX-1</li>
         <li>Pre-configured &mdash; zero setup</li>
-        <li>Tailscale VPN &mdash; phones home automatically</li>
+        <li>Internet required (Starlink, WiFi, hotspot)</li>
+        <li>VPN Tunnel &mdash; phones home automatically</li>
         <li>Master Cloud dashboard included</li>
         <li>WhatsApp updates to owner</li>
-        <li>Cellular data plan additional</li>
       </ul>
     </div>
     <div class="price-card">
@@ -600,6 +734,21 @@
         <li>WhatsApp alerts &mdash; no subscription</li>
         <li>Commander App for on-board access</li>
         <li>Optional Master Cloud add-on</li>
+      </ul>
+    </div>
+    <div class="price-card">
+      <span class="price-badge" style="background:rgba(245,158,11,0.1);border-color:rgba(245,158,11,0.2);color:var(--orange)">Per Scan</span>
+      <h3>Commander Diagnostic</h3>
+      <div class="price-amount">$75 <span class="price-period">/ scan</span></div>
+      <p class="price-desc">Per-scan fee &mdash; pass the cost to the boat owner. Or go unlimited.</p>
+      <ul>
+        <li>Comprehensive diagnostic report</li>
+        <li>Network topology map</li>
+        <li>Anomaly flags &amp; maintenance items</li>
+        <li>Comparison benchmarks vs. boat class</li>
+        <li>Dedicated Service Portal</li>
+        <li>Share reports with boat owners</li>
+        <li>Alt: $149/mo unlimited scans</li>
       </ul>
     </div>
   </div>

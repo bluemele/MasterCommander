@@ -810,6 +810,87 @@ section {
 .puck-use h4 { font-size: 1rem; margin-bottom: 0.35rem; }
 .puck-use p { font-size: 0.8rem; color: var(--text-dim); line-height: 1.4; }
 
+/* Commander Diagnostic */
+.diag-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin-top: 2rem;
+}
+.diag-steps, .diag-report {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 2rem;
+}
+.diag-steps h3, .diag-report h3 {
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+}
+.diag-step {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+.diag-step:last-child { margin-bottom: 0; }
+.diag-step span {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(245,158,11,0.1);
+  border: 1px solid rgba(245,158,11,0.3);
+  color: var(--orange);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+.diag-step p {
+  font-size: 0.9rem;
+  color: var(--text-dim);
+  line-height: 1.5;
+}
+.diag-report ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.diag-report ul li {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  padding-left: 1.25rem;
+  position: relative;
+}
+.diag-report ul li::before {
+  content: '>';
+  position: absolute;
+  left: 0;
+  color: var(--orange);
+  font-family: var(--font-mono);
+  font-weight: 700;
+}
+.diag-uses {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+.diag-use {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.5rem;
+  text-align: center;
+}
+.diag-use .diag-use-icon { font-size: 1.5rem; margin-bottom: 0.5rem; }
+.diag-use h4 { font-size: 1rem; margin-bottom: 0.35rem; }
+.diag-use p { font-size: 0.8rem; color: var(--text-dim); line-height: 1.4; }
+
 /* Hardware Comparison */
 .hw-grid {
   display: grid;
@@ -1082,6 +1163,8 @@ footer {
   .puck-uses { grid-template-columns: 1fr; }
   .chain-flow { flex-direction: column; }
   .chain-arrow { transform: rotate(90deg); }
+  .diag-layout { grid-template-columns: 1fr; }
+  .diag-uses { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 480px) {
@@ -1090,6 +1173,7 @@ footer {
   .steps { grid-template-columns: 1fr; }
   .uc-grid { grid-template-columns: 1fr; }
   .ribbon-grid { grid-template-columns: 1fr; }
+  .diag-uses { grid-template-columns: 1fr; }
 }
 
 /* Chat Widget */
