@@ -32,7 +32,6 @@
     { id:'alertengine',   x:570, y:290, w:125, h:42, label:'Alert Engine',   icon:'\ud83d\udea8', color:'#374151', detail:'Pure if/else code \u2014 no AI. Monitors thresholds 24/7. Battery low? Engine hot? Bilge pumping? You get alerted via app, WhatsApp, or push notification.', tags:['Rule-Based','No AI','Reliable'], sub:true },
     { id:'quickcmds',     x:420, y:350, w:125, h:42, label:'Quick Cmds',     icon:'\u26a1', color:'#374151', detail:'Instant responses: status, engines, battery, tanks, wind, anchor, position. Pre-built templates, no AI latency.', tags:['Instant','Templates'], sub:true },
     { id:'aibrain',       x:570, y:350, w:125, h:42, label:'AI Brain',       icon:'\ud83e\udd16', color:'#374151', detail:'Local AI runs directly on the Commander Unit \u2014 fully offline. With internet, taps cloud AI for deeper analysis.', tags:['On-Device','Offline','Cloud Optional'], sub:true },
-    { id:'simulator',     x:320, y:290, w:140, h:42, label:'Demo Mode',      icon:'\ud83c\udfae', color:'#374151', detail:'See Commander in action with simulated boat data. Choose your boat type and watch real alerts and reports.', tags:['Live Demo','3 Boat Types'], sub:true },
   ];
 
   // Connections: [fromId, toId]
@@ -54,7 +53,6 @@
     ['starlink','master'],
     ['master','push'],
     ['master','dashboard'],
-    ['signalk','simulator'],
     ['commander','autodiscovery'],
     ['commander','alertengine'],
     ['commander','quickcmds'],
@@ -125,11 +123,6 @@
       if (from === 'whatsapp' && to === 'phone') {
         sx1 = a.x + a.w; sy1 = a.y + a.h/2;
         sx2 = b.x;        sy2 = b.y + b.h/2;
-      }
-      // simulator connects from signalk bottom
-      if (to === 'simulator') {
-        sx1 = a.x + a.w/2; sy1 = a.y + a.h;
-        sx2 = b.x + b.w/2; sy2 = b.y;
       }
 
       const pathId = `path-${from}-${to}`;
@@ -210,7 +203,6 @@
       alertengine:   { x:200, y:330, w:120, h:38 },
       quickcmds:     { x:340, y:330, w:120, h:38 },
       aibrain:       { x:110, y:380, w:120, h:38 },
-      simulator:     { x:340, y:140, w:130, h:42 },
     };
     return layouts[n.id] || { x:n.x*0.4, y:n.y, w:n.w*0.8, h:n.h*0.85 };
   }
