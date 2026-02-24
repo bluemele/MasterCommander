@@ -64,24 +64,25 @@
   </div>
 </div>
 
-<!-- Flow Diagram -->
+<!-- System Architecture -->
 <section class="flow-section" id="architecture">
   <h2>System Architecture</h2>
-  <p class="subtitle">Click any node to see how it works. Data flows from your marine electronics to your phone.</p>
+  <p class="subtitle">Tap any step to learn more. Data flows from your marine electronics to your phone.</p>
   <div class="flow-tabs">
-    <button class="flow-tab-btn active" data-mode="charter" onclick="setFlowMode('charter')">Charter Fleet <span>Raspberry Pi + Cloud AI</span></button>
-    <button class="flow-tab-btn" data-mode="private" onclick="setFlowMode('private')">Private Yacht <span>Mac Mini M4 + Local AI</span></button>
-    <button class="flow-tab-btn" data-mode="delivery" onclick="setFlowMode('delivery')">Delivery Captain <span>Puck + WhatsApp</span></button>
-    <button class="flow-tab-btn" data-mode="diagnostic" onclick="setFlowMode('diagnostic')">Diagnostic <span>Scanner + Service Portal</span></button>
+    <button class="flow-tab-btn active" data-mode="charter" onclick="setFlowMode('charter')">Charter Fleet</button>
+    <button class="flow-tab-btn" data-mode="private" onclick="setFlowMode('private')">Private Yacht</button>
+    <button class="flow-tab-btn" data-mode="delivery" onclick="setFlowMode('delivery')">Delivery Captain</button>
+    <button class="flow-tab-btn" data-mode="diagnostic" onclick="setFlowMode('diagnostic')">Diagnostic</button>
   </div>
   <div id="flow-container">
-    <svg id="flow-svg"></svg>
-    <div id="detail-panel">
-      <button id="detail-close">&times;</button>
-      <h3 id="detail-title"></h3>
-      <p id="detail-desc"></p>
-      <div id="detail-tags" class="detail-tags"></div>
-    </div>
+    <div id="flow-steps" class="flow-steps"></div>
+    <div id="flow-outputs" class="flow-outputs"></div>
+  </div>
+  <div id="detail-panel" class="detail-panel">
+    <button id="detail-close">&times;</button>
+    <h3 id="detail-title"></h3>
+    <p id="detail-desc"></p>
+    <div id="detail-tags" class="detail-tags"></div>
   </div>
 </section>
 
@@ -132,7 +133,7 @@
     <div class="sub-pills">
       <button class="pill-btn active" data-pill="during-charter">During Charter (13)</button>
       <button class="pill-btn" data-pill="turnaround">Turnaround (6)</button>
-      <button class="pill-btn" data-pill="fleet-dashboard">Commander App (9)</button>
+      <button class="pill-btn" data-pill="fleet-dashboard">Fleet Management (9)</button>
     </div>
 
     <!-- During Charter -->
@@ -633,7 +634,7 @@
           <p>Log into the Commander App on your phone &mdash; your boat appears automatically</p>
         </div>
       </div>
-      <p class="puck-note">No app. No passwords. No login. Plug into any internet source &mdash; Starlink, marina WiFi, or hotspot. Master starts receiving data automatically via VPN Tunnel.</p>
+      <p class="puck-note">No configuration needed. Plug into any internet source &mdash; Starlink, marina WiFi, or hotspot. Master starts receiving data automatically via VPN Tunnel.</p>
     </div>
   </div>
 
@@ -751,7 +752,7 @@
     <div class="ribbon-card" style="cursor:pointer" onclick="document.getElementById('diagnostics').scrollIntoView({behavior:'smooth'})">
       <div class="ribbon-icon">&#x1F527;</div>
       <h4>Marine Professionals</h4>
-      <div class="ribbon-count">10 USE CASES</div>
+      <div class="ribbon-count">14 USE CASES</div>
       <p>Portable diagnostic scanning for marine technicians. Plug into any boat, scan 24&ndash;48h, deliver a professional report via the Service Portal.</p>
     </div>
   </div>
