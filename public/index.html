@@ -470,6 +470,103 @@
     <p>Plug-and-play boat monitoring in 60 seconds. Internet required &mdash; Starlink, marina WiFi, or hotspot. Just plug in and go.</p>
   </div>
 
+  <!-- Hardware Diagram -->
+  <div class="puck-diagram-wrap">
+    <svg viewBox="0 0 900 340" xmlns="http://www.w3.org/2000/svg" class="puck-diagram">
+      <defs>
+        <filter id="glow-orange"><feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="#f59e0b" flood-opacity="0.3"/></filter>
+        <filter id="glow-cyan"><feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="#0ea5e9" flood-opacity="0.3"/></filter>
+        <linearGradient id="case-grad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#1e293b"/><stop offset="100%" stop-color="#111827"/></linearGradient>
+      </defs>
+
+      <!-- Waterproof Case outline -->
+      <rect x="40" y="30" width="260" height="280" rx="16" fill="url(#case-grad)" stroke="#334155" stroke-width="2" filter="url(#glow-cyan)"/>
+      <text x="170" y="22" text-anchor="middle" fill="#0ea5e9" font-size="12" font-family="monospace" font-weight="600">WATERPROOF CASE</text>
+
+      <!-- Raspberry Pi 5 inside case -->
+      <rect x="65" y="60" width="210" height="120" rx="8" fill="#0f172a" stroke="#22c55e" stroke-width="1.5"/>
+      <text x="170" y="90" text-anchor="middle" fill="#e2e8f0" font-size="14" font-weight="700" font-family="system-ui">Raspberry Pi 5</text>
+      <text x="170" y="110" text-anchor="middle" fill="#64748b" font-size="11" font-family="monospace">ARM Cortex-A76 &bull; 8GB RAM</text>
+      <!-- GPIO pins visual -->
+      <g transform="translate(80,130)">
+        <rect x="0" y="0" width="4" height="10" rx="1" fill="#22c55e" opacity="0.6"/>
+        <rect x="8" y="0" width="4" height="10" rx="1" fill="#22c55e" opacity="0.6"/>
+        <rect x="16" y="0" width="4" height="10" rx="1" fill="#22c55e" opacity="0.6"/>
+        <rect x="24" y="0" width="4" height="10" rx="1" fill="#22c55e" opacity="0.6"/>
+        <rect x="32" y="0" width="4" height="10" rx="1" fill="#22c55e" opacity="0.6"/>
+        <rect x="40" y="0" width="4" height="10" rx="1" fill="#22c55e" opacity="0.6"/>
+        <rect x="48" y="0" width="4" height="10" rx="1" fill="#22c55e" opacity="0.6"/>
+        <rect x="56" y="0" width="4" height="10" rx="1" fill="#22c55e" opacity="0.6"/>
+      </g>
+      <!-- USB ports on Pi -->
+      <rect x="245" y="75" width="24" height="14" rx="2" fill="none" stroke="#94a3b8" stroke-width="1"/>
+      <rect x="245" y="95" width="24" height="14" rx="2" fill="none" stroke="#94a3b8" stroke-width="1"/>
+      <text x="280" y="87" fill="#64748b" font-size="8" font-family="monospace">USB</text>
+      <text x="280" y="107" fill="#64748b" font-size="8" font-family="monospace">USB</text>
+
+      <!-- SignalK label inside case -->
+      <rect x="90" y="200" width="160" height="34" rx="6" fill="rgba(14,74,47,0.3)" stroke="#10b981" stroke-width="1"/>
+      <text x="170" y="222" text-anchor="middle" fill="#10b981" font-size="12" font-weight="600" font-family="system-ui">SignalK Server</text>
+      <text x="170" y="250" text-anchor="middle" fill="#475569" font-size="10" font-family="monospace">pre-installed &bull; auto-start</text>
+
+      <!-- USB-C power port on case -->
+      <rect x="130" y="300" width="80" height="14" rx="4" fill="#0f172a" stroke="#f59e0b" stroke-width="1.5"/>
+      <text x="170" y="311" text-anchor="middle" fill="#f59e0b" font-size="9" font-family="monospace" font-weight="600">USB-C POWER</text>
+
+      <!-- Connection line: Case to Actisense -->
+      <line x1="300" y1="120" x2="380" y2="120" stroke="#334155" stroke-width="2" stroke-dasharray="6 3"/>
+      <polygon points="375,115 385,120 375,125" fill="#0ea5e9"/>
+      <text x="340" y="110" text-anchor="middle" fill="#475569" font-size="9" font-family="monospace">USB</text>
+
+      <!-- Actisense NGX-1 -->
+      <rect x="390" y="60" width="200" height="120" rx="12" fill="#1a2332" stroke="#0ea5e9" stroke-width="1.5" filter="url(#glow-cyan)"/>
+      <text x="490" y="95" text-anchor="middle" fill="#e2e8f0" font-size="14" font-weight="700" font-family="system-ui">Actisense NGX-1</text>
+      <text x="490" y="115" text-anchor="middle" fill="#64748b" font-size="11" font-family="monospace">NMEA 2000 &rarr; USB</text>
+      <!-- Connector indicators -->
+      <circle cx="420" cy="150" r="8" fill="none" stroke="#0ea5e9" stroke-width="1.5"/>
+      <text x="420" y="154" text-anchor="middle" fill="#0ea5e9" font-size="8" font-family="monospace">N</text>
+      <circle cx="560" cy="150" r="8" fill="none" stroke="#94a3b8" stroke-width="1.5"/>
+      <text x="560" y="154" text-anchor="middle" fill="#94a3b8" font-size="8" font-family="monospace">U</text>
+
+      <!-- Connection line: Actisense to T-connector -->
+      <line x1="490" y1="180" x2="490" y2="230" stroke="#334155" stroke-width="2" stroke-dasharray="6 3"/>
+      <polygon points="485,225 490,235 495,225" fill="#0ea5e9"/>
+
+      <!-- T-Connector + Drop Cable -->
+      <rect x="400" y="240" width="180" height="70" rx="10" fill="#1a2332" stroke="#1e3a5f" stroke-width="1.5"/>
+      <text x="490" y="268" text-anchor="middle" fill="#e2e8f0" font-size="13" font-weight="600" font-family="system-ui">T-Connector</text>
+      <text x="490" y="288" text-anchor="middle" fill="#64748b" font-size="10" font-family="monospace">+ 1m drop cable</text>
+      <!-- T-shape connector visual -->
+      <line x1="400" y1="252" x2="395" y2="252" stroke="#1e3a5f" stroke-width="3"/>
+      <line x1="580" y1="252" x2="585" y2="252" stroke="#1e3a5f" stroke-width="3"/>
+
+      <!-- Connection line: T-connector to NMEA backbone -->
+      <line x1="490" y1="310" x2="490" y2="335" stroke="#1e3a5f" stroke-width="3"/>
+      <text x="490" y="330" text-anchor="middle" fill="#1e3a5f" font-size="10" font-weight="700" font-family="monospace">&darr; NMEA 2000 BACKBONE</text>
+
+      <!-- Power adapter -->
+      <rect x="660" y="60" width="200" height="100" rx="12" fill="#1a2332" stroke="#f59e0b" stroke-width="1.5" filter="url(#glow-orange)"/>
+      <text x="760" y="92" text-anchor="middle" fill="#e2e8f0" font-size="13" font-weight="700" font-family="system-ui">Power Adapter</text>
+      <text x="760" y="112" text-anchor="middle" fill="#64748b" font-size="10" font-family="monospace">12V DC or 110/220V AC</text>
+      <text x="760" y="130" text-anchor="middle" fill="#f59e0b" font-size="10" font-family="monospace">&rarr; 5V USB-C out</text>
+
+      <!-- Connection line: Power to Case -->
+      <path d="M660,110 L350,110 L350,307 L130,307" fill="none" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="6 3"/>
+      <polygon points="135,302 125,307 135,312" fill="#f59e0b"/>
+
+      <!-- Internet connection (WiFi icon area) -->
+      <rect x="660" y="200" width="200" height="80" rx="12" fill="#1a2332" stroke="#334155" stroke-width="1.5"/>
+      <text x="760" y="232" text-anchor="middle" fill="#e2e8f0" font-size="13" font-weight="700" font-family="system-ui">Internet Source</text>
+      <text x="760" y="252" text-anchor="middle" fill="#64748b" font-size="10" font-family="monospace">Starlink &bull; WiFi &bull; Hotspot</text>
+      <text x="760" y="268" text-anchor="middle" fill="#475569" font-size="9" font-family="monospace">auto-connects via VPN</text>
+
+      <!-- WiFi waves visual -->
+      <path d="M730,205 Q735,198 740,205" fill="none" stroke="#94a3b8" stroke-width="1" opacity="0.5"/>
+      <path d="M725,200 Q735,190 745,200" fill="none" stroke="#94a3b8" stroke-width="1" opacity="0.4"/>
+      <path d="M720,195 Q735,182 750,195" fill="none" stroke="#94a3b8" stroke-width="1" opacity="0.3"/>
+    </svg>
+  </div>
+
   <div class="puck-layout">
     <div class="puck-kit">
       <h3>What's in the Box</h3>
@@ -477,7 +574,7 @@
         <li>Raspberry Pi 5 in waterproof case <span>~$80</span></li>
         <li>Actisense NGX-1 (NMEA 2000 USB) <span>~$200</span></li>
         <li>NMEA 2000 T-connector + 1m drop cable <span>~$30</span></li>
-        <li>12V to USB-C power cable (3m) <span>~$15</span></li>
+        <li>USB-C power adapter (12V DC or AC outlet) <span>~$15</span></li>
         <li>Quick start card (4 steps, with pictures) <span></span></li>
       </ul>
       <p class="puck-total">Total hardware: ~$325</p>
@@ -492,7 +589,7 @@
         </div>
         <div class="puck-step">
           <span>2</span>
-          <p>Plug the USB-C power cable into any 12V outlet</p>
+          <p>Plug the USB-C power into any 12V outlet or AC socket</p>
         </div>
         <div class="puck-step">
           <span>3</span>
