@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Master&amp;Commander — Talk to Your Boat via WhatsApp</title>
-  <meta name="description" content="AI boat monitor that connects marine electronics to WhatsApp. Auto-discovers sensors, sends alerts, answers questions in plain English. No cloud required.">
+  <title>Master&amp;Commander — AI Boat Monitor for Private Yachts</title>
+  <meta name="description" content="AI boat monitor for private yachts. The Commander Unit connects to your marine electronics, monitors every system 24/7, and sends alerts straight to WhatsApp. No cloud required.">
   <link rel="stylesheet" href="style.css">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#x2693;</text></svg>">
 </head>
@@ -26,7 +26,7 @@
 <!-- Hero -->
 <section class="hero">
   <h1>Talk to your boat<br>via <span class="highlight">WhatsApp.</span></h1>
-  <p class="tagline">Commander is an AI boat monitor that runs aboard your vessel. It auto-discovers your sensors, monitors every system 24/7, and sends you WhatsApp alerts when something needs attention.</p>
+  <p class="tagline">Master&amp;Commander is an AI boat monitor for private yachts. The Commander Unit sits aboard your vessel, connects to your existing electronics, and gives you 24/7 monitoring with WhatsApp alerts and plain-English answers about your boat.</p>
   <div class="badges">
     <span class="badge"><span class="dot"></span> Offline-First</span>
     <span class="badge"><span class="dot"></span> Zero Config</span>
@@ -54,24 +54,24 @@
 <section id="how-it-works">
   <div class="section-header">
     <h2>How It Works</h2>
-    <p>Three steps from installation to your first WhatsApp alert.</p>
+    <p>We install it. It learns your boat. You get WhatsApp alerts.</p>
   </div>
   <div class="steps">
     <div class="step">
       <span class="step-number">01</span>
-      <h3>Install SignalK</h3>
-      <p>SignalK is free, open-source software that translates your marine electronics into a standard JSON format. Runs on the same Mac Mini as Commander.</p>
-      <p style="margin-top:0.75rem"><code>signalk-server</code> auto-detects NMEA 2000 devices via USB gateway.</p>
+      <h3>We Install the Commander Unit</h3>
+      <p>A compact unit goes at your nav station and plugs into your NMEA 2000 network. Compatible with all major marine electronics &mdash; Garmin, Raymarine, Simrad, B&amp;G, Victron, and more.</p>
+      <p style="margin-top:0.75rem">Professional installation. No wiring changes to your boat.</p>
     </div>
     <div class="step">
       <span class="step-number">02</span>
-      <h3>Run Commander</h3>
-      <p>Commander connects to SignalK, auto-discovers every sensor on your boat, and starts monitoring. Twin engines? Two battery banks? It figures it out.</p>
-      <p style="margin-top:0.75rem"><code>node commander.js</code> &mdash; scan the QR code, done.</p>
+      <h3>It Discovers Your Boat</h3>
+      <p>Commander auto-discovers every sensor on board. Twin engines? Two battery banks? Solar? Shore power? It figures out what you have and adapts automatically.</p>
+      <p style="margin-top:0.75rem">No configuration needed. No device lists. It just learns.</p>
     </div>
     <div class="step">
       <span class="step-number">03</span>
-      <h3>Get WhatsApp Alerts</h3>
+      <h3>You Get WhatsApp Alerts</h3>
       <p>Battery low? Engine overheating? Bilge pump cycling? You get a WhatsApp message instantly. Send commands back to check any system on board.</p>
       <p style="margin-top:0.75rem">Text <code>status</code> anytime for a full report.</p>
     </div>
@@ -88,7 +88,7 @@
     <div class="feature">
       <div class="feature-icon">&#x1F50D;</div>
       <h3>Auto-Discovery</h3>
-      <p>Commander scans SignalK and learns what sensors YOUR boat has. No configuration files, no device lists. Adapts to any vessel automatically.</p>
+      <p>Commander scans your NMEA 2000 network and learns what sensors YOUR boat has. No configuration files, no device lists. Adapts to any vessel automatically.</p>
     </div>
     <div class="feature">
       <div class="feature-icon">&#x1F6A8;</div>
@@ -102,8 +102,8 @@
     </div>
     <div class="feature">
       <div class="feature-icon">&#x1F9E0;</div>
-      <h3>Local AI Brain</h3>
-      <p>Qwen 14B runs on-device via Ollama &mdash; fully offline. Ask questions in plain English. Optionally route to Claude via Starlink for deeper analysis.</p>
+      <h3>AI Brain &mdash; On Board</h3>
+      <p>A local AI runs directly on the Commander Unit &mdash; fully offline, no internet needed. Ask questions about your boat in plain English. With connectivity, it can tap cloud AI for deeper analysis.</p>
     </div>
     <div class="feature">
       <div class="feature-icon">&#x1F4F6;</div>
@@ -116,9 +116,14 @@
       <p>Set your swing radius and Commander monitors GPS drift continuously. If your anchor drags, you know immediately via WhatsApp.</p>
     </div>
     <div class="feature">
+      <div class="feature-icon">&#x1F4F7;</div>
+      <h3>Cameras &amp; FLIR</h3>
+      <p>Security cameras, FLIR thermal imaging, and night vision. Monitor your vessel visually &mdash; on board or remotely. AI vision detects intrusions and thermal anomalies.</p>
+    </div>
+    <div class="feature">
       <div class="feature-icon">&#x1F3AE;</div>
-      <h3>Built-In Simulator</h3>
-      <p>Test without a boat. Simulate catamaran, monohull, or powerboat profiles. Switch between motoring, sailing, anchored, and alarm scenarios on the fly.</p>
+      <h3>Live Demo Mode</h3>
+      <p>See Commander in action before installation. We demo with your boat type &mdash; catamaran, monohull, or powerboat &mdash; so you see exactly what your alerts and reports will look like.</p>
     </div>
     <div class="feature">
       <div class="feature-icon">&#x1F30D;</div>
@@ -149,25 +154,25 @@
           <td class="alert-icon">&#x1F50B;</td>
           <td>Battery Low</td>
           <td>SOC &lt; <code>20%</code></td>
-          <td>Any battery on SignalK</td>
+          <td>Battery monitor</td>
         </tr>
         <tr>
           <td class="alert-icon">&#x1F50B;</td>
           <td>Battery Critical</td>
           <td>SOC &lt; <code>10%</code></td>
-          <td>Any battery on SignalK</td>
+          <td>Battery monitor</td>
         </tr>
         <tr>
           <td class="alert-icon">&#x1F321;&#xFE0F;</td>
           <td>Engine Overheat</td>
           <td>Coolant &gt; <code>95&#176;C</code></td>
-          <td>Engine on NMEA 2000</td>
+          <td>Engine sensors</td>
         </tr>
         <tr>
           <td class="alert-icon">&#x1F6E2;&#xFE0F;</td>
           <td>Low Oil Pressure</td>
           <td>&lt; <code>25 PSI</code> while running</td>
-          <td>Engine on NMEA 2000</td>
+          <td>Engine sensors</td>
         </tr>
         <tr>
           <td class="alert-icon">&#x1F6B0;</td>
