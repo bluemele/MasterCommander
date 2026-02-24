@@ -1,0 +1,71 @@
+{
+  "boat": {
+    "name": "Catana 581",
+    "type": "Sailing Catamaran 58ft",
+    "draft": 1.2,
+    "homePort": "Chaguaramas, Trinidad",
+    "notes": "Christophe Barreau design. Twin Yanmar 110hp. 1700Ah 24V Happy Valley Lithium. Victron Cerbo GX. B&G Zeus."
+  },
+  "signalk": {
+    "host": "localhost",
+    "port": 3858,
+    "useTLS": false
+  },
+  "engines": {
+    "count": 2,
+    "ids": ["port", "starboard"],
+    "type": "Yanmar 110hp",
+    "thresholds": {
+      "coolantTempMax": 95,
+      "oilPressureMin": 25,
+      "exhaustTempMax": 500
+    }
+  },
+  "batteries": {
+    "ids": ["house"],
+    "type": "Happy Valley Lithium 1700Ah 24V",
+    "nominalVoltage": 24,
+    "thresholds": {
+      "socWarning": 20,
+      "socCritical": 10,
+      "voltageMin": 23
+    }
+  },
+  "tanks": {
+    "fuel": ["port", "starboard"],
+    "freshWater": ["port", "starboard"],
+    "wasteWater": ["port", "starboard"],
+    "thresholds": {
+      "fuelLow": 15,
+      "waterLow": 15
+    }
+  },
+  "safety": {
+    "depthMinimum": 2.5,
+    "anchorAlarmRadius": 30,
+    "bilgeCyclesMax": 6,
+    "bilgeWindowMinutes": 30
+  },
+  "whatsapp": {
+    "mode": "bridge",
+    "authDir": "./auth",
+    "adminNumber": "18681234567",
+    "allowedNumbers": ["18681234567"],
+    "respondToGroups": false,
+    "triggerWord": "commander"
+  },
+  "llm": {
+    "provider": "local",
+    "ollamaModel": "qwen2.5:14b",
+    "ollamaUrl": "http://localhost:11434",
+    "claudePath": "claude",
+    "timeout": 30000
+  },
+  "alerts": {
+    "enabled": true,
+    "quietHoursStart": null,
+    "quietHoursEnd": null,
+    "criticalOverridesQuiet": true
+  },
+  "dataDir": "./data"
+}

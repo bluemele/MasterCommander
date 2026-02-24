@@ -1,0 +1,61 @@
+{
+  "boat": {
+    "name": "",
+    "type": "",
+    "draft": 1.5,
+    "homePort": "",
+    "notes": ""
+  },
+  "signalk": {
+    "host": "localhost",
+    "port": 3000,
+    "useTLS": false
+  },
+  "engines": {
+    "thresholds": {
+      "coolantTempMax": 95,
+      "oilPressureMin": 25,
+      "exhaustTempMax": 500
+    }
+  },
+  "batteries": {
+    "thresholds": {
+      "socWarning": 20,
+      "socCritical": 10
+    }
+  },
+  "tanks": {
+    "thresholds": {
+      "fuelLow": 15,
+      "waterLow": 15
+    }
+  },
+  "safety": {
+    "depthMinimum": 2.5,
+    "anchorAlarmRadius": 30,
+    "bilgeCyclesMax": 6,
+    "bilgeWindowMinutes": 30
+  },
+  "whatsapp": {
+    "mode": "dedicated",
+    "authDir": "./auth",
+    "adminNumber": "",
+    "allowedNumbers": [],
+    "respondToGroups": false,
+    "triggerWord": "commander"
+  },
+  "llm": {
+    "provider": "local",
+    "ollamaModel": "qwen2.5:14b",
+    "ollamaUrl": "http://localhost:11434",
+    "claudePath": "claude",
+    "timeout": 30000
+  },
+  "alerts": {
+    "enabled": true,
+    "quietHoursStart": null,
+    "quietHoursEnd": null,
+    "criticalOverridesQuiet": true
+  },
+  "dataDir": "./data"
+}
