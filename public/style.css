@@ -221,9 +221,10 @@ section {
 /* Connection lines */
 .flow-line {
   stroke: var(--navy);
-  stroke-width: 2;
+  stroke-width: 1.5;
   fill: none;
-  stroke-dasharray: 8 4;
+  stroke-dasharray: 6 4;
+  opacity: 0.5;
 }
 /* Animated pulse */
 .flow-pulse {
@@ -939,6 +940,15 @@ section {
   color: var(--cyan);
 }
 .hw-card h3 { font-size: 1.25rem; margin-bottom: 0.5rem; }
+.hw-diagram {
+  width: 100%;
+  max-width: 320px;
+  margin: 0.5rem auto 1rem;
+  display: block;
+  border-radius: 8px;
+  background: #0b1120;
+  padding: 0.25rem;
+}
 .hw-card .hw-desc {
   font-size: 0.9rem;
   color: var(--text-dim);
@@ -963,6 +973,29 @@ section {
   color: var(--green);
   font-weight: 700;
 }
+
+/* Add-On Module */
+.addon-card {
+  max-width: 900px;
+  margin: 2rem auto 0;
+  background: var(--bg-card);
+  border: 1px solid rgba(14,165,233,0.2);
+  border-radius: 12px;
+  padding: 2rem;
+}
+.addon-header { text-align: center; margin-bottom: 1.5rem; }
+.addon-header h3 { font-size: 1.3rem; margin: 0.5rem 0; }
+.addon-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+}
+.addon-feature {
+  text-align: center;
+  padding: 1rem 0.5rem;
+}
+.addon-feature h4 { font-size: 0.95rem; margin: 0.5rem 0 0.25rem; }
+.addon-feature p { font-size: 0.8rem; color: var(--text-dim); line-height: 1.4; }
 
 /* Pricing */
 .pricing-grid {

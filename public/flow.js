@@ -257,11 +257,18 @@
       svg.appendChild(circle);
     });
 
-    // Draw nodes
+    // Draw nodes (on top of connections)
     nodes.forEach(n => {
       const p = pos[n.id];
       if (!p) return;
       const g = createSVG('g', { class: 'flow-node', 'data-id': n.id, transform: `translate(${p.x},${p.y})` });
+
+      // Halo: slightly larger invisible rect to clip connection lines near edges
+      const halo = createSVG('rect', {
+        x: -3, y: -3, width: p.w + 6, height: p.h + 6, rx: 10, ry: 10,
+        fill: '#0b1120', opacity: '0.9'
+      });
+      g.appendChild(halo);
 
       const rect = createSVG('rect', {
         width: p.w, height: p.h, fill: n.color,
@@ -271,14 +278,14 @@
       g.appendChild(rect);
 
       const icon = createSVG('text', {
-        x: 8, y: p.h/2 + 1, 'dominant-baseline': 'middle', class: 'node-icon', 'font-size': n.sub ? '11px' : '14px'
+        x: 8, y: p.h/2 + 1, 'dominant-baseline': 'middle', class: 'node-icon', 'font-size': n.sub ? '11px' : '13px'
       });
       icon.textContent = n.icon;
       g.appendChild(icon);
 
       const label = createSVG('text', {
         x: n.sub ? 28 : 30, y: p.h/2 + 1, 'dominant-baseline': 'middle',
-        fill: '#ffffff',
+        fill: '#e2e8f0',
         'font-size': n.sub ? '10px' : '11.5px', 'font-weight': n.sub ? '400' : '600'
       });
       label.textContent = n.label;
