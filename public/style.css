@@ -146,6 +146,40 @@ section {
   font-size: 0.95rem;
 }
 
+/* Flow diagram tabs */
+.flow-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+.flow-tab-btn {
+  padding: 0.6rem 1.5rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-card);
+  color: var(--text-dim);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+.flow-tab-btn span {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 400;
+  color: var(--text-muted);
+  margin-top: 0.15rem;
+}
+.flow-tab-btn:hover { border-color: var(--cyan); color: var(--text); }
+.flow-tab-btn.active {
+  background: rgba(14,165,233,0.1);
+  border-color: var(--cyan);
+  color: var(--cyan);
+}
+.flow-tab-btn.active span { color: var(--cyan); opacity: 0.7; }
+
 #flow-container {
   position: relative;
   width: 100%;

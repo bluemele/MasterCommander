@@ -65,6 +65,10 @@
 <section class="flow-section" id="architecture">
   <h2>System Architecture</h2>
   <p class="subtitle">Click any node to see how it works. Data flows from your marine electronics to your phone.</p>
+  <div class="flow-tabs">
+    <button class="flow-tab-btn active" data-mode="charter" onclick="setFlowMode('charter')">Charter Fleet <span>Raspberry Pi + Cloud AI</span></button>
+    <button class="flow-tab-btn" data-mode="private" onclick="setFlowMode('private')">Private Yacht <span>Mac Mini M4 + Local AI</span></button>
+  </div>
   <div id="flow-container">
     <svg id="flow-svg"></svg>
     <div id="detail-panel">
