@@ -1714,6 +1714,14 @@ section {
   justify-content: center;
   flex-wrap: wrap;
 }
+.hero-ctas {
+  flex-wrap: nowrap;
+}
+.hero-ctas .cta-btn {
+  padding: 0.75rem 1.25rem;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
 .cta-btn {
   display: inline-flex;
   align-items: center;
