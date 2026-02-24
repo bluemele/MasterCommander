@@ -906,6 +906,47 @@ section {
   font-weight: 700;
 }
 
+/* FleetMind */
+.fleetmind-hero {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+.fleetmind-hero h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+.fleetmind-hero h3 span { color: var(--cyan); }
+.fleetmind-hero p {
+  color: var(--text-dim);
+  max-width: 650px;
+  margin: 0 auto;
+  font-size: 0.95rem;
+}
+.fleetmind-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+.fm-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.5rem;
+  transition: border-color 0.2s;
+}
+.fm-card:hover { border-color: var(--navy); }
+.fm-card .fm-icon { font-size: 1.5rem; margin-bottom: 0.5rem; }
+.fm-card h4 { font-size: 1rem; margin-bottom: 0.35rem; }
+.fm-card p { font-size: 0.85rem; color: var(--text-dim); line-height: 1.5; }
+.fleetmind-note {
+  text-align: center;
+  margin-top: 2rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
 /* CTA */
 .cta {
   text-align: center;
