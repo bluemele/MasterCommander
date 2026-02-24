@@ -1722,6 +1722,9 @@ section {
   font-size: 0.9rem;
   white-space: nowrap;
 }
+@media (max-width: 900px) and (min-width: 769px) {
+  .hero-ctas { flex-wrap: wrap; }
+}
 .cta-btn {
   display: inline-flex;
   align-items: center;
