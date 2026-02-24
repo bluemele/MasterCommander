@@ -13,10 +13,10 @@
 <!-- Nav -->
 <nav>
   <div class="logo"><span>&#x2693;</span> Master<span>&amp;</span>Commander</div>
+  <button class="nav-hamburger" id="nav-hamburger" aria-label="Menu">&#9776;</button>
   <ul>
     <li><a href="#how-it-works">How It Works</a></li>
     <li><a href="#solutions">Solutions</a></li>
-    <li><a href="#delivery-puck">How It Connects</a></li>
     <li><a href="#diagnostics">Diagnostics</a></li>
     <li><a href="#hardware">Hardware</a></li>
     <li><a href="#pricing">Pricing</a></li>
@@ -25,24 +25,67 @@
     <li><a href="#" onclick="alert('Coming soon! The Commander App is currently in beta.');return false;" class="nav-app-link">Download App</a></li>
     <li><a href="#contact">Contact</a></li>
   </ul>
-  <div class="nav-login">
-    <button class="nav-login-btn" onclick="this.parentElement.classList.toggle('open')">Login</button>
-    <div class="nav-login-dropdown">
-      <input type="text" placeholder="Username" autocomplete="username">
-      <input type="password" placeholder="Password" autocomplete="current-password">
-      <button onclick="alert('Master Cloud is launching soon. Early access available for charter fleet partners.');this.closest('.nav-login').classList.remove('open')">Sign In</button>
+  <div class="nav-login" id="nav-login">
+    <!-- Logged-out state -->
+    <button class="nav-login-btn" id="auth-toggle" onclick="this.parentElement.classList.toggle('open')">Login</button>
+    <div class="nav-login-dropdown" id="auth-dropdown">
+      <!-- Login form (default) -->
+      <form id="auth-login" class="auth-form active" onsubmit="return mcAuth.login(event)">
+        <input type="email" id="login-email" placeholder="Email" autocomplete="email" required>
+        <input type="password" id="login-password" placeholder="Password" autocomplete="current-password" required>
+        <div class="auth-error" id="login-error"></div>
+        <button type="submit" id="login-submit">Sign In</button>
+        <div class="auth-links">
+          <a href="#" onclick="mcAuth.showForm('signup');return false">Create account</a>
+          <a href="#" onclick="mcAuth.showForm('forgot');return false">Forgot password?</a>
+        </div>
+      </form>
+      <!-- Signup form -->
+      <form id="auth-signup" class="auth-form" onsubmit="return mcAuth.signup(event)">
+        <input type="text" id="signup-name" placeholder="Full Name" autocomplete="name" required>
+        <input type="email" id="signup-email" placeholder="Email" autocomplete="email" required>
+        <input type="password" id="signup-password" placeholder="Password (8+ chars)" autocomplete="new-password" required minlength="8">
+        <div class="auth-error" id="signup-error"></div>
+        <button type="submit" id="signup-submit">Create Account</button>
+        <div class="auth-links">
+          <a href="#" onclick="mcAuth.showForm('login');return false">Already have an account?</a>
+        </div>
+      </form>
+      <!-- Forgot password form -->
+      <form id="auth-forgot" class="auth-form" onsubmit="return mcAuth.forgot(event)">
+        <input type="email" id="forgot-email" placeholder="Email" autocomplete="email" required>
+        <div class="auth-error" id="forgot-error"></div>
+        <div class="auth-success" id="forgot-success"></div>
+        <button type="submit" id="forgot-submit">Send Reset Link</button>
+        <div class="auth-links">
+          <a href="#" onclick="mcAuth.showForm('login');return false">Back to login</a>
+        </div>
+      </form>
+      <!-- Logged-in state -->
+      <div id="auth-user" class="auth-form">
+        <div class="auth-user-info">Signed in as <strong id="auth-user-name"></strong></div>
+        <button type="button" onclick="mcAuth.logout()">Sign Out</button>
+      </div>
     </div>
   </div>
 </nav>
+<script>
+document.getElementById('nav-hamburger').addEventListener('click', function() {
+  this.closest('nav').classList.toggle('nav-open');
+});
+document.querySelectorAll('nav ul a').forEach(function(a) {
+  a.addEventListener('click', function() { document.querySelector('nav').classList.remove('nav-open'); });
+});
+</script>
 
 <!-- Hero -->
 <section class="hero">
-  <h1>Your yacht, <span class="highlight">always talking.</span></h1>
+  <h1>Your Yacht, <span class="highlight">always talking.</span></h1>
   <p class="tagline">AI boat monitoring for charter fleets and private yachts. The Commander Unit connects to your marine electronics, monitors every system 24/7, and reports to you via WhatsApp, app, or cloud dashboard.</p>
   <div class="cta-buttons hero-ctas" style="margin-bottom:2rem">
     <a href="#solutions" class="cta-btn" onclick="setTimeout(function(){document.querySelector('.tab-btn[data-tab=charter]').click()},100)">Charter Fleets</a>
     <a href="#solutions" class="cta-btn secondary" onclick="setTimeout(function(){document.querySelector('.tab-btn[data-tab=private]').click()},100)">Private Yachts</a>
-    <a href="#delivery-puck" class="cta-btn secondary" onclick="setTimeout(function(){document.querySelector('.config-tab-btn[onclick*=delivery]')&&document.querySelector('.config-tab-btn[onclick*=delivery]').click()},100)">Delivery Captains</a>
+    <a href="#how-it-works" class="cta-btn secondary" onclick="setTimeout(function(){document.querySelector('.config-tab-btn[onclick*=delivery]')&&document.querySelector('.config-tab-btn[onclick*=delivery]').click()},100)">Delivery Captains</a>
     <a href="#diagnostics" class="cta-btn secondary">Marine Surveys</a>
   </div>
   <div class="badges">
@@ -72,104 +115,6 @@
     <div class="proof-label">Setup Time</div>
   </div>
 </div>
-
-<!-- How It Works -->
-<section id="how-it-works">
-  <div class="section-header">
-    <h2>How It Works</h2>
-    <p>Download the app. Order the parts. Follow the guide. Your boat is connected.</p>
-  </div>
-  <div class="hiw-tabs">
-    <button class="hiw-tab-btn active" onclick="switchHIW('pi')">Raspberry Pi</button>
-    <button class="hiw-tab-btn" onclick="switchHIW('mac')">Mac Mini M4</button>
-  </div>
-
-  <!-- Raspberry Pi flow -->
-  <div class="hiw-panel active" id="hiw-pi">
-    <div class="hw-flow-diagram compact">
-      <div class="hw-flow-row">
-        <div class="hw-flow-box accent-green"><div class="hw-flow-icon">⛵</div><div class="hw-flow-label">Commander</div><div class="hw-flow-sub">Monitors your boat</div></div>
-        <div class="hw-flow-connector">WiFi →</div>
-        <div class="hw-flow-box accent-purple"><div class="hw-flow-icon">☁️</div><div class="hw-flow-label">Master Cloud</div><div class="hw-flow-sub">AI · Fleet Dashboard</div></div>
-        <div class="hw-flow-connector">→</div>
-        <div class="hw-flow-box accent-orange"><div class="hw-flow-icon">👤</div><div class="hw-flow-label">You</div><div class="hw-flow-sub">Web · WhatsApp · App</div></div>
-      </div>
-    </div>
-    <div class="steps">
-      <div class="step">
-        <span class="step-number">01</span>
-        <div class="step-content">
-          <h3>Download the App &amp; Create Your Account</h3>
-          <p>Get the Commander app on your phone. Sign up, choose your plan (Charter Fleet or Delivery), and the app generates your personalized hardware shopping list with direct Amazon links. Raspberry Pi 5, Actisense NGX-1, case, SD card, power cable &mdash; ~$280 total.</p>
-        </div>
-      </div>
-      <div class="step">
-        <span class="step-number">02</span>
-        <div class="step-content">
-          <h3>Flash the Commander OS</h3>
-          <p>Parts arrive. The app walks you through setup: download the Commander OS image, flash it to the SD card with Raspberry Pi Imager (one click). SignalK, Commander Relay, and secure VPN tunnel are all pre-installed.</p>
-        </div>
-      </div>
-      <div class="step">
-        <span class="step-number">03</span>
-        <div class="step-content">
-          <h3>Plug In &amp; Pair</h3>
-          <p>Connect the Actisense to your NMEA 2000 backbone. Plug the Pi into 12V boat power. It broadcasts a setup hotspot &mdash; connect your phone and scan the QR code. Enter your WiFi or Starlink credentials. Ten minutes, no wiring changes.</p>
-        </div>
-      </div>
-      <div class="step">
-        <span class="step-number">04</span>
-        <div class="step-content">
-          <h3>Auto-Discovery &amp; You're Live</h3>
-          <p>Commander finds every sensor on the NMEA 2000 bus. Master Cloud says: <em>"Found 14 devices. Name this boat?"</em> You type the name and you're live. <strong>On board:</strong> Commander App over WiFi, no internet needed. <strong>Remote:</strong> WhatsApp alerts via Starlink or WiFi.</p>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Mac Mini M4 flow -->
-  <div class="hiw-panel" id="hiw-mac">
-    <div class="hw-flow-diagram compact">
-      <div class="hw-flow-row">
-        <div class="hw-flow-box accent-green"><div class="hw-flow-icon">⛵</div><div class="hw-flow-label">Commander</div><div class="hw-flow-sub">On-board AI · offline</div></div>
-        <div class="hw-flow-connector">WiFi →</div>
-        <div class="hw-flow-box accent-cyan"><div class="hw-flow-icon">📱</div><div class="hw-flow-label">Commander App</div><div class="hw-flow-sub">Full dashboard on your phone</div></div>
-        <div class="hw-flow-connector">→</div>
-        <div class="hw-flow-box accent-orange"><div class="hw-flow-icon">👤</div><div class="hw-flow-label">You</div><div class="hw-flow-sub">On board · no internet</div></div>
-      </div>
-    </div>
-    <div class="steps">
-      <div class="step">
-        <span class="step-number">01</span>
-        <div class="step-content">
-          <h3>Download the App &amp; Create Your Account</h3>
-          <p>Get the Commander app on your phone. Sign up, choose Private Yacht, and the app generates your hardware list: Mac Mini M4 and Actisense NGX-1. Optional: PoE cameras for AI Vision. ~$800 total.</p>
-        </div>
-      </div>
-      <div class="step">
-        <span class="step-number">02</span>
-        <div class="step-content">
-          <h3>Restore the Disk Image</h3>
-          <p>Download our pre-configured disk image from the app. Restore it to the Mac Mini using Apple Configurator or Disk Utility. Qwen 14B AI model, SignalK, Commander, and AI Vision are all pre-loaded &mdash; ready to boot.</p>
-        </div>
-      </div>
-      <div class="step">
-        <span class="step-number">03</span>
-        <div class="step-content">
-          <h3>Connect &amp; Pair</h3>
-          <p>Plug the Actisense into your NMEA 2000 backbone. Connect PoE cameras if you have them. Power on the Mac Mini. Open Commander App on your phone over the boat's WiFi &mdash; scan the QR code to pair. No internet needed.</p>
-        </div>
-      </div>
-      <div class="step">
-        <span class="step-number">04</span>
-        <div class="step-content">
-          <h3>Auto-Discovery &amp; Two Ways to Connect</h3>
-          <p>Commander maps every sensor and starts AI processing locally. <strong>On board:</strong> real-time gauges, alerts, and camera feeds over WiFi &mdash; no internet needed. <strong>Remote (optional):</strong> add Starlink or WiFi for WhatsApp alerts from anywhere and cloud analytics.</p>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
 
 <!-- Solutions -->
 <section id="solutions">
@@ -581,11 +526,11 @@
   </div>
 </section>
 
-<!-- The Delivery Captain -->
-<section id="delivery-puck">
+<!-- How It Works -->
+<section id="how-it-works">
   <div class="section-header">
-    <h2>How It Connects</h2>
-    <p>Four configurations &mdash; same NMEA 2000 backbone, different hardware and data paths.</p>
+    <h2>How It Works</h2>
+    <p>Download the app. Order the parts. Follow the guide. Your boat is connected.</p>
   </div>
 
   <!-- 4-config tabs -->
@@ -683,7 +628,7 @@
         </div>
       </div>
     </div>
-    <p class="config-desc">Captain plugs it in and uses the Commander App on board. Owner gets live WhatsApp updates from anywhere. Moves between boats &mdash; no reconfiguration. ~$325 hardware.</p>
+    <p class="config-desc">Captain plugs it in and uses the Commander App on board. Owner gets live WhatsApp updates from anywhere. Moves between boats &mdash; no reconfiguration. ~$335 hardware.</p>
   </div>
 
   <!-- Diagnostic Scanner -->
@@ -728,12 +673,13 @@
         <li>USB-C power adapter (12V DC or AC outlet) <span>~$15</span></li>
         <li>microSD card (32GB+) <span>~$10</span></li>
       </ul>
-      <p class="puck-total">Total hardware: ~$325</p>
+      <p class="puck-total">Total hardware: ~$335</p>
     </div>
 
     <div class="puck-setup" style="flex:1">
       <div class="setup-tabs">
-        <button class="setup-tab-btn active" onclick="switchSetup('first')">First-Time Setup</button>
+        <button class="setup-tab-btn active" onclick="switchSetup('first')">Raspberry Pi Setup</button>
+        <button class="setup-tab-btn" onclick="switchSetup('mac')">Mac Mini M4 Setup</button>
         <button class="setup-tab-btn" onclick="switchSetup('newboat')">New Boat &mdash; 60 Seconds</button>
       </div>
 
@@ -761,6 +707,28 @@
           </div>
         </div>
         <p class="puck-note">One-time setup takes about 15 minutes. The app guides you through every step with pictures. No terminal commands, no configuration files.</p>
+      </div>
+
+      <div class="setup-panel" id="setup-mac">
+        <div class="puck-steps">
+          <div class="puck-step">
+            <span>1</span>
+            <p><strong>Download the App &amp; Create Your Account</strong> &mdash; Get the Commander app on your phone. Sign up, choose Private Yacht, and the app generates your hardware list: Mac Mini M4 and Actisense NGX-1. Optional: PoE cameras for AI Vision. ~$800 total.</p>
+          </div>
+          <div class="puck-step">
+            <span>2</span>
+            <p><strong>Restore the Disk Image</strong> &mdash; Download the pre-configured disk image from the app. Restore it to the Mac Mini using Apple Configurator or Disk Utility. Qwen 14B AI model, SignalK, Commander, and AI Vision are all pre-loaded &mdash; ready to boot.</p>
+          </div>
+          <div class="puck-step">
+            <span>3</span>
+            <p><strong>Connect &amp; Pair</strong> &mdash; Plug the Actisense into your NMEA 2000 backbone. Connect PoE cameras if you have them. Power on the Mac Mini. Open Commander App on your phone over the boat's WiFi &mdash; scan the QR code to pair. No internet needed.</p>
+          </div>
+          <div class="puck-step">
+            <span>4</span>
+            <p><strong>Auto-Discovery &amp; Two Ways to Connect</strong> &mdash; Commander maps every sensor and starts AI processing locally. <strong>On board:</strong> real-time gauges, alerts, and camera feeds over WiFi &mdash; no internet needed. <strong>Remote (optional):</strong> add Starlink or WiFi for WhatsApp alerts from anywhere and cloud analytics.</p>
+          </div>
+        </div>
+        <p class="puck-note">Everything runs locally on the Mac Mini. No cloud required for on-board use. Add internet when you want remote access.</p>
       </div>
 
       <div class="setup-panel" id="setup-newboat">
@@ -952,7 +920,7 @@
       <p class="hw-desc">You source the hardware, we provide the software. Download the Commander OS image, flash to SD card, plug in. Cloud AI processing via internet.</p>
       <ul>
         <li>Downloadable OS image &mdash; flash &amp; boot</li>
-        <li>You buy: Pi 5 + Actisense NGX-1 (~$280)</li>
+        <li>You buy: Pi 5 + Actisense NGX-1 (~$335)</li>
         <li>Auto-discovers your boat on first boot</li>
         <li>Low power draw (5W) &mdash; always on</li>
         <li>Secure VPN tunnel to Master Cloud</li>
@@ -972,7 +940,7 @@
         <li>Pre-provisioned VPN Tunnel</li>
         <li>60-second setup &mdash; plug in and go</li>
         <li>Store &amp; forward when offline</li>
-        <li>~$325 hardware</li>
+        <li>~$335 hardware</li>
       </ul>
     </div>
   </div>
@@ -1062,7 +1030,7 @@
       <p class="price-desc">Software subscription. You source the hardware, we provide the Commander OS image and cloud platform.</p>
       <ul>
         <li>Downloadable Commander OS image</li>
-        <li>You buy hardware (~$280/boat)</li>
+        <li>You buy hardware (~$335/boat)</li>
         <li>Master Cloud &mdash; fleet dashboard</li>
         <li>WhatsApp alerts &amp; guest self-service</li>
         <li>OTA updates &amp; remote management</li>
@@ -1079,9 +1047,9 @@
       <span class="price-badge">Plug &amp; Play</span>
       <h3>Delivery Captain</h3>
       <div class="price-amount">$50 <span class="price-period">/ boat</span></div>
-      <p class="price-desc">~$325 one-time hardware + $50 per boat monitored. For deliveries, marina monitoring, or seasonal storage.</p>
+      <p class="price-desc">~$335 one-time hardware + $50 per boat monitored. For deliveries, marina monitoring, or seasonal storage.</p>
       <ul>
-        <li>You buy hardware (~$325 one-time)</li>
+        <li>You buy hardware (~$335 one-time)</li>
         <li>$50 per boat monitoring fee</li>
         <li>Internet required (Starlink, WiFi, hotspot)</li>
         <li>VPN Tunnel &mdash; phones home automatically</li>
@@ -1194,7 +1162,7 @@
   </div>
 
   <div class="fleetmind-hero">
-    <h3>Your yacht is one data point in a <span>world of sailors.</span></h3>
+    <h3>Your Yacht is one data point in a <span>world of sailors.</span></h3>
     <p>Every boat pushes real-time telemetry to Master &mdash; position, wind, depth, barometric pressure, sea state. BigBlue aggregates this data and pushes relevant insights back to every vessel in the network. No extra hardware. Pure cloud logic.</p>
   </div>
 
@@ -1646,7 +1614,7 @@
   <h2>Ready to sleep easy?</h2>
   <p>Commander is currently in development. Get in touch to learn more or join the early access program.</p>
   <div class="cta-buttons">
-    <a href="#demo" class="cta-btn">Chat Online Now</a>
+    <a href="#" class="cta-btn" onclick="document.getElementById('chat-window').classList.add('open');document.getElementById('chat-input').focus();return false;">Chat Online Now</a>
     <a href="https://wa.me/13055601031?text=Hi%2C%20I'm%20interested%20in%20Master%26Commander" class="cta-btn secondary" target="_blank">WhatsApp</a>
   </div>
 </section>
@@ -1658,14 +1626,6 @@
 
 <script src="flow.js"></script>
 <script>
-// How It Works tab switching
-function switchHIW(mode) {
-  document.querySelectorAll('.hiw-tab-btn').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('.hiw-panel').forEach(p => p.classList.remove('active'));
-  document.querySelector('.hiw-tab-btn[onclick*="' + mode + '"]').classList.add('active');
-  document.getElementById('hiw-' + mode).classList.add('active');
-}
-
 function switchSetup(mode) {
   document.querySelectorAll('.setup-tab-btn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.setup-panel').forEach(p => p.classList.remove('active'));
@@ -1743,7 +1703,10 @@ document.querySelectorAll('.price-card').forEach(card => {
 });
 </script>
 
-<!-- Chat Widget -->
+<!-- Floating Buttons -->
+<a href="https://wa.me/13055601031?text=Hi%2C%20I'm%20interested%20in%20Master%26Commander" target="_blank" class="wa-bubble" aria-label="WhatsApp">
+  <svg viewBox="0 0 24 24" width="28" height="28" fill="#fff"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51l-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+</a>
 <button class="chat-bubble" id="chat-toggle" aria-label="Open chat">
   &#x2693;
   <span class="bubble-badge"></span>
@@ -1829,6 +1792,221 @@ document.querySelectorAll('.price-card').forEach(card => {
   sendBtn.addEventListener('click', send);
   input.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+  });
+})();
+</script>
+
+<!-- Password Reset Modal (triggered by ?reset=<token> URL param) -->
+<div class="auth-modal-overlay" id="reset-modal">
+  <div class="auth-modal">
+    <button class="auth-modal-close" onclick="document.getElementById('reset-modal').classList.remove('open')">&times;</button>
+    <h3>Reset Password</h3>
+    <form id="auth-reset" onsubmit="return mcAuth.resetPassword(event)">
+      <input type="password" id="reset-password" placeholder="New password (8+ chars)" autocomplete="new-password" required minlength="8">
+      <input type="password" id="reset-confirm" placeholder="Confirm new password" autocomplete="new-password" required minlength="8">
+      <div class="auth-error" id="reset-error"></div>
+      <div class="auth-success" id="reset-success"></div>
+      <button type="submit" id="reset-submit">Reset Password</button>
+    </form>
+  </div>
+</div>
+
+<!-- MasterCommander Auth -->
+<script>
+(function() {
+  const API = '/api/auth';
+
+  window.mcAuth = {
+    showForm: function(name) {
+      document.querySelectorAll('#auth-dropdown .auth-form').forEach(f => f.classList.remove('active'));
+      document.getElementById('auth-' + name).classList.add('active');
+      document.querySelectorAll('.auth-error, .auth-success').forEach(el => el.textContent = '');
+      var login = document.getElementById('nav-login');
+      if (!login.classList.contains('open')) login.classList.add('open');
+    },
+
+    login: async function(e) {
+      e.preventDefault();
+      var btn = document.getElementById('login-submit');
+      var err = document.getElementById('login-error');
+      err.textContent = '';
+      btn.disabled = true;
+      btn.textContent = 'Signing in...';
+      try {
+        var res = await fetch(API + '/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: document.getElementById('login-email').value,
+            password: document.getElementById('login-password').value
+          })
+        });
+        var data = await res.json();
+        if (!res.ok) { err.textContent = data.error; return; }
+        localStorage.setItem('mc_token', data.token);
+        localStorage.setItem('mc_user', JSON.stringify(data.user));
+        mcAuth.setLoggedIn(data.user);
+      } catch(ex) {
+        err.textContent = 'Connection error. Please try again.';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Sign In';
+      }
+      return false;
+    },
+
+    signup: async function(e) {
+      e.preventDefault();
+      var btn = document.getElementById('signup-submit');
+      var err = document.getElementById('signup-error');
+      err.textContent = '';
+      btn.disabled = true;
+      btn.textContent = 'Creating...';
+      try {
+        var res = await fetch(API + '/signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: document.getElementById('signup-name').value,
+            email: document.getElementById('signup-email').value,
+            password: document.getElementById('signup-password').value
+          })
+        });
+        var data = await res.json();
+        if (!res.ok) { err.textContent = data.error; return; }
+        localStorage.setItem('mc_token', data.token);
+        localStorage.setItem('mc_user', JSON.stringify(data.user));
+        mcAuth.setLoggedIn(data.user);
+      } catch(ex) {
+        err.textContent = 'Connection error. Please try again.';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Create Account';
+      }
+      return false;
+    },
+
+    forgot: async function(e) {
+      e.preventDefault();
+      var btn = document.getElementById('forgot-submit');
+      var err = document.getElementById('forgot-error');
+      var suc = document.getElementById('forgot-success');
+      err.textContent = '';
+      suc.textContent = '';
+      btn.disabled = true;
+      btn.textContent = 'Sending...';
+      try {
+        var res = await fetch(API + '/forgot-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: document.getElementById('forgot-email').value })
+        });
+        var data = await res.json();
+        suc.textContent = data.message || 'Check your email for a reset link.';
+      } catch(ex) {
+        err.textContent = 'Connection error. Please try again.';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Send Reset Link';
+      }
+      return false;
+    },
+
+    resetPassword: async function(e) {
+      e.preventDefault();
+      var pw = document.getElementById('reset-password').value;
+      var confirm = document.getElementById('reset-confirm').value;
+      var err = document.getElementById('reset-error');
+      var suc = document.getElementById('reset-success');
+      var btn = document.getElementById('reset-submit');
+      err.textContent = '';
+      suc.textContent = '';
+      if (pw !== confirm) { err.textContent = 'Passwords do not match.'; return false; }
+      btn.disabled = true;
+      btn.textContent = 'Resetting...';
+      try {
+        var token = new URLSearchParams(window.location.search).get('reset');
+        var res = await fetch(API + '/reset-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: token, password: pw })
+        });
+        var data = await res.json();
+        if (!res.ok) { err.textContent = data.error; return; }
+        suc.textContent = data.message;
+        btn.style.display = 'none';
+        setTimeout(function() {
+          document.getElementById('reset-modal').classList.remove('open');
+          history.replaceState(null, '', window.location.pathname);
+          mcAuth.showForm('login');
+        }, 2000);
+      } catch(ex) {
+        err.textContent = 'Connection error. Please try again.';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Reset Password';
+      }
+      return false;
+    },
+
+    setLoggedIn: function(user) {
+      var toggle = document.getElementById('auth-toggle');
+      var firstName = user.name.split(' ')[0];
+      toggle.textContent = firstName;
+      toggle.classList.add('logged-in');
+      document.querySelectorAll('#auth-dropdown .auth-form').forEach(f => f.classList.remove('active'));
+      document.getElementById('auth-user').classList.add('active');
+      document.getElementById('auth-user-name').textContent = user.name;
+      document.getElementById('nav-login').classList.remove('open');
+    },
+
+    logout: function() {
+      localStorage.removeItem('mc_token');
+      localStorage.removeItem('mc_user');
+      var toggle = document.getElementById('auth-toggle');
+      toggle.textContent = 'Login';
+      toggle.classList.remove('logged-in');
+      document.querySelectorAll('#auth-dropdown .auth-form').forEach(f => f.classList.remove('active'));
+      document.getElementById('auth-login').classList.add('active');
+      document.getElementById('nav-login').classList.remove('open');
+      document.getElementById('login-email').value = '';
+      document.getElementById('login-password').value = '';
+    },
+
+    restoreSession: async function() {
+      var token = localStorage.getItem('mc_token');
+      if (!token) return;
+      try {
+        var res = await fetch(API + '/session', {
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        if (!res.ok) { mcAuth.logout(); return; }
+        var data = await res.json();
+        localStorage.setItem('mc_user', JSON.stringify(data.user));
+        mcAuth.setLoggedIn(data.user);
+      } catch(ex) {
+        // Offline — use cached user data
+        var cached = localStorage.getItem('mc_user');
+        if (cached) {
+          try { mcAuth.setLoggedIn(JSON.parse(cached)); } catch(e) { mcAuth.logout(); }
+        }
+      }
+    }
+  };
+
+  // Restore session on load
+  mcAuth.restoreSession();
+
+  // Check for reset token in URL
+  var resetToken = new URLSearchParams(window.location.search).get('reset');
+  if (resetToken) {
+    document.getElementById('reset-modal').classList.add('open');
+  }
+
+  // Close dropdown on outside click
+  document.addEventListener('click', function(e) {
+    var login = document.getElementById('nav-login');
+    if (!login.contains(e.target)) login.classList.remove('open');
   });
 })();
 </script>
