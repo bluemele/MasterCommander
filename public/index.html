@@ -1314,13 +1314,14 @@
         <div class="wa-name">Commander</div>
         <div class="wa-status">online</div>
       </div>
+      <button class="wa-scenario-btn" id="demo-scenario-btn" onclick="demoScenario()" title="Watch a live scenario">&#x25B6; Watch Demo</button>
       <a class="wa-clear" onclick="demoClear()" title="Reset chat">&#x21bb;</a>
     </div>
     <div class="wa-chat" id="demo-chat">
-      <div class="wa-msg recv">&#x2693; Welcome aboard! I'm Commander — your AI boat monitor. Try a command below or type one in.<span class="time" id="demo-welcome-time"></span></div>
+      <div class="wa-msg recv">&#x2693; Welcome aboard! I'm Commander &mdash; your AI boat monitor. Ask me anything about your vessel, or try the buttons below.<span class="time" id="demo-welcome-time"></span></div>
     </div>
     <div class="wa-typing" id="demo-typing">Commander is typing<span class="typing-dots"></span></div>
-    <div class="wa-quick-replies">
+    <div class="wa-quick-replies" id="demo-pills">
       <button onclick="demoSend('status')">status</button>
       <button onclick="demoSend('anchor')">anchor</button>
       <button onclick="demoSend('engines')">engines</button>
@@ -1329,28 +1330,83 @@
       <button onclick="demoSend('alerts')">alerts</button>
     </div>
     <div class="wa-input-bar">
-      <input type="text" id="demo-input" placeholder="Type a command..." onkeydown="if(event.key==='Enter')demoSendInput()">
+      <input type="text" id="demo-input" placeholder="Ask anything... &quot;how's the boat?&quot;" onkeydown="if(event.key==='Enter')demoSendInput()">
       <button onclick="demoSendInput()">&#x27A4;</button>
     </div>
   </div>
 
   <script>
   (function(){
-    var responses = {
+    // ---- DATA RESPONSES (structured command output) ----
+    var data = {
       status: '<pre>\u2693 VESSEL STATUS\n\n\uD83D\uDCCD Position\n  18\u00B027.3\'N  64\u00B037.1\'W\n  At anchor \u2014 Virgin Gorda\n\n\u2699\uFE0F Engines\n  Port:  OFF  (1,847 hrs)\n  Stbd:  OFF  (1,832 hrs)\n\n\uD83D\uDD0B Battery\n  House:  87%  25.4V  -2.1A\n  Start:  100%  13.2V\n  Solar:  +14.2A  (342W)\n\n\u26FD Tanks\n  Fuel:  72%  |  Water:  45%\n\n\uD83C\uDF2C\uFE0F Wind  8kt NE  |  Depth 28ft</pre>',
-
       anchor: '<pre>\u2693 ANCHOR WATCH\n\n  Status:  SET \u2014 holding\n  Radius:  45m set  |  12m current\n  Drift:   0.3m in last hour\n  GPS:     18\u00B027.342\'N  64\u00B037.089\'W\n  Depth:   28ft  (stable)</pre>',
-
       engines: '<pre>\u2699\uFE0F ENGINE DIAGNOSTICS\n\n  PORT ENGINE\n  Hours:    1,847\n  RPM:      idle (OFF)\n  Oil:      42 psi  \u2714\n  Coolant:  176\u00B0F  \u2714\n  Alt:      14.1V  \u2714\n\n  STBD ENGINE\n  Hours:    1,832\n  RPM:      idle (OFF)\n  Oil:      44 psi  \u2714\n  Coolant:  174\u00B0F  \u2714\n  Alt:      14.2V  \u2714\n\nAll readings normal.</pre>',
-
       batteries: '<pre>\uD83D\uDD0B BATTERY &amp; CHARGING\n\n  HOUSE BANK\n  Capacity: 87%  (520/600 Ah)\n  Voltage:  25.4V\n  Current:  -2.1A (discharging)\n  Temp:     78\u00B0F\n\n  START BATTERY\n  Voltage:  13.2V  \u2714\n  Status:   Full\n\n  SOLAR\n  Output:   342W  (+14.2A)\n  Today:    1.8 kWh harvested\n\n  SHORE POWER\n  Status:   Disconnected</pre>',
-
       weather: '<pre>\uD83C\uDF24\uFE0F LOCAL WEATHER\n\n  Now:   82\u00B0F  Partly cloudy\n  Wind:  8kt NE\n  Seas:  1-2ft\n  Baro:  30.12 inHg (steady)\n\n  3-DAY FORECAST\n  Today:  82\u00B0F  Scattered clouds  5-10kt E\n  Tue:    84\u00B0F  Mostly sunny      8-12kt E\n  Wed:    80\u00B0F  Showers likely   15-20kt SE\n          \u26A0\uFE0F Small craft advisory possible</pre>',
-
       alerts: '<pre>\uD83D\uDD14 RECENT ALERTS (last 5)\n\n  14:22  \u2714  Anchor watch check \u2014 holding\n  11:05  \u26A0\uFE0F  Water tank below 50%\n  08:30  \u2714  Solar charging resumed\n  06:15  \u2139\uFE0F  Overnight report sent\n  22:41  \u2714  Bilge pump cycled (normal)</pre>'
     };
 
-    var hint = "I didn't recognize that command. Try one of the quick reply buttons: <b>status</b>, <b>anchor</b>, <b>engines</b>, <b>batteries</b>, <b>weather</b>, or <b>alerts</b>.";
+    // ---- NATURAL LANGUAGE MATCHING ----
+    var nlp = [
+      { keys: ['status','how.*boat','how.*vessel','overview','report','everything','what.*going on','check.*boat','how.*she','sitrep','sit rep','how.*things','give me.*rundown','full report'], cmd: 'status' },
+      { keys: ['anchor','drift','holding','dragging','swing','hook','rode','scope'], cmd: 'anchor' },
+      { keys: ['engine','motor','rpm','oil pressure','coolant','alternator','hours','prop','propulsion','mechanical'], cmd: 'engines' },
+      { keys: ['batter','solar','charging','shore power','volt','amp','house bank','lithium','inverter','power','electrical'], cmd: 'batteries' },
+      { keys: ['weather','wind','forecast','rain','storm','wave','sea state','baro','temperature','cloud','gust','seas'], cmd: 'weather' },
+      { keys: ['alert','alarm','emergency','warning','notif','anything wrong','any issues','problem','trouble','bilge','leak'], cmd: 'alerts' }
+    ];
+
+    // ---- CONVERSATIONAL AI RESPONSES ----
+    var chat = {
+      worry: "Looking good overall. Water tanks are at 45% \u2014 if you're staying at anchor a few more days, you might want to top up at the marina. Everything else is in normal range. Solar is keeping up with house loads, engines haven't been run today.",
+      goodnight: "Sleep easy, Captain. Anchor watch is active, all systems nominal. I\u2019ll message you immediately if anything changes. \uD83C\uDF19",
+      goodmorning: "Good morning! Quiet night \u2014 anchor held steady, no alarms. House batteries at 87%, solar panels are already charging. Wind picked up a bit to 8kt NE. Water tanks still at 45%. Ready when you are.",
+      thanks: "Anytime, Captain. That's what I'm here for. \u2693",
+      who: "I'm Commander \u2014 your AI boat monitor. I connect to your marine electronics via SignalK, watch every sensor 24/7, and report to you right here on WhatsApp. No apps to install, no dashboards to check. Just ask me anything.",
+      safe: "Looking at the data: anchor is holding with minimal drift, bilge is dry, batteries charging well, no unusual readings on any sensor. Wednesday's forecast shows possible higher winds \u2014 I'll alert you if conditions change. You're good.",
+      water: "Water tanks are at 45% \u2014 roughly 2-3 days of normal use remaining. The nearest marina with water is at Spanish Town, about 2nm south. Want me to remind you tomorrow morning?",
+      fuel: "Fuel tanks at 72%. At your average consumption of 8 gal/hr per engine, that\u2019s roughly 18 hours of motoring range. Plenty for getting to the next fuel dock.",
+      depth: "Current depth under keel is 28ft, stable. Tide is incoming \u2014 you'll gain about 1.5ft over the next 3 hours. No shallow water alerts.",
+      leave: "For tomorrow\u2019s departure: engines haven't been run today, so I\u2019d suggest a 5-minute warm-up. House bank is at 87%. Weather looks good \u2014 8-12kt E winds. I\u2019ll run a full systems check in the morning and send you a departure briefing.",
+      night: "Overnight summary: anchor watch \u2714, bilge pump cycled once (normal), no voltage drops, barometer steady. Quiet night. \uD83C\uDF19"
+    };
+
+    var chatPatterns = [
+      { keys: ['worried','worry','concern','should i','anything i should','safe to','is everything ok','all good','any risk'], resp: 'worry' },
+      { keys: ['good night','goodnight','going to (sleep|bed)','heading to bed','signing off','turning in'], resp: 'goodnight' },
+      { keys: ['good morning','morning','wake','woke up','just got up'], resp: 'goodmorning' },
+      { keys: ['thanks','thank you','thx','cheers','appreciate','great job'], resp: 'thanks' },
+      { keys: ['who are you','what are you','what can you','what do you do','how do you work','tell me about yourself'], resp: 'who' },
+      { keys: ['safe','can i sleep','night swim','leave.*kids','leave.*boat','unattended'], resp: 'safe' },
+      { keys: ['water tank','water level','fresh water','how much water','running low.*water','top up','fill up.*water'], resp: 'water' },
+      { keys: ['fuel','diesel','gas','range','how far','motoring'], resp: 'fuel' },
+      { keys: ['depth','shallow','tide','keel','draft','run aground'], resp: 'depth' },
+      { keys: ['leaving tomorrow','departure','ready to go','sail tomorrow','heading out','prep.*departure','check before we go'], resp: 'leave' },
+      { keys: ['overnight','last night','while i slept','during the night','night report'], resp: 'night' }
+    ];
+
+    // ---- FOLLOW-UP SUGGESTIONS (shown after each response) ----
+    var followups = {
+      status: ['anything to worry about?','check the anchor','how\u2019s the weather?'],
+      anchor: ['is it safe to sleep?','check the weather','full status'],
+      engines: ['battery status','ready to depart?','full status'],
+      batteries: ['engine check','how much fuel?','full status'],
+      weather: ['is it safe?','anchor holding?','leaving tomorrow'],
+      alerts: ['anything to worry about?','full status','check the anchor'],
+      worry: ['anchor watch','weather forecast','engine check'],
+      goodnight: ['overnight report','anchor watch'],
+      goodmorning: ['full status','weather forecast','departure prep'],
+      safe: ['anchor watch','weather forecast','good night'],
+      water: ['fuel level','full status'],
+      fuel: ['battery check','departure prep'],
+      depth: ['anchor watch','full status'],
+      leave: ['weather forecast','engine check','full status'],
+      night: ['full status','weather forecast']
+    };
+
+    // ---- ENGINE ----
+    var busy = false;
 
     function getTime() {
       var d = new Date();
@@ -1362,37 +1418,186 @@
       c.scrollTop = c.scrollHeight;
     }
 
-    function addMsg(type, html) {
+    function addMsg(type, html, cls) {
       var c = document.getElementById('demo-chat');
       var m = document.createElement('div');
-      m.className = 'wa-msg ' + type;
+      m.className = 'wa-msg ' + type + (cls ? ' ' + cls : '');
       m.innerHTML = html + '<span class="time">' + getTime() + '</span>';
       c.appendChild(m);
       scrollChat();
+      return m;
+    }
+
+    function showFollowups(key) {
+      var pills = followups[key];
+      if (!pills) return;
+      var box = document.getElementById('demo-pills');
+      box.innerHTML = '';
+      pills.forEach(function(label) {
+        var b = document.createElement('button');
+        b.textContent = label;
+        b.onclick = function(){ demoSendText(label); };
+        box.appendChild(b);
+      });
+    }
+
+    function resetPills() {
+      var box = document.getElementById('demo-pills');
+      box.innerHTML = '';
+      ['status','anchor','engines','batteries','weather','alerts'].forEach(function(cmd){
+        var b = document.createElement('button');
+        b.textContent = cmd;
+        b.onclick = function(){ window.demoSend(cmd); };
+        box.appendChild(b);
+      });
+    }
+
+    function matchNLP(text) {
+      var t = text.toLowerCase();
+      for (var i = 0; i < nlp.length; i++) {
+        for (var j = 0; j < nlp[i].keys.length; j++) {
+          if (new RegExp(nlp[i].keys[j], 'i').test(t)) return { type: 'data', cmd: nlp[i].cmd };
+        }
+      }
+      for (var i = 0; i < chatPatterns.length; i++) {
+        for (var j = 0; j < chatPatterns[i].keys.length; j++) {
+          if (new RegExp(chatPatterns[i].keys[j], 'i').test(t)) return { type: 'chat', key: chatPatterns[i].resp };
+        }
+      }
+      return null;
+    }
+
+    function respond(input, cb) {
+      var match = matchNLP(input);
+      if (match) {
+        if (match.type === 'data') {
+          cb(data[match.cmd], match.cmd);
+        } else {
+          cb(chat[match.key], match.key);
+        }
+      } else {
+        cb("I\u2019m not sure what you mean. Try asking about your boat \u2014 like <b>\"how\u2019s the boat?\"</b>, <b>\"is the anchor holding?\"</b>, or <b>\"any alerts?\"</b> \u2014 or use the buttons below.", null);
+      }
     }
 
     window.demoSend = function(cmd) {
+      if (busy) return;
+      busy = true;
       addMsg('sent', cmd);
       var typing = document.getElementById('demo-typing');
       typing.classList.add('visible');
       scrollChat();
       setTimeout(function(){
         typing.classList.remove('visible');
-        addMsg('recv', responses[cmd] || hint);
-      }, 800);
+        addMsg('recv', data[cmd]);
+        showFollowups(cmd);
+        busy = false;
+      }, 700 + Math.random() * 400);
+    };
+
+    window.demoSendText = function(text) {
+      if (busy) return;
+      busy = true;
+      addMsg('sent', text);
+      var typing = document.getElementById('demo-typing');
+      typing.classList.add('visible');
+      scrollChat();
+      respond(text, function(html, key) {
+        var delay = key ? (700 + Math.random() * 600) : 500;
+        setTimeout(function(){
+          typing.classList.remove('visible');
+          addMsg('recv', html);
+          if (key) showFollowups(key); else resetPills();
+          busy = false;
+        }, delay);
+      });
     };
 
     window.demoSendInput = function() {
       var inp = document.getElementById('demo-input');
-      var val = inp.value.trim().toLowerCase();
-      if (!val) return;
+      var val = inp.value.trim();
+      if (!val || busy) return;
       inp.value = '';
-      demoSend(val);
+      var lower = val.toLowerCase();
+      if (data[lower]) { demoSend(lower); }
+      else { demoSendText(val); }
     };
 
     window.demoClear = function() {
+      if (scenarioTimer) { clearTimeout(scenarioTimer); scenarioTimer = null; }
+      scenarioRunning = false;
+      var btn = document.getElementById('demo-scenario-btn');
+      btn.innerHTML = '\u25B6 Watch Demo';
+      btn.classList.remove('active');
       var c = document.getElementById('demo-chat');
-      c.innerHTML = '<div class="wa-msg recv">\u2693 Welcome aboard! I\'m Commander \u2014 your AI boat monitor. Try a command below or type one in.<span class="time">' + getTime() + '</span></div>';
+      c.innerHTML = '<div class="wa-msg recv">\u2693 Welcome aboard! I\'m Commander \u2014 your AI boat monitor. Ask me anything about your vessel, or try the buttons below.<span class="time">' + getTime() + '</span></div>';
+      resetPills();
+      busy = false;
+    };
+
+    // ---- AUTO-PLAY SCENARIO ----
+    var scenarioRunning = false;
+    var scenarioTimer = null;
+    var scenario = [
+      { type:'sent', text:'how\u2019s the boat?' },
+      { type:'data', cmd:'status', delay:900 },
+      { type:'sent', text:'anything I should worry about?', delay:2200 },
+      { type:'chat', key:'worry', delay:1100 },
+      { type:'sent', text:'is the anchor holding?', delay:2500 },
+      { type:'data', cmd:'anchor', delay:800 },
+      { type:'sent', text:'what\u2019s the weather looking like?', delay:2000 },
+      { type:'data', cmd:'weather', delay:900 },
+      { type:'sent', text:'we\u2019re leaving tomorrow morning', delay:2800 },
+      { type:'chat', key:'leave', delay:1200 },
+      { type:'sent', text:'thanks Commander', delay:2000 },
+      { type:'chat', key:'thanks', delay:600 }
+    ];
+
+    function playStep(i) {
+      if (!scenarioRunning || i >= scenario.length) {
+        scenarioRunning = false;
+        var btn = document.getElementById('demo-scenario-btn');
+        btn.innerHTML = '\u25B6 Watch Demo';
+        btn.classList.remove('active');
+        resetPills();
+        busy = false;
+        return;
+      }
+      var step = scenario[i];
+      if (step.type === 'sent') {
+        addMsg('sent', step.text);
+        var typing = document.getElementById('demo-typing');
+        typing.classList.add('visible');
+        scrollChat();
+        scenarioTimer = setTimeout(function(){ playStep(i+1); }, scenario[i+1] ? scenario[i+1].delay || 800 : 800);
+      } else {
+        var typing = document.getElementById('demo-typing');
+        typing.classList.remove('visible');
+        var html = step.type === 'data' ? data[step.cmd] : chat[step.key];
+        addMsg('recv', html);
+        var followKey = step.cmd || step.key;
+        showFollowups(followKey);
+        scenarioTimer = setTimeout(function(){ playStep(i+1); }, step.delay ? step.delay + 800 : 1600);
+      }
+    }
+
+    window.demoScenario = function() {
+      if (scenarioRunning) {
+        clearTimeout(scenarioTimer);
+        scenarioRunning = false;
+        var btn = document.getElementById('demo-scenario-btn');
+        btn.innerHTML = '\u25B6 Watch Demo';
+        btn.classList.remove('active');
+        busy = false;
+        return;
+      }
+      demoClear();
+      scenarioRunning = true;
+      busy = true;
+      var btn = document.getElementById('demo-scenario-btn');
+      btn.innerHTML = '\u25A0 Stop';
+      btn.classList.add('active');
+      setTimeout(function(){ playStep(0); }, 600);
     };
 
     // Set welcome time
