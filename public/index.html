@@ -71,6 +71,7 @@
   <div class="flow-tabs">
     <button class="flow-tab-btn active" data-mode="charter" onclick="setFlowMode('charter')">Charter Fleet <span>Raspberry Pi + Cloud AI</span></button>
     <button class="flow-tab-btn" data-mode="private" onclick="setFlowMode('private')">Private Yacht <span>Mac Mini M4 + Local AI</span></button>
+    <button class="flow-tab-btn" data-mode="delivery" onclick="setFlowMode('delivery')">Delivery Captain <span>Puck + WhatsApp</span></button>
     <button class="flow-tab-btn" data-mode="diagnostic" onclick="setFlowMode('diagnostic')">Diagnostic <span>Scanner + Service Portal</span></button>
   </div>
   <div id="flow-container">
@@ -408,6 +409,7 @@
     <div class="sub-pills">
       <button class="pill-btn active" data-pill="diag-diagnostics">Diagnostics (5)</button>
       <button class="pill-btn" data-pill="diag-reports">Service Reports (5)</button>
+      <button class="pill-btn" data-pill="diag-delivery">Delivery Captains (4)</button>
     </div>
 
     <!-- Diagnostics -->
@@ -465,6 +467,30 @@
         <div class="uc-icon">&#x1F9ED;</div>
         <h4>Marine Survey Reports</h4>
         <p>Back up visual inspections with 48 hours of verified sensor data. Engine health, electrical system analysis, battery condition, and network topology &mdash; evidence-based assessments for pre-purchase, insurance, and condition surveys.</p>
+      </div>
+    </div>
+
+    <!-- Delivery Captains -->
+    <div class="pill-panel uc-grid" id="pill-diag-delivery">
+      <div class="uc-card">
+        <div class="uc-icon">&#x1F6A2;</div>
+        <h4>Passage Monitoring</h4>
+        <p>Real-time engine, battery, and bilge data throughout the delivery. Know the boat's condition at every waypoint &mdash; not just departure and arrival.</p>
+      </div>
+      <div class="uc-card">
+        <div class="uc-icon">&#x1F4CD;</div>
+        <h4>Position Tracking</h4>
+        <p>Live GPS tracking with automatic position reports. Boat owner sees exactly where their vessel is at all times during the delivery.</p>
+      </div>
+      <div class="uc-card">
+        <div class="uc-icon">&#x1F4C4;</div>
+        <h4>Delivery Report</h4>
+        <p>Automated log of the entire passage &mdash; engine hours, fuel consumption, weather encountered, route taken. Professional handoff documentation.</p>
+      </div>
+      <div class="uc-card">
+        <div class="uc-icon">&#x26A0;&#xFE0F;</div>
+        <h4>Incident Alerts</h4>
+        <p>Instant alerts to owner and captain if anything goes out of spec during transit. Bilge pumps, battery voltage, engine temps &mdash; caught in real time.</p>
       </div>
     </div>
   </div>

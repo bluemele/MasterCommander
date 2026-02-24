@@ -215,11 +215,7 @@ section {
 .flow-node text {
   font-family: var(--font-sans);
   fill: var(--text);
-  font-size: 13px;
   pointer-events: none;
-}
-.flow-node .node-icon {
-  font-size: 18px;
 }
 
 /* Connection lines */
