@@ -1349,7 +1349,7 @@
 
     // ---- NATURAL LANGUAGE MATCHING ----
     var nlp = [
-      { keys: ['status','how.*boat','how.*vessel','overview','report','everything','what.*going on','check.*boat','how.*she','sitrep','sit rep','how.*things','give me.*rundown','full report'], cmd: 'status' },
+      { keys: ['status','how.*boat','how.*vessel','overview','everything','what.*going on','check.*boat','how.*she','sitrep','sit rep','how.*things','give me.*rundown','full report','status report','vessel report','boat report'], cmd: 'status' },
       { keys: ['anchor','drift','holding','dragging','swing','hook','rode','scope'], cmd: 'anchor' },
       { keys: ['engine','motor','rpm','oil pressure','coolant','alternator','hours','prop','propulsion','mechanical'], cmd: 'engines' },
       { keys: ['batter','solar','charging','shore power','volt','amp','house bank','lithium','inverter','power','electrical'], cmd: 'batteries' },
@@ -1585,6 +1585,7 @@
       if (scenarioRunning) {
         clearTimeout(scenarioTimer);
         scenarioRunning = false;
+        document.getElementById('demo-typing').classList.remove('visible');
         var btn = document.getElementById('demo-scenario-btn');
         btn.innerHTML = '\u25B6 Watch Demo';
         btn.classList.remove('active');
