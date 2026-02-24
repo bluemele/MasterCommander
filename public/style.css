@@ -309,9 +309,10 @@ section {
   transition: max-height 0.3s, opacity 0.3s, padding 0.3s;
 }
 #detail-panel.visible {
-  max-height: 300px;
+  max-height: 700px;
   opacity: 1;
   padding: 1.25rem;
+  overflow-y: auto;
 }
 #detail-panel h3 {
   font-size: 1rem;
@@ -350,6 +351,530 @@ section {
   cursor: pointer;
   font-size: 1.1rem;
   line-height: 1;
+  z-index: 2;
+}
+/* Detail content layout — side by side on desktop */
+.detail-content {
+  display: flex;
+  gap: 1.25rem;
+  align-items: flex-start;
+}
+.detail-info { flex: 1; min-width: 0; }
+.detail-mockup {
+  flex: 1.2;
+  min-width: 0;
+  max-width: 480px;
+}
+@media (max-width: 768px) {
+  .detail-content { flex-direction: column; }
+  .detail-mockup { max-width: 100%; }
+}
+
+/* =====================================================
+   MOCKUP SCREEN STYLES — Visual previews of app screens
+   ===================================================== */
+.mockup-screen {
+  background: #0b1120;
+  border: 1px solid #1e293b;
+  border-radius: 8px;
+  overflow: hidden;
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+/* Top bar */
+.mockup-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.75rem;
+  background: #111827;
+  border-bottom: 1px solid #1e293b;
+  font-size: 0.7rem;
+}
+.mockup-topbar.compact { padding: 0.35rem 0.6rem; font-size: 0.65rem; }
+.mockup-logo { font-weight: 700; color: var(--cyan); }
+.mockup-nav { color: var(--text-dim); }
+.mockup-user { color: var(--text-muted); }
+
+/* Stats row */
+.mockup-stats-row {
+  display: flex;
+  justify-content: space-around;
+  padding: 0.6rem 0.5rem;
+  border-bottom: 1px solid #1e293b;
+}
+.mockup-stats-row.compact { padding: 0.5rem; }
+.mockup-stat { text-align: center; }
+.mockup-stat-num {
+  font-size: 1.1rem;
+  font-weight: 800;
+  font-family: var(--font-mono);
+  color: var(--text);
+}
+.mockup-stat-num.ok { color: var(--green); }
+.mockup-stat-num.warn { color: var(--orange); }
+.mockup-stat-label {
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* Fleet grid — boat cards */
+.mockup-fleet-grid {
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.mockup-boat-card {
+  background: #111827;
+  border: 1px solid #1e293b;
+  border-radius: 6px;
+  padding: 0.5rem 0.6rem;
+}
+.mockup-boat-card.alert { border-color: rgba(245,158,11,0.4); }
+.mockup-boat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.35rem;
+  font-size: 0.75rem;
+}
+.mockup-status {
+  font-size: 0.6rem;
+  font-family: var(--font-mono);
+}
+.mockup-status.online { color: var(--green); }
+.mockup-status.alert { color: var(--orange); }
+.mockup-boat-gauges {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 0.3rem;
+}
+.mockup-gauge {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.65rem;
+  color: var(--text-muted);
+}
+.mockup-gauge-bar {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--green);
+  min-width: 20px;
+  max-width: 80px;
+  transition: width 0.3s;
+}
+.mockup-gauge-bar.engine { background: var(--cyan); }
+.mockup-gauge-bar.low { background: var(--orange); }
+.mockup-boat-meta {
+  font-size: 0.6rem;
+  color: var(--text-muted);
+}
+
+/* WhatsApp mockup */
+.mockup-whatsapp { background: #0b141a; }
+.mockup-wa-header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.75rem;
+  background: #1f2c34;
+  border-bottom: 1px solid #2a3942;
+}
+.mockup-wa-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--navy);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+}
+.mockup-wa-header strong { font-size: 0.75rem; }
+.mockup-wa-status { font-size: 0.6rem; color: var(--green); }
+.mockup-wa-chat {
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  max-height: 280px;
+  overflow-y: auto;
+}
+.mockup-wa-msg {
+  max-width: 88%;
+  padding: 0.4rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  line-height: 1.4;
+}
+.mockup-wa-msg.recv {
+  align-self: flex-start;
+  background: #1f2c34;
+  border-bottom-left-radius: 2px;
+}
+.mockup-wa-msg.sent {
+  align-self: flex-end;
+  background: #005c4b;
+  border-bottom-right-radius: 2px;
+}
+.mockup-wa-sender {
+  font-size: 0.6rem;
+  color: var(--cyan);
+  font-weight: 600;
+  margin-bottom: 0.15rem;
+}
+.mockup-wa-time {
+  font-size: 0.55rem;
+  color: rgba(255,255,255,0.4);
+  float: right;
+  margin-left: 0.5rem;
+  margin-top: 0.15rem;
+}
+
+/* FleetMind map mockup */
+.mockup-map {
+  padding: 0.5rem;
+}
+.mockup-map-bg {
+  position: relative;
+  height: 140px;
+  background: linear-gradient(135deg, #0a1628 0%, #112240 50%, #0a1628 100%);
+  border: 1px solid #1e293b;
+  border-radius: 6px;
+  overflow: hidden;
+}
+.mockup-map-label {
+  position: absolute;
+  font-size: 0.6rem;
+  color: var(--text-dim);
+  background: rgba(17,24,39,0.85);
+  padding: 0.15rem 0.4rem;
+  border-radius: 3px;
+  border: 1px solid #1e293b;
+  white-space: nowrap;
+}
+.mockup-map-label.alert { border-color: rgba(245,158,11,0.4); color: var(--orange); }
+.mockup-map-dot {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--cyan);
+  box-shadow: 0 0 6px var(--cyan);
+}
+.mockup-intel-feed {
+  padding: 0.4rem 0.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.mockup-intel-item {
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  padding: 0.3rem 0.5rem;
+  background: #111827;
+  border-radius: 4px;
+  border-left: 2px solid var(--cyan);
+}
+
+/* On Board gauges mockup */
+.mockup-gauges-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+  padding: 0.6rem;
+}
+.mockup-live-gauge { text-align: center; }
+.mockup-gauge-ring {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  margin: 0 auto 0.3rem;
+  position: relative;
+  background: conic-gradient(
+    var(--color, var(--green)) calc(var(--pct, 0) * 1%),
+    #1e293b calc(var(--pct, 0) * 1%)
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.mockup-gauge-center {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: #0b1120;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  color: var(--text);
+}
+.mockup-gauge-title {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text);
+}
+.mockup-gauge-detail {
+  font-size: 0.6rem;
+  color: var(--text-muted);
+}
+.mockup-bottom-bar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  border-top: 1px solid #1e293b;
+}
+.mockup-bottom-item {
+  font-size: 0.6rem;
+  color: var(--text-dim);
+  background: #111827;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+}
+
+/* Delivery tracking mockup */
+.mockup-tracking {
+  padding: 0.6rem;
+}
+.mockup-tracking-map {
+  position: relative;
+  height: 50px;
+  margin-bottom: 0.6rem;
+  display: flex;
+  align-items: center;
+}
+.mockup-track-line {
+  flex: 1;
+  height: 3px;
+  background: linear-gradient(90deg, var(--green) 68%, #1e293b 68%);
+  border-radius: 2px;
+  margin: 0 0.5rem;
+}
+.mockup-track-start, .mockup-track-end {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+.mockup-track-current {
+  position: absolute;
+  left: calc(68% - 6px);
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1rem;
+  filter: drop-shadow(0 0 4px var(--cyan));
+}
+.mockup-tracking-info {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.3rem;
+}
+.mockup-track-stat {
+  font-size: 0.65rem;
+  padding: 0.3rem 0.5rem;
+  background: #111827;
+  border-radius: 4px;
+}
+.mockup-track-stat span { color: var(--text-muted); display: block; font-size: 0.55rem; }
+.mockup-track-stat strong { color: var(--text); }
+.mockup-track-stat strong.ok { color: var(--green); }
+
+/* Delivery Report mockup */
+.mockup-report { background: #0f172a; }
+.mockup-report-header {
+  text-align: center;
+  padding: 0.75rem;
+  border-bottom: 2px solid var(--cyan);
+}
+.mockup-report-logo {
+  font-size: 0.6rem;
+  font-family: var(--font-mono);
+  color: var(--cyan);
+  letter-spacing: 0.1em;
+}
+.mockup-report-title {
+  font-size: 1rem;
+  font-weight: 800;
+  margin: 0.25rem 0;
+}
+.mockup-report-sub {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+}
+.mockup-report-section {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid #1e293b;
+}
+.mockup-report-label {
+  font-size: 0.6rem;
+  font-family: var(--font-mono);
+  color: var(--cyan);
+  letter-spacing: 0.05em;
+  margin-bottom: 0.35rem;
+}
+.mockup-report-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.25rem;
+}
+.mockup-report-grid div {
+  font-size: 0.65rem;
+}
+.mockup-report-grid span {
+  color: var(--text-muted);
+  display: block;
+  font-size: 0.55rem;
+}
+.mockup-report-grid strong { color: var(--text); }
+.mockup-report-grid strong.ok { color: var(--green); }
+.mockup-report-row {
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  padding: 0.2rem 0;
+}
+.mockup-report-footer {
+  text-align: center;
+  padding: 0.5rem;
+  font-size: 0.55rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* Diagnostic portal mockup */
+.mockup-diag-header {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid #1e293b;
+  font-size: 0.75rem;
+}
+.mockup-diag-date {
+  display: block;
+  font-size: 0.6rem;
+  color: var(--text-muted);
+}
+.mockup-diag-network {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid #1e293b;
+}
+.mockup-diag-title {
+  font-size: 0.65rem;
+  font-family: var(--font-mono);
+  color: var(--cyan);
+  margin-bottom: 0.4rem;
+  letter-spacing: 0.03em;
+}
+.mockup-diag-nodes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+.mockup-diag-node {
+  font-size: 0.6rem;
+  padding: 0.3rem 0.5rem;
+  border-radius: 4px;
+  border: 1px solid #1e293b;
+  background: #111827;
+  text-align: center;
+  min-width: 70px;
+}
+.mockup-diag-node span {
+  display: block;
+  font-size: 0.5rem;
+  color: var(--text-muted);
+}
+.mockup-diag-node.ok { border-color: rgba(16,185,129,0.3); }
+.mockup-diag-node.warn { border-color: rgba(245,158,11,0.4); color: var(--orange); }
+.mockup-diag-node.err { border-color: rgba(239,68,68,0.4); color: var(--red); }
+.mockup-diag-findings {
+  padding: 0.5rem 0.75rem;
+}
+.mockup-diag-item {
+  font-size: 0.65rem;
+  padding: 0.3rem 0.5rem;
+  margin-bottom: 0.25rem;
+  border-radius: 4px;
+  background: #111827;
+}
+.mockup-diag-item.ok { border-left: 2px solid var(--green); color: var(--text-dim); }
+.mockup-diag-item.warn { border-left: 2px solid var(--orange); color: var(--text-dim); }
+.mockup-diag-item.err { border-left: 2px solid var(--red); color: var(--text-dim); }
+.mockup-diag-item.info { border-left: 2px solid var(--cyan); color: var(--text-dim); }
+
+/* Phone mockup (Tech's device) */
+.mockup-phone {
+  max-width: 260px;
+  margin: 0 auto;
+  border-radius: 20px;
+  border: 2px solid #2a3942;
+}
+.mockup-phone-notch {
+  width: 80px;
+  height: 6px;
+  background: #1e293b;
+  border-radius: 3px;
+  margin: 0.4rem auto 0;
+}
+.mockup-phone-list {
+  padding: 0.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.mockup-phone-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: #111827;
+  border-radius: 8px;
+}
+.mockup-phone-item-icon { font-size: 1.2rem; }
+.mockup-phone-item-text {
+  flex: 1;
+  min-width: 0;
+}
+.mockup-phone-item-text strong {
+  display: block;
+  font-size: 0.7rem;
+}
+.mockup-phone-item-text span {
+  font-size: 0.6rem;
+  color: var(--text-muted);
+}
+.mockup-phone-item-badge {
+  font-size: 0.75rem;
+}
+.mockup-phone-item-badge.warn { color: var(--orange); }
+.mockup-phone-item-badge.ok { color: var(--green); }
+.mockup-phone-item-badge.scanning {
+  color: var(--cyan);
+  animation: pulse-scan 1.5s ease-in-out infinite;
+}
+@keyframes pulse-scan {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+.mockup-phone-action {
+  padding: 0.5rem;
+}
+.mockup-btn {
+  text-align: center;
+  padding: 0.4rem;
+  background: var(--cyan);
+  color: #fff;
+  border-radius: 8px;
+  font-size: 0.7rem;
+  font-weight: 600;
 }
 
 /* How It Works */
