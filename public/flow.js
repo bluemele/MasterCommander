@@ -15,14 +15,21 @@
     { id:'sensors',  x:60,  y:250, w:140, h:52, label:'Sensors',       icon:'\ud83c\udf21\ufe0f', color:'#1e3a5f', detail:'Temperature, humidity, bilge pump counters, tank levels, barometric pressure. Any sensor on your network is auto-detected.', tags:['OneWire','I2C','WiFi'] },
     { id:'cameras',  x:60,  y:335, w:140, h:52, label:'Cameras / FLIR', icon:'\ud83d\udcf7', color:'#1e3a5f', detail:'Security cameras, FLIR thermal imaging, night vision. Monitor your vessel visually \u2014 on board or from shore. AI vision for intrusion and thermal alerts.', tags:['IP Cameras','FLIR','Night Vision','AI Vision'] },
     { id:'signalk',  x:320, y:165, w:150, h:52, label:'SignalK Server', icon:'\ud83d\udd04', color:'#0e4a2f', detail:'Included with every Commander Unit. SignalK translates all marine protocols into a unified data stream \u2014 the universal translator for boats.', tags:['Included','Open Source','Universal'] },
-    { id:'commander',x:500, y:165, w:160, h:52, label:'Commander Unit', icon:'\ud83e\udde0', color:'#7c2d12', detail:'The brain on board. A compact unit at your nav station that auto-discovers sensors, monitors 24/7, and sends telemetry to Master via Starlink or marina WiFi. Runs offline when there\u2019s no connection.', tags:['Compact','24/7','Offline'] },
-    { id:'starlink', x:720, y:165, w:150, h:52, label:'Starlink / WiFi', icon:'\ud83d\udce1', color:'#1e3a5f', detail:'Starlink, marina WiFi, or cellular \u2014 any internet connection. Commander queues data when offline and syncs when connectivity returns.', tags:['Starlink','Marina WiFi','Cellular','Store & Forward'] },
-    { id:'master',   x:930, y:80,  w:160, h:52, label:'Master (Cloud)', icon:'\u2601\ufe0f', color:'#4c1d95', detail:'Master provisions and manages every Commander Unit remotely. Software updates, alert tuning, owner dashboard, fleet management, and historical analytics. Delivers your alerts via WhatsApp.', tags:['Provisioning','Updates','Dashboard','Subscription'] },
-    { id:'whatsapp', x:930, y:250, w:140, h:52, label:'WhatsApp',      icon:'\ud83d\udcac', color:'#1a5c38', detail:'Your interface. Master delivers alerts and reports to your WhatsApp. Send commands back in plain English. Nothing to install \u2014 you already have it.', tags:['E2E Encrypted','Free'] },
-    { id:'phone',    x:1140,y:165, w:130, h:52, label:'Your Phone',    icon:'\ud83d\udcf1', color:'#1e3a5f', detail:'Alerts and reports appear as regular WhatsApp messages. Access the Master dashboard from any browser for deeper insights.', tags:['iOS','Android','Dashboard'] },
+    { id:'commander',x:500, y:190, w:160, h:52, label:'Commander Unit', icon:'\ud83e\udde0', color:'#7c2d12', detail:'The brain on board. Monitors 24/7 and reaches you three ways: directly on board via app, WhatsApp alerts when you have internet, and the full Master dashboard if you subscribe.', tags:['Compact','24/7','Offline'] },
+    // ON-BOARD path (top) — no internet needed
+    { id:'localnet', x:730, y:55,  w:155, h:46, label:'Boat WiFi / BLE', icon:'\ud83d\udcf6', color:'#1e3a5f', detail:'When you\u2019re on board, the Commander App connects directly over the boat\u2019s local WiFi or Bluetooth. No internet needed. Full access to every system.', tags:['Local WiFi','Bluetooth','Zero Latency','No Internet'] },
+    { id:'app',      x:950, y:55,  w:155, h:46, label:'Commander App',   icon:'\ud83d\udcf1', color:'#0e4a2f', detail:'Native app for iOS and Android. On board: connects directly via WiFi or Bluetooth. Real-time gauges, alerts, camera feeds, and full command interface \u2014 no internet required.', tags:['iOS','Android','Real-Time','Offline'] },
+    { id:'phone',    x:1160,y:55,  w:130, h:46, label:'Your Phone',      icon:'\ud83d\udcf1', color:'#1e3a5f', detail:'On board: Commander App connects directly \u2014 no internet. With Starlink: WhatsApp alerts. With Master: full cloud dashboard, push notifications, fleet view.', tags:['iOS','Android'] },
+    // INTERNET path (middle) — Commander-only with Starlink
+    { id:'starlink', x:730, y:185, w:155, h:46, label:'Starlink / WiFi', icon:'\ud83d\udce1', color:'#1e3a5f', detail:'Starlink, marina WiFi, or cellular. With just Commander + internet, you get WhatsApp alerts directly. Commander queues data when offline and syncs when connectivity returns.', tags:['Starlink','Marina WiFi','Cellular','Store & Forward'] },
+    { id:'whatsapp', x:950, y:185, w:155, h:46, label:'WhatsApp',        icon:'\ud83d\udcac', color:'#1a5c38', detail:'Works with just Commander + internet \u2014 no Master subscription needed. Commander sends alerts and reports directly to your WhatsApp. Send commands back in plain English.', tags:['Included','E2E Encrypted','Two-Way'] },
+    // MASTER path (bottom) — premium subscription
+    { id:'master',   x:730, y:325, w:155, h:46, label:'Master (Cloud)',   icon:'\u2601\ufe0f', color:'#4c1d95', detail:'Optional subscription. Remote provisioning, software updates, historical analytics, owner dashboard, and fleet management. Commander works without it \u2014 Master makes it smarter.', tags:['Subscription','Dashboard','Analytics','Fleet'] },
+    { id:'push',     x:950, y:300, w:140, h:40, label:'Push Alerts',     icon:'\ud83d\udd14', color:'#4c1d95', detail:'Critical alerts via push notifications through the Commander App. Battery critical, anchor drag, bilge alarm \u2014 even if WhatsApp is closed.', tags:['Master','Push Notifications'], sub:true },
+    { id:'dashboard',x:950, y:355, w:140, h:40, label:'Web Dashboard',   icon:'\ud83d\udcca', color:'#4c1d95', detail:'Full web dashboard accessible from any browser. Historical charts, live telemetry, camera feeds, fleet overview. Your boat\u2019s control room in the cloud.', tags:['Master','Analytics','Live View'], sub:true },
     // Sub-modules (below Commander)
     { id:'autodiscovery', x:420, y:290, w:135, h:42, label:'Auto-Discovery', icon:'\ud83d\udd0d', color:'#374151', detail:'Commander scans your network and learns what sensors YOUR boat has. Twin engines? Two batteries? No config needed.', tags:['Zero Config','Adaptive'], sub:true },
-    { id:'alertengine',   x:570, y:290, w:125, h:42, label:'Alert Engine',   icon:'\ud83d\udea8', color:'#374151', detail:'Pure if/else code \u2014 no AI. Monitors thresholds 24/7. Battery low? Engine hot? Bilge pumping? You get a WhatsApp alert.', tags:['Rule-Based','No AI','Reliable'], sub:true },
+    { id:'alertengine',   x:570, y:290, w:125, h:42, label:'Alert Engine',   icon:'\ud83d\udea8', color:'#374151', detail:'Pure if/else code \u2014 no AI. Monitors thresholds 24/7. Battery low? Engine hot? Bilge pumping? You get alerted via app, WhatsApp, or push notification.', tags:['Rule-Based','No AI','Reliable'], sub:true },
     { id:'quickcmds',     x:420, y:350, w:125, h:42, label:'Quick Cmds',     icon:'\u26a1', color:'#374151', detail:'Instant responses: status, engines, battery, tanks, wind, anchor, position. Pre-built templates, no AI latency.', tags:['Instant','Templates'], sub:true },
     { id:'aibrain',       x:570, y:350, w:125, h:42, label:'AI Brain',       icon:'\ud83e\udd16', color:'#374151', detail:'Local AI runs directly on the Commander Unit \u2014 fully offline. With internet, taps cloud AI for deeper analysis.', tags:['On-Device','Offline','Cloud Optional'], sub:true },
     { id:'simulator',     x:320, y:290, w:140, h:42, label:'Demo Mode',      icon:'\ud83c\udfae', color:'#374151', detail:'See Commander in action with simulated boat data. Choose your boat type and watch real alerts and reports.', tags:['Live Demo','3 Boat Types'], sub:true },
@@ -35,11 +42,18 @@
     ['sensors','signalk'],
     ['cameras','signalk'],
     ['signalk','commander'],
+    // On-board path (no internet)
+    ['commander','localnet'],
+    ['localnet','app'],
+    ['app','phone'],
+    // Internet path (Commander + Starlink)
     ['commander','starlink'],
-    ['starlink','master'],
-    ['master','whatsapp'],
+    ['starlink','whatsapp'],
     ['whatsapp','phone'],
-    ['master','phone'],
+    // Master path (subscription)
+    ['starlink','master'],
+    ['master','push'],
+    ['master','dashboard'],
     ['signalk','simulator'],
     ['commander','autodiscovery'],
     ['commander','alertengine'],
@@ -55,10 +69,13 @@
     // Scale for viewport
     let scale, tx, ty, vw, vh;
     if (isMobile) {
-      vw = 500; vh = 660;
+      vw = 500; vh = 700;
+      container.style.minHeight = '600px';
       scale = 0.4; tx = 10; ty = 20;
     } else {
       vw = 1340; vh = 440;
+      // increase container min-height
+      container.style.minHeight = '500px';
       scale = 1; tx = 0; ty = 0;
     }
     svg.setAttribute('viewBox', `0 0 ${vw} ${vh}`);
@@ -89,13 +106,23 @@
         sx1 = a.x + a.w/2; sy1 = a.y + a.h;
         sx2 = b.x + b.w/2; sy2 = b.y;
       }
-      // master → whatsapp goes down
-      if (from === 'master' && to === 'whatsapp') {
+      // starlink → master goes down
+      if (from === 'starlink' && to === 'master') {
         sx1 = a.x + a.w/2; sy1 = a.y + a.h;
         sx2 = b.x + b.w/2; sy2 = b.y;
       }
-      // starlink → master goes up-right
-      if (from === 'starlink' && to === 'master') {
+      // commander → localnet goes up-right
+      if (from === 'commander' && to === 'localnet') {
+        sx1 = a.x + a.w; sy1 = a.y + a.h/4;
+        sx2 = b.x;        sy2 = b.y + b.h/2;
+      }
+      // commander → starlink goes right
+      if (from === 'commander' && to === 'starlink') {
+        sx1 = a.x + a.w; sy1 = a.y + a.h/2;
+        sx2 = b.x;        sy2 = b.y + b.h/2;
+      }
+      // whatsapp → phone goes up-right
+      if (from === 'whatsapp' && to === 'phone') {
         sx1 = a.x + a.w; sy1 = a.y + a.h/2;
         sx2 = b.x;        sy2 = b.y + b.h/2;
       }
@@ -167,10 +194,18 @@
       cameras:  { x:105, y:70,  w:140, h:45 },
       signalk:  { x:155, y:140, w:180, h:50 },
       commander:{ x:140, y:240, w:200, h:50 },
-      starlink: { x:155, y:440, w:180, h:50 },
-      master:   { x:155, y:510, w:180, h:50 },
-      whatsapp: { x:55,  y:580, w:160, h:50 },
-      phone:    { x:260, y:580, w:150, h:50 },
+      // On-board path
+      localnet: { x:50,  y:440, w:150, h:42 },
+      app:      { x:220, y:440, w:150, h:42 },
+      phone:    { x:155, y:500, w:170, h:46 },
+      // Internet path
+      starlink: { x:50,  y:570, w:150, h:42 },
+      whatsapp: { x:220, y:570, w:150, h:42 },
+      // Master path
+      master:   { x:50,  y:640, w:150, h:42 },
+      push:     { x:220, y:630, w:120, h:36 },
+      dashboard:{ x:350, y:630, w:120, h:36 },
+      // Sub-modules
       autodiscovery: { x:50,  y:330, w:130, h:38 },
       alertengine:   { x:200, y:330, w:120, h:38 },
       quickcmds:     { x:340, y:330, w:120, h:38 },
