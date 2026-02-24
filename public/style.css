@@ -788,8 +788,14 @@ section {
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 2rem;
+  cursor: pointer;
+  transition: border-color 0.2s, transform 0.15s, box-shadow 0.2s;
 }
-.hw-card.featured { border-color: var(--green); }
+.hw-card:hover {
+  border-color: var(--cyan);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(14,165,233,0.15);
+}
 .hw-card .hw-badge {
   display: inline-block;
   font-size: 0.7rem;
@@ -799,13 +805,6 @@ section {
   margin-bottom: 1rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-}
-.hw-card.featured .hw-badge {
-  background: rgba(16,185,129,0.1);
-  border: 1px solid rgba(16,185,129,0.2);
-  color: var(--green);
-}
-.hw-card:not(.featured) .hw-badge {
   background: rgba(14,165,233,0.1);
   border: 1px solid rgba(14,165,233,0.2);
   color: var(--cyan);
@@ -849,8 +848,14 @@ section {
   border-radius: 12px;
   padding: 2.5rem 2rem;
   text-align: center;
+  cursor: pointer;
+  transition: border-color 0.2s, transform 0.15s, box-shadow 0.2s;
 }
-.price-card.featured { border-color: var(--green); }
+.price-card:hover {
+  border-color: var(--cyan);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(14,165,233,0.15);
+}
 .price-card .price-badge {
   display: inline-block;
   font-size: 0.7rem;
@@ -859,13 +864,6 @@ section {
   padding: 0.2rem 0.6rem;
   margin-bottom: 1rem;
   text-transform: uppercase;
-}
-.price-card.featured .price-badge {
-  background: rgba(16,185,129,0.1);
-  border: 1px solid rgba(16,185,129,0.2);
-  color: var(--green);
-}
-.price-card:not(.featured) .price-badge {
   background: rgba(14,165,233,0.1);
   border: 1px solid rgba(14,165,233,0.2);
   color: var(--cyan);

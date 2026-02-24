@@ -503,7 +503,7 @@
     <p>Three Commander Unit options &mdash; matched to how you use your boat.</p>
   </div>
   <div class="hw-grid">
-    <div class="hw-card featured">
+    <div class="hw-card">
       <span class="hw-badge">Charter Fleets</span>
       <h3>Raspberry Pi</h3>
       <p class="hw-desc">Compact, always-on, and built for fleets. Cloud AI processing via internet &mdash; no local model needed.</p>
@@ -552,7 +552,7 @@
     <p>Simple, transparent pricing. No hidden fees.</p>
   </div>
   <div class="pricing-grid">
-    <div class="price-card featured">
+    <div class="price-card">
       <span class="price-badge">Most Popular</span>
       <h3>Charter Fleet</h3>
       <div class="price-amount">$240 <span class="price-period">/ boat / year</span></div>
@@ -852,6 +852,22 @@ document.querySelectorAll('.pill-btn').forEach(btn => {
     // Activate selected
     btn.classList.add('active');
     document.getElementById('pill-' + pill).classList.add('active');
+  });
+});
+
+// Hardware cards → scroll to pricing
+document.querySelectorAll('.hw-card').forEach(card => {
+  card.addEventListener('click', () => {
+    document.getElementById('pricing').scrollIntoView({ behavior: 'smooth' });
+  });
+});
+
+// Pricing cards → trigger email link on card click
+document.querySelectorAll('.price-card').forEach(card => {
+  card.addEventListener('click', (e) => {
+    if (e.target.closest('a')) return; // don't double-trigger if clicking the button
+    const link = card.querySelector('a.cta-btn');
+    if (link) link.click();
   });
 });
 </script>
