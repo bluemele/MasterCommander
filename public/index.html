@@ -568,7 +568,7 @@
         <li>Compliance reporting</li>
         <li>FleetMind &mdash; shared intelligence</li>
       </ul>
-      <a href="mailto:overlord.gil.ai@gmail.com?subject=Charter%20Fleet%20Inquiry" class="cta-btn" style="width:100%;justify-content:center">Get Started</a>
+      <a href="https://wa.me/13055601031?text=Hi%2C%20I'm%20interested%20in%20Master%26Commander%20for%20my%20charter%20fleet" class="cta-btn" style="width:100%;justify-content:center">Get Started</a>
     </div>
     <div class="price-card">
       <span class="price-badge">Plug &amp; Play</span>
@@ -584,7 +584,7 @@
         <li>WhatsApp updates to owner</li>
         <li>Cellular data plan additional</li>
       </ul>
-      <a href="mailto:overlord.gil.ai@gmail.com?subject=Delivery%20Puck%20Inquiry" class="cta-btn secondary" style="width:100%;justify-content:center">Inquire</a>
+      <a href="https://wa.me/13055601031?text=Hi%2C%20I'm%20interested%20in%20the%20Delivery%20Puck" class="cta-btn secondary" style="width:100%;justify-content:center">Inquire</a>
     </div>
     <div class="price-card">
       <span class="price-badge">Flexible</span>
@@ -599,7 +599,7 @@
         <li>Commander App for on-board access</li>
         <li>Optional Master Cloud add-on</li>
       </ul>
-      <a href="mailto:overlord.gil.ai@gmail.com?subject=Private%20Yacht%20Inquiry" class="cta-btn secondary" style="width:100%;justify-content:center">Contact Us</a>
+      <a href="https://wa.me/13055601031?text=Hi%2C%20I'm%20interested%20in%20Master%26Commander%20for%20my%20private%20yacht" class="cta-btn secondary" style="width:100%;justify-content:center">Contact Us</a>
     </div>
   </div>
 </section>
@@ -862,8 +862,8 @@
   <h2>Ready to monitor your fleet?</h2>
   <p>Commander is currently in development. Get in touch to learn more or join the early access program.</p>
   <div class="cta-buttons">
-    <a href="mailto:overlord.gil.ai@gmail.com?subject=Charter%20Fleet%20Inquiry" class="cta-btn">Charter Fleet Inquiry</a>
-    <a href="mailto:overlord.gil.ai@gmail.com?subject=Private%20Yacht%20Inquiry" class="cta-btn secondary">Private Yacht Inquiry</a>
+    <a href="https://wa.me/13055601031?text=Hi%2C%20I'm%20interested%20in%20Master%26Commander%20for%20my%20charter%20fleet" class="cta-btn" target="_blank">Chat on WhatsApp</a>
+    <a href="https://wa.me/13055601031?text=Hi%2C%20I'm%20interested%20in%20Master%26Commander%20for%20my%20private%20yacht" class="cta-btn secondary" target="_blank">Private Yacht Inquiry</a>
   </div>
 </section>
 
@@ -919,6 +919,96 @@ document.querySelectorAll('.price-card').forEach(card => {
     if (link) link.click();
   });
 });
+</script>
+
+<!-- Chat Widget -->
+<button class="chat-bubble" id="chat-toggle" aria-label="Open chat">
+  &#x2693;
+  <span class="bubble-badge"></span>
+</button>
+
+<div class="chat-window" id="chat-window">
+  <div class="chat-window-header">
+    <div class="chat-avatar">&#x2693;</div>
+    <div class="chat-info">
+      <h4>Commander</h4>
+      <span>Online</span>
+    </div>
+    <button class="chat-window-close" id="chat-close">&times;</button>
+  </div>
+  <div class="chat-messages" id="chat-messages">
+    <div class="chat-msg bot">Hi! I'm the Master&amp;Commander assistant. Ask me anything about our boat monitoring system, pricing, or hardware options.</div>
+  </div>
+  <div class="chat-input-area">
+    <input type="text" id="chat-input" placeholder="Ask about pricing, hardware, features..." maxlength="1000" autocomplete="off">
+    <button id="chat-send">&#x27A4;</button>
+  </div>
+</div>
+
+<script>
+(function() {
+  const toggle = document.getElementById('chat-toggle');
+  const win = document.getElementById('chat-window');
+  const closeBtn = document.getElementById('chat-close');
+  const input = document.getElementById('chat-input');
+  const sendBtn = document.getElementById('chat-send');
+  const messages = document.getElementById('chat-messages');
+  let sessionId = null;
+  let sending = false;
+
+  toggle.addEventListener('click', () => {
+    win.classList.toggle('open');
+    if (win.classList.contains('open')) input.focus();
+  });
+  closeBtn.addEventListener('click', () => win.classList.remove('open'));
+
+  function addMessage(text, cls) {
+    const div = document.createElement('div');
+    div.className = 'chat-msg ' + cls;
+    div.textContent = text;
+    messages.appendChild(div);
+    messages.scrollTop = messages.scrollHeight;
+    return div;
+  }
+
+  async function send() {
+    const text = input.value.trim();
+    if (!text || sending) return;
+    sending = true;
+    sendBtn.disabled = true;
+    input.value = '';
+
+    addMessage(text, 'user');
+    const typing = addMessage('Thinking...', 'typing');
+
+    try {
+      const res = await fetch('/api/web-chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text, sessionId })
+      });
+      const data = await res.json();
+      typing.remove();
+      if (data.error) {
+        addMessage(data.error, 'bot');
+      } else {
+        sessionId = data.sessionId;
+        addMessage(data.response, 'bot');
+      }
+    } catch (err) {
+      typing.remove();
+      addMessage('Connection error. Please try again.', 'bot');
+    }
+    sending = false;
+    sendBtn.disabled = false;
+    input.focus();
+  }
+
+  sendBtn.addEventListener('click', send);
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+  });
+})();
 </script>
 </body>
 </html>
