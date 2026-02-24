@@ -1,0 +1,13 @@
+services:
+  mastercommander:
+    build: .
+    container_name: mastercommander
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3010:80"
+    networks:
+      - coolify
+
+networks:
+  coolify:
+    external: true
