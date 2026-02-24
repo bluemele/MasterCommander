@@ -95,20 +95,20 @@
 <section id="how-it-works">
   <div class="section-header">
     <h2>How It Works</h2>
-    <p>We install it. It learns your boat. You get WhatsApp alerts.</p>
+    <p>You install it. It learns your boat. You get WhatsApp alerts.</p>
   </div>
   <div class="steps">
     <div class="step">
       <span class="step-number">01</span>
-      <h3>Install the Commander Unit</h3>
-      <p>A compact unit goes at your nav station and plugs into your NMEA 2000 network. Compatible with all major marine electronics &mdash; Garmin, Raymarine, Simrad, B&amp;G, Victron, and more.</p>
-      <p style="margin-top:0.75rem">Professional installation. No wiring changes to your boat.</p>
+      <h3>Get the Hardware, Flash the Image</h3>
+      <p>Buy a Raspberry Pi 5 and Actisense NGX-1 from Amazon or any marine chandlery. Download the Commander OS image from our site, flash it to an SD card with Raspberry Pi Imager, and plug it into your NMEA 2000 network. Mac Mini owners get a pre-configured disk image with the AI model included.</p>
+      <p style="margin-top:0.75rem">Installation by owner. No wiring changes. No hardware to ship.</p>
     </div>
     <div class="step">
       <span class="step-number">02</span>
-      <h3>It Discovers Your Boat</h3>
-      <p>Commander auto-discovers every sensor on board. Twin engines? Two battery banks? Solar? Shore power? It figures out what you have and adapts automatically.</p>
-      <p style="margin-top:0.75rem">No configuration needed. No device lists. It just learns.</p>
+      <h3>Boot &amp; Auto-Discover</h3>
+      <p>Power on, scan the QR code to pair with your Commander account. The unit auto-discovers every sensor on the NMEA 2000 bus &mdash; twin engines, battery banks, solar, shore power. It reports what it finds and you name your boat. No configuration needed.</p>
+      <p style="margin-top:0.75rem">Boots generic. Discovers everything. Configures itself.</p>
     </div>
     <div class="step">
       <span class="step-number">03</span>
@@ -791,12 +791,13 @@
         <text x="287" y="50" text-anchor="middle" fill="#64748b" font-size="7">Cloud AI</text>
         <text x="40" y="12" text-anchor="middle" fill="#475569" font-size="7">&darr; NMEA 2000</text>
       </svg>
-      <p class="hw-desc">Compact, always-on, and built for fleets. Cloud AI processing via internet &mdash; no local model needed.</p>
+      <p class="hw-desc">You source the hardware, we provide the software. Download the Commander OS image, flash to SD card, plug in. Cloud AI processing via internet.</p>
       <ul>
-        <li>Compact form factor &mdash; fits anywhere</li>
-        <li>Low power draw (5W)</li>
-        <li>Always-on internet required</li>
-        <li>Cloud AI via Master subscription</li>
+        <li>Downloadable OS image &mdash; flash &amp; boot</li>
+        <li>You buy: Pi 5 + Actisense NGX-1 (~$280)</li>
+        <li>Auto-discovers your boat on first boot</li>
+        <li>Low power draw (5W) &mdash; always on</li>
+        <li>Secure VPN tunnel to Master Cloud</li>
         <li>OTA updates &amp; remote management</li>
       </ul>
     </div>
@@ -863,12 +864,13 @@
         <text x="299" y="74" text-anchor="middle" fill="#a78bfa" font-size="6.5" font-weight="600">Cloud</text>
         <text x="45" y="12" text-anchor="middle" fill="#475569" font-size="7">&darr; NMEA 2000</text>
       </svg>
-      <p class="hw-desc">Full power for private owners. Runs AI locally with Qwen 14B &mdash; works completely offline.</p>
+      <p class="hw-desc">You buy the Mac Mini, we provide a pre-configured disk image with Qwen 14B AI model, SignalK, and Commander &mdash; ready to boot.</p>
       <ul>
-        <li>Apple M4 chip &mdash; runs local AI</li>
-        <li>Qwen 14B language model on device</li>
-        <li>Works fully offline &mdash; no internet needed</li>
+        <li>Pre-built disk image with LLM included</li>
+        <li>You buy: Mac Mini M4 + Actisense (~$800)</li>
+        <li>Qwen 14B runs locally &mdash; fully offline</li>
         <li>AI Vision for cameras &amp; FLIR</li>
+        <li>Auto-discovers your boat on first boot</li>
         <li>Optional Master Cloud subscription</li>
       </ul>
     </div>
@@ -950,10 +952,10 @@
       <span class="price-badge">Most Popular</span>
       <h3>Charter Fleet</h3>
       <div class="price-amount">Custom <span class="price-period">per fleet</span></div>
-      <p class="price-desc">Tailored to your fleet size and hardware choice. Pi or Mac Mini &mdash; we build the right solution.</p>
+      <p class="price-desc">Software subscription. You source the hardware, we provide the Commander OS image and cloud platform.</p>
       <ul>
-        <li>Commander Unit (Raspberry Pi)</li>
-        <li>Professional installation</li>
+        <li>Downloadable Commander OS image</li>
+        <li>You buy hardware (~$280/boat)</li>
         <li>Master Cloud &mdash; fleet dashboard</li>
         <li>WhatsApp alerts &amp; guest self-service</li>
         <li>OTA updates &amp; remote management</li>
@@ -981,11 +983,11 @@
       <span class="price-badge">Flexible</span>
       <h3>Private Yacht</h3>
       <div class="price-amount">Custom</div>
-      <p class="price-desc">Tailored to your vessel and needs.</p>
+      <p class="price-desc">Software subscription. You buy the Mac Mini, we provide the disk image with AI model pre-loaded.</p>
       <ul>
-        <li>Commander Unit (Mac Mini M4)</li>
-        <li>Professional installation</li>
-        <li>Local AI &mdash; works offline</li>
+        <li>Pre-built disk image with Qwen 14B</li>
+        <li>You buy hardware (~$800)</li>
+        <li>Local AI &mdash; works fully offline</li>
         <li>WhatsApp alerts &mdash; no subscription</li>
         <li>Commander App for on-board access</li>
         <li>Optional Master Cloud add-on</li>

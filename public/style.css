@@ -1772,7 +1772,6 @@ footer {
   .alerts-table { font-size: 0.8rem; }
   .alerts-table th, .alerts-table td { padding: 0.5rem; }
   .wa-demo { margin: 2rem 0 0; }
-  #flow-container { min-height: 600px; }
   .flow-tabs { gap: 0.35rem; }
   .flow-tab-btn { padding: 0.5rem 0.75rem; font-size: 0.8rem; }
   .flow-tab-btn span { font-size: 0.6rem; }
