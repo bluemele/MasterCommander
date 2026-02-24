@@ -33,9 +33,9 @@
   <h1>Your fleet, <span class="highlight">always talking.</span></h1>
   <p class="tagline">AI boat monitoring for charter fleets and private yachts. The Commander Unit connects to your marine electronics, monitors every system 24/7, and reports to you via WhatsApp, app, or cloud dashboard.</p>
   <div class="cta-buttons hero-ctas" style="margin-bottom:2rem">
-    <a href="#solutions" class="cta-btn">Charter Fleets</a>
-    <a href="#solutions" class="cta-btn secondary">Private Yachts</a>
-    <a href="#delivery-puck" class="cta-btn secondary">Delivery Captains</a>
+    <a href="#solutions" class="cta-btn" onclick="setTimeout(function(){document.querySelector('.tab-btn[data-tab=charter]').click()},100)">Charter Fleets</a>
+    <a href="#solutions" class="cta-btn secondary" onclick="setTimeout(function(){document.querySelector('.tab-btn[data-tab=private]').click()},100)">Private Yachts</a>
+    <a href="#delivery-puck" class="cta-btn secondary" onclick="setTimeout(function(){document.querySelector('.config-tab-btn[onclick*=delivery]')&&document.querySelector('.config-tab-btn[onclick*=delivery]').click()},100)">Delivery Captains</a>
     <a href="#diagnostics" class="cta-btn secondary">Marine Surveys</a>
   </div>
   <div class="badges">
