@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Master&amp;Commander &mdash; AI Boat Monitor for Charter Fleets &amp; Private Yachts</title>
-  <meta name="description" content="AI boat monitoring for charter fleets and private yachts. Commander Unit connects to your marine electronics, monitors every system 24/7, and sends alerts to WhatsApp. From $240/year per boat.">
+  <meta name="description" content="AI boat monitoring for charter fleets, private yachts, deliveries, and marinas. Commander Unit connects to your marine electronics, monitors every system 24/7, and sends alerts to WhatsApp. From $240/year per boat.">
   <link rel="stylesheet" href="style.css">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#x2693;</text></svg>">
 </head>
@@ -16,6 +16,7 @@
   <ul>
     <li><a href="#how-it-works">How It Works</a></li>
     <li><a href="#solutions">Solutions</a></li>
+    <li><a href="#delivery-puck">Delivery Puck</a></li>
     <li><a href="#hardware">Hardware</a></li>
     <li><a href="#pricing">Pricing</a></li>
     <li><a href="#alerts">Alerts</a></li>
@@ -43,7 +44,7 @@
 <!-- Social Proof Bar -->
 <div class="proof-bar">
   <div class="proof-item">
-    <div class="proof-number">61</div>
+    <div class="proof-number">67+</div>
     <div class="proof-label">Use Cases</div>
   </div>
   <div class="proof-item">
@@ -107,7 +108,7 @@
 <section id="solutions">
   <div class="section-header">
     <h2>Solutions</h2>
-    <p>61 use cases across charter operations and private yacht ownership.</p>
+    <p>67+ use cases across charter operations, private yacht ownership, deliveries, and marinas.</p>
   </div>
 
   <!-- Main tabs -->
@@ -394,6 +395,85 @@
   </div>
 </section>
 
+<!-- The Delivery Puck -->
+<section id="delivery-puck">
+  <div class="section-header">
+    <h2>The Delivery Puck</h2>
+    <p>Plug-and-play boat monitoring in 60 seconds. No configuration, no WiFi, no app. Just plug in and go.</p>
+  </div>
+
+  <div class="puck-layout">
+    <div class="puck-kit">
+      <h3>What's in the Box</h3>
+      <ul>
+        <li>Raspberry Pi 5 in waterproof case <span>~$80</span></li>
+        <li>4G cellular HAT + antenna + SIM <span>~$45</span></li>
+        <li>Actisense NGX-1 (NMEA 2000 USB) <span>~$200</span></li>
+        <li>NMEA 2000 T-connector + 1m drop cable <span>~$30</span></li>
+        <li>12V to USB-C power cable (3m) <span>~$15</span></li>
+        <li>Quick start card (3 steps, with pictures) <span></span></li>
+      </ul>
+      <p class="puck-total">Total hardware: ~$370</p>
+    </div>
+
+    <div class="puck-setup">
+      <h3>Captain's Setup: 60 Seconds</h3>
+      <div class="puck-steps">
+        <div class="puck-step">
+          <span>1</span>
+          <p>Plug the NMEA 2000 cable into any open T-connector on the backbone</p>
+        </div>
+        <div class="puck-step">
+          <span>2</span>
+          <p>Plug the USB-C power cable into any 12V outlet</p>
+        </div>
+        <div class="puck-step">
+          <span>3</span>
+          <p>Wait for the green light (60 seconds)</p>
+        </div>
+      </div>
+      <p class="puck-note">No app. No WiFi passwords. No login. Master starts receiving data automatically via cellular + Tailscale VPN.</p>
+    </div>
+  </div>
+
+  <div class="puck-chain">
+    <h3>How Data Flows</h3>
+    <div class="chain-flow">
+      <div class="chain-node"><span class="chain-icon">&#x2693;</span><span class="chain-label">NMEA 2000</span></div>
+      <span class="chain-arrow">&rarr;</span>
+      <div class="chain-node"><span class="chain-icon">&#x1F50C;</span><span class="chain-label">Actisense USB</span></div>
+      <span class="chain-arrow">&rarr;</span>
+      <div class="chain-node"><span class="chain-icon">&#x1F4BB;</span><span class="chain-label">Raspberry Pi</span></div>
+      <span class="chain-arrow">&rarr;</span>
+      <div class="chain-node"><span class="chain-icon">&#x1F4F6;</span><span class="chain-label">4G Cellular</span></div>
+      <span class="chain-arrow">&rarr;</span>
+      <div class="chain-node"><span class="chain-icon">&#x1F510;</span><span class="chain-label">Tailscale VPN</span></div>
+      <span class="chain-arrow">&rarr;</span>
+      <div class="chain-node"><span class="chain-icon">&#x2601;&#xFE0F;</span><span class="chain-label">Master Cloud</span></div>
+      <span class="chain-arrow">&rarr;</span>
+      <div class="chain-node"><span class="chain-icon">&#x1F4AC;</span><span class="chain-label">WhatsApp</span></div>
+    </div>
+  </div>
+
+  <div class="puck-uses">
+    <div class="puck-use">
+      <div class="puck-use-icon">&#x1F6A2;</div>
+      <h4>Delivery Monitoring</h4>
+      <p>Owner tracks their boat in real-time during delivery passages. Position, engine health, fuel, ETA &mdash; all via WhatsApp. Captain plugs it in, owner gets updates. No crew involvement needed.</p>
+    </div>
+    <div class="puck-use">
+      <div class="puck-use-icon">&#x2693;</div>
+      <h4>Marina Management</h4>
+      <p>Deploy pucks across slips to monitor every vessel. Shore power status, bilge activity, battery health, security alerts. Automate dock walks and catch problems before owners call.</p>
+    </div>
+    <div class="puck-use">
+      <div class="puck-use-icon">&#x2744;&#xFE0F;</div>
+      <h4>Seasonal Storage</h4>
+      <p>Leave the puck plugged in while your boat sits on the hard or at a winter slip. Battery, bilge, and temperature alerts via cellular &mdash; even 1,000 miles away.</p>
+    </div>
+  </div>
+</section>
+
 <!-- Also Built For -->
 <section id="also-built-for">
   <div class="section-header">
@@ -401,18 +481,6 @@
     <p>Commander adapts to specialized marine operations.</p>
   </div>
   <div class="ribbon-grid">
-    <div class="ribbon-card">
-      <div class="ribbon-icon">&#x2693;</div>
-      <h4>Marinas</h4>
-      <div class="ribbon-count">5 USE CASES</div>
-      <p>Monitor vessels in slips, detect shore power issues, track bilge activity fleet-wide, automate dock walk reports.</p>
-    </div>
-    <div class="ribbon-card">
-      <div class="ribbon-icon">&#x1F6A2;</div>
-      <h4>Delivery Crews</h4>
-      <div class="ribbon-count">2 USE CASES</div>
-      <p>Owner tracks their boat during delivery passages. Real-time position, engine health, and ETA updates via WhatsApp.</p>
-    </div>
     <div class="ribbon-card">
       <div class="ribbon-icon">&#x1F4C4;</div>
       <h4>Marine Insurance</h4>
@@ -432,7 +500,7 @@
 <section id="hardware">
   <div class="section-header">
     <h2>Choose Your Hardware</h2>
-    <p>Two Commander Unit options &mdash; matched to how you use your boat.</p>
+    <p>Three Commander Unit options &mdash; matched to how you use your boat.</p>
   </div>
   <div class="hw-grid">
     <div class="hw-card featured">
@@ -446,6 +514,19 @@
         <li>Cloud AI via Master subscription</li>
         <li>OTA updates &amp; remote management</li>
         <li>$240/yr per boat &mdash; all inclusive</li>
+      </ul>
+    </div>
+    <div class="hw-card">
+      <span class="hw-badge">Delivery &amp; Marinas</span>
+      <h3>Delivery Puck</h3>
+      <p class="hw-desc">Plug-and-play monitoring via cellular. No WiFi, no config. Ideal for deliveries, marinas, and seasonal storage.</p>
+      <ul>
+        <li>Raspberry Pi 5 + 4G cellular modem</li>
+        <li>Actisense NGX-1 (NMEA 2000 USB)</li>
+        <li>Pre-provisioned Tailscale VPN</li>
+        <li>60-second setup &mdash; 3 steps</li>
+        <li>Store &amp; forward when offline</li>
+        <li>~$370 hardware + data plan</li>
       </ul>
     </div>
     <div class="hw-card">
@@ -487,6 +568,22 @@
         <li>Compliance reporting</li>
       </ul>
       <a href="mailto:overlord.gil.ai@gmail.com?subject=Charter%20Fleet%20Inquiry" class="cta-btn" style="width:100%;justify-content:center">Get Started</a>
+    </div>
+    <div class="price-card">
+      <span class="price-badge">Plug &amp; Play</span>
+      <h3>Delivery Puck</h3>
+      <div class="price-amount">~$370 <span class="price-period">one-time hardware</span></div>
+      <p class="price-desc">Buy or rent for deliveries, marina monitoring, or seasonal storage.</p>
+      <ul>
+        <li>Raspberry Pi 5 + 4G cellular</li>
+        <li>Actisense NMEA 2000 interface</li>
+        <li>Pre-configured &mdash; zero setup</li>
+        <li>Tailscale VPN &mdash; phones home automatically</li>
+        <li>Master Cloud dashboard included</li>
+        <li>WhatsApp updates to owner</li>
+        <li>Cellular data plan additional</li>
+      </ul>
+      <a href="mailto:overlord.gil.ai@gmail.com?subject=Delivery%20Puck%20Inquiry" class="cta-btn secondary" style="width:100%;justify-content:center">Inquire</a>
     </div>
     <div class="price-card">
       <span class="price-badge">Flexible</span>
