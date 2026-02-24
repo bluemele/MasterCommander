@@ -73,33 +73,6 @@
   </div>
 </div>
 
-<!-- System Architecture -->
-<section class="flow-section" id="architecture">
-  <h2>System Architecture</h2>
-  <p class="subtitle">Tap any step to learn more. Data flows from your marine electronics to your phone.</p>
-  <div class="flow-tabs">
-    <button class="flow-tab-btn active" data-mode="charter" onclick="setFlowMode('charter')">Charter Fleet</button>
-    <button class="flow-tab-btn" data-mode="private" onclick="setFlowMode('private')">Private Yacht</button>
-    <button class="flow-tab-btn" data-mode="delivery" onclick="setFlowMode('delivery')">Delivery Captain</button>
-    <button class="flow-tab-btn" data-mode="diagnostic" onclick="setFlowMode('diagnostic')">Diagnostic</button>
-  </div>
-  <div id="flow-container">
-    <div id="flow-steps" class="flow-steps"></div>
-    <div id="flow-outputs" class="flow-outputs"></div>
-  </div>
-  <div id="detail-panel" class="detail-panel">
-    <button id="detail-close">&times;</button>
-    <div class="detail-content">
-      <div class="detail-info">
-        <h3 id="detail-title"></h3>
-        <p id="detail-desc"></p>
-        <div id="detail-tags" class="detail-tags"></div>
-      </div>
-      <div id="detail-mockup" class="detail-mockup" style="display:none"></div>
-    </div>
-  </div>
-</section>
-
 <!-- How It Works -->
 <section id="how-it-works">
   <div class="section-header">
@@ -577,6 +550,33 @@
         <h4>Incident Alerts</h4>
         <p>Instant alerts to owner and captain if anything goes out of spec during transit. Bilge pumps, battery voltage, engine temps &mdash; caught in real time.</p>
       </div>
+    </div>
+  </div>
+</section>
+
+<!-- System Architecture -->
+<section class="flow-section" id="architecture">
+  <h2>System Architecture</h2>
+  <p class="subtitle">Tap any step to learn more. Data flows from your marine electronics to your phone.</p>
+  <div class="flow-tabs">
+    <button class="flow-tab-btn active" data-mode="charter" onclick="setFlowMode('charter')">Charter Fleet</button>
+    <button class="flow-tab-btn" data-mode="private" onclick="setFlowMode('private')">Private Yacht</button>
+    <button class="flow-tab-btn" data-mode="delivery" onclick="setFlowMode('delivery')">Delivery Captain</button>
+    <button class="flow-tab-btn" data-mode="diagnostic" onclick="setFlowMode('diagnostic')">Diagnostic</button>
+  </div>
+  <div id="flow-container">
+    <div id="flow-steps" class="flow-steps"></div>
+    <div id="flow-outputs" class="flow-outputs"></div>
+  </div>
+  <div id="detail-panel" class="detail-panel">
+    <button id="detail-close">&times;</button>
+    <div class="detail-content">
+      <div class="detail-info">
+        <h3 id="detail-title"></h3>
+        <p id="detail-desc"></p>
+        <div id="detail-tags" class="detail-tags"></div>
+      </div>
+      <div id="detail-mockup" class="detail-mockup" style="display:none"></div>
     </div>
   </div>
 </section>
