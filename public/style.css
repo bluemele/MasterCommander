@@ -65,6 +65,76 @@ nav ul { list-style: none; display: flex; gap: 1.5rem; }
 nav ul a { color: var(--text-dim); font-size: 0.875rem; transition: color 0.2s; }
 nav ul a:hover { color: var(--cyan); text-decoration: none; }
 
+.nav-login {
+  position: relative;
+  margin-left: 0.5rem;
+}
+.nav-login-btn {
+  background: transparent;
+  border: 1px solid var(--cyan);
+  color: var(--cyan);
+  padding: 0.35rem 1rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: background 0.2s, box-shadow 0.2s;
+  font-family: var(--font-sans);
+}
+.nav-login-btn:hover {
+  background: rgba(14,165,233,0.15);
+  box-shadow: 0 0 8px rgba(14,165,233,0.3);
+}
+.nav-login-dropdown {
+  display: none;
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem;
+  width: 220px;
+  flex-direction: column;
+  gap: 0.6rem;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  z-index: 200;
+}
+.nav-login.open .nav-login-dropdown {
+  display: flex;
+}
+.nav-login-dropdown input {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  color: var(--text);
+  font-size: 0.85rem;
+  font-family: var(--font-sans);
+  outline: none;
+  width: 100%;
+}
+.nav-login-dropdown input:focus {
+  border-color: var(--cyan);
+}
+.nav-login-dropdown input::placeholder {
+  color: var(--text-muted);
+}
+.nav-login-dropdown button {
+  background: var(--cyan);
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem;
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  transition: background 0.2s;
+}
+.nav-login-dropdown button:hover {
+  background: #0284c7;
+}
+
 /* Sections */
 section {
   position: relative;
