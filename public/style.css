@@ -906,6 +906,15 @@ section {
   font-weight: 700;
 }
 
+/* Pricing shared CTA row */
+.pricing-cta-row {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 2.5rem;
+  flex-wrap: wrap;
+}
+
 /* FleetMind */
 .fleetmind-hero {
   text-align: center;
