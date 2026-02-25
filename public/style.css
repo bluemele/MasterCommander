@@ -2454,3 +2454,265 @@ footer {
   .chat-bubble { bottom: 1rem; right: 1rem; }
   .wa-bubble { bottom: 1rem; right: 4.5rem; }
 }
+
+/* ---- Email Verification Banner ---- */
+.verify-banner {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 101;
+  background: var(--orange);
+  color: #000;
+  text-align: center;
+  padding: 0.5rem 2rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.verify-banner.visible { display: flex; align-items: center; justify-content: center; gap: 0.75rem; }
+.verify-banner a { color: #000; text-decoration: underline; cursor: pointer; font-weight: 700; }
+.verify-banner .verify-dismiss {
+  position: absolute;
+  right: 1rem;
+  background: none;
+  border: none;
+  color: #000;
+  font-size: 1.2rem;
+  cursor: pointer;
+  opacity: 0.7;
+  line-height: 1;
+}
+.verify-banner .verify-dismiss:hover { opacity: 1; }
+body.has-verify-banner nav { top: 2rem; }
+body.has-verify-banner .hero { padding-top: 10rem; }
+
+/* ---- Dashboard Overlay ---- */
+.dash-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  backdrop-filter: blur(6px);
+  z-index: 1000;
+  align-items: flex-start;
+  justify-content: center;
+  overflow-y: auto;
+  padding: 3rem 1rem;
+}
+.dash-overlay.open { display: flex; }
+.dash-modal {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 2rem;
+  width: 800px;
+  max-width: 95vw;
+  position: relative;
+}
+.dash-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 1.6rem;
+  cursor: pointer;
+  line-height: 1;
+}
+.dash-close:hover { color: var(--text); }
+.dash-welcome {
+  margin-bottom: 2rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 1.5rem;
+}
+.dash-welcome h2 {
+  font-size: 1.4rem;
+  margin-bottom: 0.5rem;
+}
+.dash-welcome .verify-badge {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.verify-badge.verified { background: rgba(16,185,129,0.2); color: var(--green); }
+.verify-badge.unverified { background: rgba(245,158,11,0.2); color: var(--orange); }
+
+/* Dashboard sections */
+.dash-section {
+  margin-bottom: 2rem;
+}
+.dash-section h3 {
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--cyan);
+}
+.dash-section .dash-msg {
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+  min-height: 1rem;
+}
+.dash-section .dash-msg.error { color: var(--red); }
+.dash-section .dash-msg.success { color: var(--green); }
+
+/* Dashboard forms */
+.dash-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+.dash-form .full-width { grid-column: 1 / -1; }
+.dash-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+.dash-form input {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  color: var(--text);
+  font-size: 0.85rem;
+  font-family: var(--font-sans);
+  outline: none;
+  width: 100%;
+}
+.dash-form input:focus { border-color: var(--cyan); }
+.dash-form input::placeholder { color: var(--text-muted); }
+.dash-form input[readonly] { opacity: 0.5; cursor: not-allowed; }
+.dash-form button {
+  background: var(--cyan);
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 1.25rem;
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  transition: background 0.2s;
+  justify-self: start;
+}
+.dash-form button:hover { background: #0284c7; }
+.dash-form button:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* Boat cards grid */
+.boats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+.boat-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem;
+  position: relative;
+}
+.boat-card h4 {
+  font-size: 0.95rem;
+  margin-bottom: 0.4rem;
+  color: var(--text);
+}
+.boat-card p {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  margin-bottom: 0.15rem;
+}
+.boat-card .boat-actions {
+  margin-top: 0.6rem;
+  display: flex;
+  gap: 0.5rem;
+}
+.boat-card .boat-actions button {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  padding: 0.25rem 0.6rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  transition: color 0.2s, border-color 0.2s;
+}
+.boat-card .boat-actions button:hover {
+  color: var(--cyan);
+  border-color: var(--cyan);
+}
+.boat-card .boat-actions button.delete-btn:hover {
+  color: var(--red);
+  border-color: var(--red);
+}
+
+/* Add boat form */
+.boat-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-top: 0.5rem;
+}
+.boat-form input {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.45rem 0.65rem;
+  color: var(--text);
+  font-size: 0.82rem;
+  font-family: var(--font-sans);
+  outline: none;
+  width: 100%;
+}
+.boat-form input:focus { border-color: var(--cyan); }
+.boat-form input::placeholder { color: var(--text-muted); }
+.boat-form .boat-form-btns {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 0.5rem;
+}
+.boat-form .boat-form-btns button {
+  padding: 0.4rem 1rem;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  border: none;
+  transition: background 0.2s;
+}
+.boat-form .boat-form-btns .save-btn { background: var(--cyan); color: #fff; }
+.boat-form .boat-form-btns .save-btn:hover { background: #0284c7; }
+.boat-form .boat-form-btns .cancel-btn { background: transparent; color: var(--text-dim); border: 1px solid var(--border); }
+.boat-form .boat-form-btns .cancel-btn:hover { color: var(--text); }
+.add-boat-btn {
+  background: transparent;
+  border: 1px dashed var(--border);
+  color: var(--text-dim);
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  transition: color 0.2s, border-color 0.2s;
+}
+.add-boat-btn:hover { color: var(--cyan); border-color: var(--cyan); }
+
+/* Dashboard responsive */
+@media (max-width: 640px) {
+  .dash-modal { padding: 1.25rem; }
+  .dash-form { grid-template-columns: 1fr; }
+  .boat-form { grid-template-columns: 1fr; }
+  .boats-grid { grid-template-columns: 1fr; }
+}

@@ -10,6 +10,13 @@
 </head>
 <body>
 
+<!-- Email Verification Banner -->
+<div class="verify-banner" id="verify-banner">
+  <span>Please verify your email address.</span>
+  <a href="#" id="resend-verify" onclick="mcDashboard.resendVerify();return false">Resend verification email</a>
+  <button class="verify-dismiss" onclick="document.getElementById('verify-banner').classList.remove('visible');document.body.classList.remove('has-verify-banner')">&times;</button>
+</div>
+
 <!-- Nav -->
 <nav>
   <div class="logo"><span>&#x2693;</span> Master<span>&amp;</span>Commander</div>
@@ -1796,6 +1803,55 @@ document.querySelectorAll('.price-card').forEach(card => {
 })();
 </script>
 
+<!-- Dashboard Overlay -->
+<div class="dash-overlay" id="dash-overlay" onclick="if(event.target===this)mcDashboard.close()">
+  <div class="dash-modal">
+    <button class="dash-close" onclick="mcDashboard.close()">&times;</button>
+    <div class="dash-welcome">
+      <h2 id="dash-greeting">Welcome</h2>
+      <span class="verify-badge" id="dash-verify-badge"></span>
+    </div>
+
+    <!-- My Boats -->
+    <div class="dash-section">
+      <h3>My Boats</h3>
+      <div class="boats-grid" id="boats-grid"></div>
+      <div id="boat-form-area"></div>
+      <button class="add-boat-btn" id="add-boat-btn" onclick="mcDashboard.showAddBoat()">+ Add Boat</button>
+      <div class="dash-msg" id="boats-msg"></div>
+    </div>
+
+    <!-- Profile -->
+    <div class="dash-section">
+      <h3>Profile</h3>
+      <div class="dash-form" id="profile-form">
+        <label>Name <input type="text" id="prof-name" placeholder="Full name"></label>
+        <label>Email <input type="email" id="prof-email" readonly></label>
+        <label>Phone <input type="tel" id="prof-phone" placeholder="Phone number"></label>
+        <label>Company <input type="text" id="prof-company" placeholder="Company / Fleet name"></label>
+        <div class="full-width">
+          <button onclick="mcDashboard.saveProfile()">Save Profile</button>
+        </div>
+      </div>
+      <div class="dash-msg" id="profile-msg"></div>
+    </div>
+
+    <!-- Change Password -->
+    <div class="dash-section">
+      <h3>Change Password</h3>
+      <div class="dash-form">
+        <label>Current Password <input type="password" id="pw-current" autocomplete="current-password"></label>
+        <label>New Password <input type="password" id="pw-new" placeholder="8+ characters" autocomplete="new-password"></label>
+        <label>Confirm <input type="password" id="pw-confirm" autocomplete="new-password"></label>
+        <div>
+          <button onclick="mcDashboard.changePassword()">Change Password</button>
+        </div>
+      </div>
+      <div class="dash-msg" id="password-msg"></div>
+    </div>
+  </div>
+</div>
+
 <!-- Password Reset Modal (triggered by ?reset=<token> URL param) -->
 <div class="auth-modal-overlay" id="reset-modal">
   <div class="auth-modal">
@@ -1811,11 +1867,243 @@ document.querySelectorAll('.price-card').forEach(card => {
   </div>
 </div>
 
-<!-- MasterCommander Auth -->
+<!-- MasterCommander Auth + Dashboard -->
 <script>
 (function() {
   const API = '/api/auth';
 
+  function authHeaders() {
+    var t = localStorage.getItem('mc_token');
+    return t ? { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + t } : { 'Content-Type': 'application/json' };
+  }
+
+  // ---- Dashboard ----
+  window.mcDashboard = {
+    _editingBoatId: null,
+
+    open: function() {
+      document.getElementById('dash-overlay').classList.add('open');
+      mcDashboard.loadProfile();
+      mcDashboard.loadBoats();
+      document.querySelectorAll('.dash-msg').forEach(function(el) { el.textContent = ''; el.className = 'dash-msg'; });
+      document.getElementById('pw-current').value = '';
+      document.getElementById('pw-new').value = '';
+      document.getElementById('pw-confirm').value = '';
+    },
+
+    close: function() {
+      document.getElementById('dash-overlay').classList.remove('open');
+    },
+
+    loadProfile: async function() {
+      try {
+        var res = await fetch('/api/user/profile', { headers: authHeaders() });
+        if (!res.ok) return;
+        var data = await res.json();
+        document.getElementById('dash-greeting').textContent = 'Welcome, ' + data.name.split(' ')[0];
+        var badge = document.getElementById('dash-verify-badge');
+        if (data.email_verified) {
+          badge.textContent = 'Verified';
+          badge.className = 'verify-badge verified';
+        } else {
+          badge.textContent = 'Unverified';
+          badge.className = 'verify-badge unverified';
+        }
+        document.getElementById('prof-name').value = data.name;
+        document.getElementById('prof-email').value = data.email;
+        document.getElementById('prof-phone').value = data.phone || '';
+        document.getElementById('prof-company').value = data.company || '';
+      } catch(e) {}
+    },
+
+    saveProfile: async function() {
+      var msg = document.getElementById('profile-msg');
+      msg.textContent = '';
+      msg.className = 'dash-msg';
+      try {
+        var res = await fetch('/api/user/profile', {
+          method: 'PUT',
+          headers: authHeaders(),
+          body: JSON.stringify({
+            name: document.getElementById('prof-name').value,
+            phone: document.getElementById('prof-phone').value,
+            company: document.getElementById('prof-company').value
+          })
+        });
+        var data = await res.json();
+        if (!res.ok) { msg.textContent = data.error; msg.className = 'dash-msg error'; return; }
+        msg.textContent = 'Profile saved.';
+        msg.className = 'dash-msg success';
+        // Update nav and localStorage
+        var user = JSON.parse(localStorage.getItem('mc_user') || '{}');
+        user.name = document.getElementById('prof-name').value;
+        localStorage.setItem('mc_user', JSON.stringify(user));
+        var toggle = document.getElementById('auth-toggle');
+        toggle.textContent = user.name.split(' ')[0];
+        document.getElementById('auth-user-name').textContent = user.name;
+        document.getElementById('dash-greeting').textContent = 'Welcome, ' + user.name.split(' ')[0];
+      } catch(e) { msg.textContent = 'Connection error.'; msg.className = 'dash-msg error'; }
+    },
+
+    changePassword: async function() {
+      var msg = document.getElementById('password-msg');
+      msg.textContent = '';
+      msg.className = 'dash-msg';
+      var pw = document.getElementById('pw-new').value;
+      var confirm = document.getElementById('pw-confirm').value;
+      if (pw !== confirm) { msg.textContent = 'Passwords do not match.'; msg.className = 'dash-msg error'; return; }
+      try {
+        var res = await fetch('/api/user/password', {
+          method: 'PUT',
+          headers: authHeaders(),
+          body: JSON.stringify({
+            current_password: document.getElementById('pw-current').value,
+            new_password: pw
+          })
+        });
+        var data = await res.json();
+        if (!res.ok) { msg.textContent = data.error; msg.className = 'dash-msg error'; return; }
+        msg.textContent = 'Password changed.';
+        msg.className = 'dash-msg success';
+        document.getElementById('pw-current').value = '';
+        document.getElementById('pw-new').value = '';
+        document.getElementById('pw-confirm').value = '';
+      } catch(e) { msg.textContent = 'Connection error.'; msg.className = 'dash-msg error'; }
+    },
+
+    loadBoats: async function() {
+      try {
+        var res = await fetch('/api/boats', { headers: authHeaders() });
+        if (!res.ok) return;
+        var data = await res.json();
+        var grid = document.getElementById('boats-grid');
+        grid.innerHTML = '';
+        if (data.boats.length === 0) {
+          grid.innerHTML = '<p style="color:var(--text-dim);font-size:0.85rem">No boats registered yet.</p>';
+          return;
+        }
+        data.boats.forEach(function(b) {
+          var card = document.createElement('div');
+          card.className = 'boat-card';
+          var details = '';
+          if (b.model || b.year) details += '<p>' + (b.model || '') + (b.model && b.year ? ' (' + b.year + ')' : (b.year || '')) + '</p>';
+          if (b.mmsi) details += '<p>MMSI: ' + b.mmsi + '</p>';
+          if (b.home_port) details += '<p>' + b.home_port + '</p>';
+          card.innerHTML = '<h4>' + b.name + '</h4>' + details +
+            '<div class="boat-actions">' +
+            '<button onclick="mcDashboard.editBoat(' + b.id + ')">Edit</button>' +
+            '<button class="delete-btn" onclick="mcDashboard.deleteBoat(' + b.id + ',\'' + b.name.replace(/'/g, "\\'") + '\')">Delete</button>' +
+            '</div>';
+          grid.appendChild(card);
+        });
+      } catch(e) {}
+    },
+
+    showAddBoat: function() {
+      mcDashboard._editingBoatId = null;
+      var area = document.getElementById('boat-form-area');
+      area.innerHTML = '<div class="boat-form">' +
+        '<input type="text" id="bf-name" placeholder="Boat name *">' +
+        '<input type="text" id="bf-model" placeholder="Model">' +
+        '<input type="number" id="bf-year" placeholder="Year" min="1900" max="2099">' +
+        '<input type="text" id="bf-mmsi" placeholder="MMSI">' +
+        '<input type="text" id="bf-port" placeholder="Home port">' +
+        '<div class="boat-form-btns">' +
+        '<button class="save-btn" onclick="mcDashboard.saveBoat()">Add Boat</button>' +
+        '<button class="cancel-btn" onclick="mcDashboard.hideBoatForm()">Cancel</button>' +
+        '</div></div>';
+      document.getElementById('add-boat-btn').style.display = 'none';
+    },
+
+    hideBoatForm: function() {
+      document.getElementById('boat-form-area').innerHTML = '';
+      document.getElementById('add-boat-btn').style.display = '';
+      mcDashboard._editingBoatId = null;
+    },
+
+    saveBoat: async function() {
+      var msg = document.getElementById('boats-msg');
+      msg.textContent = '';
+      msg.className = 'dash-msg';
+      var name = document.getElementById('bf-name').value.trim();
+      if (!name) { msg.textContent = 'Boat name is required.'; msg.className = 'dash-msg error'; return; }
+      var body = {
+        name: name,
+        model: document.getElementById('bf-model').value,
+        year: document.getElementById('bf-year').value || null,
+        mmsi: document.getElementById('bf-mmsi').value,
+        home_port: document.getElementById('bf-port').value
+      };
+      try {
+        var url = mcDashboard._editingBoatId ? '/api/boats/' + mcDashboard._editingBoatId : '/api/boats';
+        var method = mcDashboard._editingBoatId ? 'PUT' : 'POST';
+        var res = await fetch(url, { method: method, headers: authHeaders(), body: JSON.stringify(body) });
+        var data = await res.json();
+        if (!res.ok) { msg.textContent = data.error; msg.className = 'dash-msg error'; return; }
+        mcDashboard.hideBoatForm();
+        mcDashboard.loadBoats();
+      } catch(e) { msg.textContent = 'Connection error.'; msg.className = 'dash-msg error'; }
+    },
+
+    editBoat: async function(id) {
+      try {
+        var res = await fetch('/api/boats', { headers: authHeaders() });
+        if (!res.ok) return;
+        var data = await res.json();
+        var boat = data.boats.find(function(b) { return b.id === id; });
+        if (!boat) return;
+        mcDashboard._editingBoatId = id;
+        var area = document.getElementById('boat-form-area');
+        area.innerHTML = '<div class="boat-form">' +
+          '<input type="text" id="bf-name" placeholder="Boat name *" value="' + (boat.name || '').replace(/"/g, '&quot;') + '">' +
+          '<input type="text" id="bf-model" placeholder="Model" value="' + (boat.model || '').replace(/"/g, '&quot;') + '">' +
+          '<input type="number" id="bf-year" placeholder="Year" min="1900" max="2099" value="' + (boat.year || '') + '">' +
+          '<input type="text" id="bf-mmsi" placeholder="MMSI" value="' + (boat.mmsi || '').replace(/"/g, '&quot;') + '">' +
+          '<input type="text" id="bf-port" placeholder="Home port" value="' + (boat.home_port || '').replace(/"/g, '&quot;') + '">' +
+          '<div class="boat-form-btns">' +
+          '<button class="save-btn" onclick="mcDashboard.saveBoat()">Save Changes</button>' +
+          '<button class="cancel-btn" onclick="mcDashboard.hideBoatForm()">Cancel</button>' +
+          '</div></div>';
+        document.getElementById('add-boat-btn').style.display = 'none';
+      } catch(e) {}
+    },
+
+    deleteBoat: async function(id, name) {
+      if (!confirm('Delete "' + name + '"? This cannot be undone.')) return;
+      var msg = document.getElementById('boats-msg');
+      msg.textContent = '';
+      msg.className = 'dash-msg';
+      try {
+        var res = await fetch('/api/boats/' + id, { method: 'DELETE', headers: authHeaders() });
+        var data = await res.json();
+        if (!res.ok) { msg.textContent = data.error; msg.className = 'dash-msg error'; return; }
+        mcDashboard.loadBoats();
+      } catch(e) { msg.textContent = 'Connection error.'; msg.className = 'dash-msg error'; }
+    },
+
+    resendVerify: async function() {
+      try {
+        var res = await fetch(API + '/resend-verify', { method: 'POST', headers: authHeaders() });
+        var data = await res.json();
+        var link = document.getElementById('resend-verify');
+        link.textContent = data.message || 'Sent!';
+        setTimeout(function() { link.textContent = 'Resend verification email'; }, 3000);
+      } catch(e) {}
+    },
+
+    checkVerifyBanner: function(user) {
+      var banner = document.getElementById('verify-banner');
+      if (user && user.email_verified === false) {
+        banner.classList.add('visible');
+        document.body.classList.add('has-verify-banner');
+      } else {
+        banner.classList.remove('visible');
+        document.body.classList.remove('has-verify-banner');
+      }
+    }
+  };
+
+  // ---- Auth ----
   window.mcAuth = {
     showForm: function(name) {
       document.querySelectorAll('#auth-dropdown .auth-form').forEach(f => f.classList.remove('active'));
@@ -1954,10 +2242,13 @@ document.querySelectorAll('.price-card').forEach(card => {
       var firstName = user.name.split(' ')[0];
       toggle.textContent = firstName;
       toggle.classList.add('logged-in');
+      // Click nav button → open dashboard (not dropdown)
+      toggle.onclick = function(e) { e.stopPropagation(); mcDashboard.open(); };
       document.querySelectorAll('#auth-dropdown .auth-form').forEach(f => f.classList.remove('active'));
       document.getElementById('auth-user').classList.add('active');
       document.getElementById('auth-user-name').textContent = user.name;
       document.getElementById('nav-login').classList.remove('open');
+      mcDashboard.checkVerifyBanner(user);
     },
 
     logout: function() {
@@ -1966,11 +2257,17 @@ document.querySelectorAll('.price-card').forEach(card => {
       var toggle = document.getElementById('auth-toggle');
       toggle.textContent = 'Login';
       toggle.classList.remove('logged-in');
+      // Restore dropdown toggle behavior
+      toggle.onclick = function() { toggle.parentElement.classList.toggle('open'); };
       document.querySelectorAll('#auth-dropdown .auth-form').forEach(f => f.classList.remove('active'));
       document.getElementById('auth-login').classList.add('active');
       document.getElementById('nav-login').classList.remove('open');
       document.getElementById('login-email').value = '';
       document.getElementById('login-password').value = '';
+      // Hide verify banner and close dashboard
+      document.getElementById('verify-banner').classList.remove('visible');
+      document.body.classList.remove('has-verify-banner');
+      mcDashboard.close();
     },
 
     restoreSession: async function() {
@@ -1996,6 +2293,35 @@ document.querySelectorAll('.price-card').forEach(card => {
 
   // Restore session on load
   mcAuth.restoreSession();
+
+  // Check for verify token in URL
+  var verifyToken = new URLSearchParams(window.location.search).get('verify');
+  if (verifyToken) {
+    (async function() {
+      try {
+        var res = await fetch(API + '/verify-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: verifyToken })
+        });
+        var data = await res.json();
+        if (res.ok) {
+          // Update local user state
+          var user = JSON.parse(localStorage.getItem('mc_user') || '{}');
+          user.email_verified = true;
+          localStorage.setItem('mc_user', JSON.stringify(user));
+          document.getElementById('verify-banner').classList.remove('visible');
+          document.body.classList.remove('has-verify-banner');
+          alert('Email verified successfully!');
+        } else {
+          alert(data.error || 'Verification failed.');
+        }
+      } catch(e) {
+        alert('Connection error. Please try again.');
+      }
+      history.replaceState(null, '', window.location.pathname);
+    })();
+  }
 
   // Check for reset token in URL
   var resetToken = new URLSearchParams(window.location.search).get('reset');
