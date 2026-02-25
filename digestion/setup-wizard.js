@@ -40,9 +40,28 @@ async function main() {
   if (draftStr) config.boat.draft = parseFloat(draftStr);
   config.boat.homePort = await ask(`Home port [${config.boat.homePort || ''}]: `) || config.boat.homePort;
 
+  // ── Hardware Platform ─────────────────────────────────
+  console.log('\n─── HARDWARE PLATFORM ───');
+  console.log('  "pi"        — Raspberry Pi 5 (uses Qwen 3B, 5W power, runs off NMEA 2000)');
+  console.log('  "mac-mini"  — Mac Mini M4 (uses Qwen 14B, full AI, needs AC power)');
+  if (!config.hardware) config.hardware = {};
+  config.hardware.platform = await ask(`Platform [${config.hardware.platform || 'pi'}]: `) || config.hardware.platform || 'pi';
+
+  // Auto-set LLM model based on platform
+  if (config.hardware.platform === 'pi') {
+    config.llm = config.llm || {};
+    config.llm.ollamaModel = 'qwen2.5:3b';
+    console.log('  → LLM set to qwen2.5:3b (optimized for Pi)');
+  } else if (config.hardware.platform === 'mac-mini') {
+    config.llm = config.llm || {};
+    config.llm.ollamaModel = 'qwen2.5:14b';
+    console.log('  → LLM set to qwen2.5:14b (full model for Mac Mini)');
+  }
+
   // ── SignalK Connection ─────────────────────────────────
   console.log('\n─── SIGNALK SERVER ───');
-  console.log('(SignalK must be running on the Mac Mini)');
+  const skHint = config.hardware.platform === 'pi' ? '(SignalK runs on the Pi)' : '(SignalK must be running on the Mac Mini)';
+  console.log(skHint);
   config.signalk.host = await ask(`SignalK host [${config.signalk.host || 'localhost'}]: `) || config.signalk.host || 'localhost';
   const portStr = await ask(`SignalK port [${config.signalk.port || 3000}]: `);
   if (portStr) config.signalk.port = parseInt(portStr);
@@ -69,13 +88,15 @@ async function main() {
 
   // ── LLM ────────────────────────────────────────────────
   console.log('\n─── AI ENGINE ───');
-  console.log('  "local"  — Qwen 14B via Ollama (works offline)');
+  const modelLabel = config.llm.ollamaModel || 'qwen2.5:3b';
+  console.log(`  "local"  — ${modelLabel} via Ollama (works offline)`);
   console.log('  "cloud"  — Claude CLI (needs internet)');
-  console.log('  "auto"   — Claude when online, Qwen when offline');
+  console.log('  "auto"   — Claude when online, local when offline');
   config.llm.provider = await ask(`LLM mode [${config.llm.provider || 'local'}]: `) || config.llm.provider || 'local';
 
   if (config.llm.provider === 'local' || config.llm.provider === 'auto') {
-    config.llm.ollamaModel = await ask(`Ollama model [${config.llm.ollamaModel || 'qwen2.5:14b'}]: `) || config.llm.ollamaModel;
+    console.log(`  (Default model for ${config.hardware.platform || 'pi'}: ${modelLabel})`);
+    config.llm.ollamaModel = await ask(`Ollama model [${modelLabel}]: `) || config.llm.ollamaModel;
   }
 
   // ── Write config ───────────────────────────────────────

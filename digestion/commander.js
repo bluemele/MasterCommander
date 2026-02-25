@@ -48,7 +48,7 @@ console.log(`
 // ── Initialize components ────────────────────────────────
 const sk = new SignalKClient(config.signalk || {});
 const alerts = new AlertEngine(sk, config);
-const llm = new LLMRouter(config.llm || {});
+const llm = new LLMRouter({ ...config.llm, platform: config.hardware?.platform });
 const status = new StatusBuilder(sk, config);
 
 let wa = null;

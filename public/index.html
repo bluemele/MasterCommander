@@ -923,15 +923,15 @@ document.querySelectorAll('nav ul a').forEach(function(a) {
   <div class="hw-tab-panel active" id="hw-charter">
     <div class="hw-card" style="max-width:600px;margin:0 auto">
       <span class="hw-badge">Charter Fleets</span>
-      <h3>Raspberry Pi</h3>
-      <p class="hw-desc">You source the hardware, we provide the software. Download the Commander OS image, flash to SD card, plug in. Cloud AI processing via internet.</p>
+      <h3>Raspberry Pi 5</h3>
+      <p class="hw-desc">You source the hardware, we provide the software. Download the Commander OS image, flash to NVMe, plug in. Local AI (Qwen 3B) runs offline, cloud AI when connected.</p>
       <ul>
         <li>Downloadable OS image &mdash; flash &amp; boot</li>
-        <li>You buy: Pi 5 + Actisense NGX-1 (~$335)</li>
-        <li>Auto-discovers your boat on first boot</li>
-        <li>Low power draw (5W) &mdash; always on</li>
-        <li>Secure VPN tunnel to Master Cloud</li>
-        <li>OTA updates &amp; remote management</li>
+        <li>Raspberry Pi 5 (16GB) + PICAN-M HAT + NVMe SSD (~$250)</li>
+        <li>PICAN-M HAT powers Pi from NMEA 2000 bus &mdash; no separate power needed</li>
+        <li>Qwen 3B runs locally at 4&ndash;7 tok/s &mdash; works offline</li>
+        <li>Low power draw (5&ndash;10W) &mdash; always on, 5V DC</li>
+        <li>OTA updates &amp; remote management via VPN</li>
       </ul>
     </div>
   </div>
@@ -940,14 +940,14 @@ document.querySelectorAll('nav ul a').forEach(function(a) {
     <div class="hw-card" style="max-width:600px;margin:0 auto">
       <span class="hw-badge">Delivery &amp; Marinas</span>
       <h3>The Pulse</h3>
-      <p class="hw-desc">Plug-and-play monitoring. Internet required &mdash; Starlink, marina WiFi, or hotspot. Ideal for deliveries, marinas, and seasonal storage.</p>
+      <p class="hw-desc">Plug-and-play monitoring. Local AI works offline, uploads when internet available. Ideal for deliveries, marinas, and seasonal storage.</p>
       <ul>
-        <li>Raspberry Pi 5 + Actisense NGX-1</li>
-        <li>Internet required (Starlink, WiFi, hotspot)</li>
-        <li>Pre-provisioned VPN Tunnel</li>
+        <li>Raspberry Pi 5 (16GB) + PICAN-M HAT + NVMe SSD</li>
+        <li>PICAN-M HAT: NMEA 2000 data + powers the Pi from the bus</li>
+        <li>Qwen 3B local AI &mdash; monitors and answers questions offline</li>
         <li>60-second setup &mdash; plug in and go</li>
-        <li>Store &amp; forward when offline</li>
-        <li>~$335 hardware</li>
+        <li>Store &amp; forward when offline, syncs via Starlink/WiFi/hotspot</li>
+        <li>~$250 hardware, portable between boats</li>
       </ul>
     </div>
   </div>
@@ -959,8 +959,8 @@ document.querySelectorAll('nav ul a').forEach(function(a) {
       <p class="hw-desc">You buy the Mac Mini, we provide a pre-configured disk image with Qwen 14B AI model, SignalK, and Commander &mdash; ready to boot.</p>
       <ul>
         <li>Pre-built disk image with LLM included</li>
-        <li>You buy: Mac Mini M4 + Actisense (~$800)</li>
-        <li>Qwen 14B runs locally &mdash; fully offline</li>
+        <li>Mac Mini M4 (24GB) + Actisense NGT-1 USB (~$850)</li>
+        <li>Qwen 14B runs locally at 15&ndash;25 tok/s &mdash; fully offline</li>
         <li>AI Vision for cameras &amp; FLIR</li>
         <li>Auto-discovers your boat on first boot</li>
         <li>Optional Master Cloud subscription</li>
@@ -972,13 +972,13 @@ document.querySelectorAll('nav ul a').forEach(function(a) {
     <div class="hw-card" style="max-width:600px;margin:0 auto">
       <span class="hw-badge" style="background:rgba(245,158,11,0.1);border-color:rgba(245,158,11,0.2);color:var(--orange)">Marine Professionals</span>
       <h3>Diagnostic Scanner</h3>
-      <p class="hw-desc">Same hardware as the Delivery Captain, configured for portable diagnostic scans. Moves between boats &mdash; plug in, scan, retrieve.</p>
+      <p class="hw-desc">Same Raspberry Pi 5 hardware as the Delivery Captain, configured for portable diagnostic scans. Moves between boats &mdash; plug in, scan, retrieve.</p>
       <ul>
-        <li>Raspberry Pi 5 + Actisense NGX-1</li>
+        <li>Raspberry Pi 5 (16GB) + PICAN-M HAT + NVMe SSD</li>
         <li>Portable &mdash; moves between boats</li>
-        <li>24&ndash;48 hour deep analysis scans</li>
-        <li>Internet required for report upload</li>
-        <li>Service Portal for diagnostic reports</li>
+        <li>24&ndash;48 hour deep analysis scans with local AI</li>
+        <li>Optional 5&rdquo; touchscreen ($40) for on-site diagnostics</li>
+        <li>Internet for report upload (or store &amp; forward)</li>
         <li>Per-scan or subscription pricing</li>
       </ul>
     </div>

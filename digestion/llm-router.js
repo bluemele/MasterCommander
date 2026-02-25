@@ -4,18 +4,46 @@
 // Supports: 'local' (Ollama), 'cloud' (Claude CLI), 'auto'
 // Auto mode: tries Claude, falls back to local on timeout/error
 // Local mode: always Ollama, works fully offline
+//
+// Hardware tiers:
+//   'pi'       — Raspberry Pi 5 (8-16GB), uses qwen2.5:3b
+//   'mac-mini' — Mac Mini M4 (24GB+), uses qwen2.5:14b
+//
+// Model recommendations by platform:
+//   Pi 5 (16GB):  qwen2.5:3b (~4-7 tok/s), llama3.2:3b, gemma3:1b
+//   Pi 5 (8GB):   gemma3:1b (~7+ tok/s), qwen2.5:1.5b
+//   Mac Mini M4:  qwen2.5:14b (~15-25 tok/s), llama3:8b
 // ============================================================
 
 import { execSync } from 'child_process';
+import { freemem, totalmem } from 'os';
+
+// Default model per hardware platform
+const PLATFORM_DEFAULTS = {
+  'pi':       'qwen2.5:3b',
+  'mac-mini': 'qwen2.5:14b',
+};
 
 export class LLMRouter {
   constructor(config = {}) {
     // 'local' | 'cloud' | 'auto'
     this.mode = config.provider || 'local';
-    this.ollamaModel = config.ollamaModel || 'qwen2.5:14b';
+    this.platform = config.platform || null;
+    this.ollamaModel = config.ollamaModel || this._defaultModel();
     this.ollamaUrl = config.ollamaUrl || 'http://localhost:11434';
     this.claudePath = config.claudePath || 'claude';
     this.timeout = config.timeout || 30000;
+  }
+
+  // Pick the right default model based on platform or available RAM
+  _defaultModel() {
+    if (this.platform && PLATFORM_DEFAULTS[this.platform]) {
+      return PLATFORM_DEFAULTS[this.platform];
+    }
+    // Auto-detect: if total RAM < 12GB, assume Pi-class hardware
+    const totalGB = totalmem() / (1024 ** 3);
+    if (totalGB < 12) return 'qwen2.5:3b';
+    return 'qwen2.5:14b';
   }
 
   async ask(question, boatContext) {
