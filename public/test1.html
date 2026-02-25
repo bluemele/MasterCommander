@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MasterCommander — Midnight</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Inter',sans-serif;background:#060D1A;color:#E8F4FF;line-height:1.6;-webkit-font-smoothing:antialiased}
+
+:root{
+  --sky:#00CFFF;
+  --sky-dark:#00B8E0;
+  --sky-pale:rgba(0,207,255,0.08);
+  --sky-mid:rgba(0,207,255,0.12);
+  --ocean:#021020;
+  --emerald:#00E5A0;
+  --amber:#FFB800;
+  --violet:#A78BFA;
+  --coral:#F97316;
+  --slate:#7B97B5;
+  --border:rgba(0,207,255,0.2);
+  --surface:#0D1829;
+  --text:#E8F4FF;
+  --r:12px;
+  --shadow:0 1px 3px rgba(0,0,0,0.3),0 6px 20px rgba(0,0,0,0.2);
+  --shadow-lg:0 12px 40px rgba(0,0,0,0.4);
+}
+
+a{color:inherit;text-decoration:none}
+ul{list-style:none}
+.container{max-width:1120px;margin:0 auto;padding:0 24px}
+
+/* ── NAV ── */
+nav{
+  position:sticky;top:0;z-index:100;
+  background:rgba(6,13,26,0.92);
+  backdrop-filter:blur(16px);
+  border-bottom:1px solid rgba(0,207,255,0.1);
+}
+.nav-inner{display:flex;align-items:center;justify-content:space-between;height:60px;gap:24px}
+.logo{font-size:1rem;font-weight:900;letter-spacing:-0.02em;color:#E8F4FF}
+.logo span{color:#00CFFF}
+.nav-links{display:flex;gap:24px}
+.nav-links a{font-size:0.85rem;font-weight:500;color:var(--slate);transition:color .2s}
+.nav-links a:hover{color:var(--text)}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 20px;border-radius:8px;font-size:0.875rem;font-weight:600;border:none;cursor:pointer;transition:all .2s;text-decoration:none}
+.btn-sky{background:#00CFFF;color:#060D1A;box-shadow:0 2px 8px rgba(0,207,255,.35)}
+.btn-sky:hover{background:#00B8E0;transform:translateY(-1px);box-shadow:0 4px 16px rgba(0,207,255,.4)}
+.btn-outline{background:transparent;color:#E8F4FF;border:1.5px solid rgba(0,207,255,0.3)}
+.btn-outline:hover{border-color:#00CFFF;color:#00CFFF}
+.btn-ghost-white{background:rgba(255,255,255,.08);color:#fff;border:1.5px solid rgba(255,255,255,.15)}
+.btn-ghost-white:hover{background:rgba(255,255,255,.14)}
+.btn-lg{padding:13px 28px;font-size:1rem;border-radius:10px}
+
+/* ── HERO ── */
+.hero{
+  background:linear-gradient(160deg,#0A1628 0%,#070E1C 60%,#060D1A 100%);
+  padding:72px 0 56px;
+  overflow:hidden;position:relative;
+}
+.hero::after{
+  content:'';position:absolute;top:-80px;right:-100px;
+  width:600px;height:600px;
+  background:radial-gradient(circle,rgba(0,207,255,.08) 0%,transparent 68%);
+  pointer-events:none;
+}
+.hero-grid{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center}
+.tag{
+  display:inline-flex;align-items:center;gap:7px;
+  font-size:0.75rem;font-weight:700;
+  text-transform:uppercase;letter-spacing:.08em;
+  color:#00CFFF;background:rgba(0,207,255,.1);
+  padding:5px 12px;border-radius:99px;margin-bottom:18px;
+}
+.tag-dot{width:6px;height:6px;border-radius:50%;background:#00CFFF;animation:pulse 2s infinite, glow-dot 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+@keyframes glow-dot{0%,100%{box-shadow:0 0 4px rgba(0,207,255,.6)}50%{box-shadow:0 0 10px rgba(0,207,255,1)}}
+.hero h1{font-size:clamp(2.2rem,4.5vw,3.2rem);line-height:1.1;letter-spacing:-.035em;font-weight:900;margin-bottom:18px;color:#E8F4FF}
+.hero h1 em{font-style:normal;color:#00CFFF}
+.hero-sub{font-size:1.05rem;color:var(--slate);line-height:1.75;margin-bottom:28px;max-width:460px}
+.hero-ctas{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:32px}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{
+  font-size:0.75rem;font-weight:500;
+  color:#7B97B5;background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.1);
+  padding:4px 10px;border-radius:6px;
+  display:flex;align-items:center;gap:5px;
+}
+
+/* Live panel */
+.panel{
+  background:#0D1829;border-radius:16px;
+  box-shadow:0 0 40px rgba(0,207,255,0.08);
+  border:1px solid rgba(0,207,255,0.2);overflow:hidden;
+}
+.panel-head{
+  background:#021020;padding:13px 16px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.panel-boat{color:#fff;font-size:.875rem;font-weight:700;display:flex;align-items:center;gap:8px}
+.blink{width:7px;height:7px;border-radius:50%;background:#00E5A0;animation:blink 1.5s infinite, glow-blink 1.5s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes glow-blink{0%,100%{box-shadow:0 0 4px rgba(0,229,160,.5)}50%{box-shadow:0 0 10px rgba(0,229,160,.9)}}
+.live-tag{font-size:.7rem;font-weight:700;color:#00E5A0;text-transform:uppercase;letter-spacing:.07em}
+.panel-body{padding:14px;display:flex;flex-direction:column;gap:10px}
+.pcard{background:rgba(255,255,255,.04);border-radius:9px;padding:11px 13px;border:1px solid rgba(255,255,255,.06)}
+.pcard-title{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--slate);margin-bottom:8px}
+.prow{display:flex;align-items:center;justify-content:space-between;padding:4px 0;font-size:.8rem}
+.prow+.prow{border-top:1px solid rgba(255,255,255,.06)}
+.plabel{color:var(--slate);font-weight:500;display:flex;align-items:center;gap:6px}
+.pval{font-weight:700;color:var(--text)}
+.dot{width:5px;height:5px;border-radius:50%}
+.dot-g{background:#00E5A0}.dot-y{background:#FFB800}.dot-r{background:#EF4444}
+.ai-box{
+  background:rgba(0,207,255,.07);
+  border:1px solid rgba(0,207,255,.15);
+  border-radius:9px;padding:11px 13px;
+  display:flex;gap:9px;align-items:flex-start;
+}
+.ai-box-text{font-size:.79rem;color:var(--text);line-height:1.55}
+.ai-box-text strong{display:block;font-size:.68rem;color:#00CFFF;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px}
+
+/* ── STATS ── */
+.stats{background:#021020;padding:28px 0}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr)}
+.stat{text-align:center;padding:8px 12px;border-right:1px solid rgba(255,255,255,.08)}
+.stat:last-child{border-right:none}
+.stat-n{font-size:1.6rem;font-weight:900;color:#00CFFF;letter-spacing:-.03em}
+.stat-l{font-size:.78rem;color:rgba(255,255,255,.4);margin-top:3px}
+
+/* ── SECTIONS ── */
+.section{padding:88px 0}
+.section-sm{padding:60px 0}
+.eyebrow{font-size:.73rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#00CFFF;margin-bottom:10px}
+.section-title{font-size:clamp(1.7rem,3.2vw,2.4rem);font-weight:900;letter-spacing:-.03em;margin-bottom:14px;color:#E8F4FF}
+.section-sub{font-size:1rem;color:var(--slate);line-height:1.75;max-width:540px;margin-bottom:52px}
+
+/* ── n8n FLOW DIAGRAM ── */
+.flow-wrap{background:#0D1829;border-radius:20px;padding:40px;border:1px solid rgba(0,207,255,0.12)}
+.flow-label{
+  display:inline-flex;align-items:center;gap:7px;
+  font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;
+  padding:4px 12px;border-radius:6px;margin-bottom:20px;
+}
+.flow-label.on-board{background:rgba(0,207,255,.08);color:#00CFFF}
+.flow-label.cloud{background:rgba(0,229,160,.08);color:#00E5A0}
+.flow-label.users{background:rgba(167,139,250,.08);color:#A78BFA}
+.flow-row{display:flex;align-items:center;gap:0;margin-bottom:12px;flex-wrap:wrap}
+.flow-connector{
+  flex:1;min-width:28px;height:2px;
+  background:linear-gradient(to right,rgba(255,255,255,.1),rgba(255,255,255,.1));
+  position:relative;
+}
+.flow-connector::after{
+  content:'';position:absolute;right:-1px;top:50%;transform:translateY(-50%);
+  border:5px solid transparent;border-left-color:var(--slate);border-right:none;
+  opacity:.5;
+}
+.flow-connector.sky{background:linear-gradient(to right,#00CFFF,#00B8E0)}
+.flow-connector.sky::after{border-left-color:#00B8E0;opacity:1}
+.flow-connector.green{background:linear-gradient(to right,#00E5A0,#00C88A)}
+.flow-connector.green::after{border-left-color:#00C88A;opacity:1}
+.flow-connector.violet{background:linear-gradient(to right,#A78BFA,var(--violet))}
+.flow-connector.violet::after{border-left-color:var(--violet);opacity:1}
+
+.flow-node{
+  background:#0D1829;border-radius:10px;padding:12px 15px;
+  border:1.5px solid rgba(0,207,255,.15);
+  min-width:140px;box-shadow:var(--shadow);
+  position:relative;transition:all .2s;flex-shrink:0;
+}
+.flow-node:hover{transform:translateY(-2px);box-shadow:0 0 20px rgba(0,207,255,.2)}
+.flow-node-icon{font-size:1.3rem;margin-bottom:5px}
+.flow-node-title{font-size:.8rem;font-weight:700;color:var(--text)}
+.flow-node-sub{font-size:.7rem;color:var(--slate);line-height:1.4;margin-top:2px}
+.flow-node-tag{
+  font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;
+  padding:2px 7px;border-radius:4px;margin-bottom:6px;display:inline-block;
+}
+.tag-sky{background:rgba(0,207,255,.1);color:#00CFFF}
+.tag-green{background:rgba(0,229,160,.1);color:#00E5A0}
+.tag-violet{background:rgba(167,139,250,.1);color:#A78BFA}
+.tag-amber{background:rgba(255,184,0,.1);color:#FFB800}
+.tag-coral{background:rgba(249,115,22,.1);color:var(--coral)}
+.tag-ocean{background:rgba(0,207,255,.08);color:#00CFFF}
+
+.flow-node.highlight{border-color:#00CFFF;box-shadow:0 0 0 3px rgba(0,207,255,.15),var(--shadow)}
+.flow-node.highlight-green{border-color:#00E5A0;box-shadow:0 0 0 3px rgba(0,229,160,.15),var(--shadow)}
+.flow-node.highlight-violet{border-color:#A78BFA;box-shadow:0 0 0 3px rgba(167,139,250,.15),var(--shadow)}
+
+.flow-divider{
+  display:flex;align-items:center;gap:12px;margin:20px 0;
+  font-size:.73rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--slate);
+}
+.flow-divider::before,.flow-divider::after{content:'';flex:1;height:1px;background:rgba(255,255,255,.08)}
+
+.flow-down{
+  display:flex;flex-direction:column;align-items:center;gap:0;
+  width:2px;height:28px;background:linear-gradient(to bottom,#00CFFF,#00B8E0);
+  position:relative;margin:0 auto;
+}
+.flow-down::after{
+  content:'';position:absolute;bottom:-1px;left:50%;transform:translateX(-50%);
+  border:5px solid transparent;border-top-color:#00B8E0;border-bottom:none;
+}
+.flow-down.green{background:linear-gradient(to bottom,#00E5A0,#00C88A)}
+.flow-down.green::after{border-top-color:#00C88A}
+.flow-split{display:flex;gap:16px;align-items:flex-start}
+.flow-split-line{width:2px;background:linear-gradient(to bottom,#00E5A0,#00C88A);border-radius:2px}
+
+/* ── PERSONAS ── */
+.personas-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px}
+.persona{
+  background:#0D1829;border-radius:var(--r);padding:26px 28px;
+  border:1.5px solid rgba(0,207,255,.12);box-shadow:var(--shadow);
+  border-left:4px solid rgba(0,207,255,.2);
+  transition:all .25s;position:relative;overflow:hidden;
+}
+.persona:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg)}
+.persona.sky{border-left-color:#00CFFF}
+.persona.emerald{border-left-color:#00E5A0}
+.persona.amber{border-left-color:#FFB800}
+.persona.violet{border-left-color:#A78BFA}
+.persona-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px}
+.persona-icon{font-size:2rem;margin-bottom:10px}
+.persona-name{font-size:1.05rem;font-weight:800;margin-bottom:3px}
+.persona-desc{font-size:.83rem;color:var(--slate)}
+.persona-list{display:flex;flex-direction:column;gap:8px;margin-top:14px}
+.persona-item{display:flex;align-items:center;gap:9px;font-size:.84rem}
+.pi-check{
+  width:18px;height:18px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:.62rem;font-weight:800;
+}
+.pi-check.sky{background:rgba(0,207,255,.1);color:#00CFFF}
+.pi-check.emerald{background:rgba(0,229,160,.1);color:#00E5A0}
+.pi-check.amber{background:rgba(255,184,0,.1);color:#FFB800}
+.pi-check.violet{background:rgba(167,139,250,.1);color:#A78BFA}
+
+/* ── PRICING ── */
+.pricing-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;align-items:start}
+.price-card{
+  background:#0D1829;border-radius:var(--r);
+  padding:24px 20px;border:1.5px solid rgba(0,207,255,.1);
+  transition:all .25s;position:relative;
+}
+.price-card:hover{border-color:#00CFFF;box-shadow:var(--shadow-lg);transform:translateY(-3px)}
+.price-card.dark{background:#021020;border-color:rgba(0,207,255,.25);color:#fff}
+.price-card.dark .price-period,.price-card.dark .price-feat{color:rgba(255,255,255,.5)}
+.price-card.dark .price-divider{border-color:rgba(255,255,255,.08)}
+.price-badge{
+  position:absolute;top:-11px;left:50%;transform:translateX(-50%);
+  background:#00CFFF;color:#060D1A;
+  font-size:.65rem;font-weight:800;text-transform:uppercase;letter-spacing:.07em;
+  padding:3px 12px;border-radius:99px;white-space:nowrap;
+}
+.price-persona{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
+.price-card.dark .price-persona{color:rgba(255,255,255,.45)}
+.price-name{font-size:.95rem;font-weight:800;margin-bottom:16px}
+.price-amount{font-size:2rem;font-weight:900;letter-spacing:-.04em;line-height:1}
+.price-period{font-size:.78rem;color:var(--slate);margin-top:2px;margin-bottom:10px}
+.price-trial{
+  font-size:.75rem;font-weight:700;
+  color:#00E5A0;background:rgba(0,229,160,.15);
+  padding:4px 10px;border-radius:6px;
+  display:inline-block;margin-bottom:16px;
+}
+.price-card.dark .price-trial{background:rgba(0,229,160,.12);color:#00E5A0}
+.price-divider{border:none;border-top:1px solid rgba(255,255,255,.08);margin:14px 0}
+.price-feats{display:flex;flex-direction:column;gap:8px;margin-bottom:18px}
+.price-feat{display:flex;align-items:flex-start;gap:7px;font-size:.8rem;color:var(--slate)}
+.pfcheck{
+  width:15px;height:15px;border-radius:50%;flex-shrink:0;margin-top:2px;
+  background:rgba(0,229,160,.12);color:#00E5A0;
+  font-size:.58rem;font-weight:800;
+  display:flex;align-items:center;justify-content:center;
+}
+.price-card.dark .pfcheck{background:rgba(255,255,255,.08);color:rgba(255,255,255,.7)}
+.price-note{font-size:.72rem;color:var(--slate);text-align:center;margin-top:8px}
+.price-card.dark .price-note{color:rgba(255,255,255,.3)}
+
+/* ── CTA ── */
+.cta{
+  background:linear-gradient(145deg,#021020,#060D1A);
+  padding:80px 0;text-align:center;overflow:hidden;position:relative;
+}
+.cta::before{
+  content:'';position:absolute;top:-120px;left:50%;transform:translateX(-50%);
+  width:700px;height:700px;
+  background:radial-gradient(circle,rgba(0,207,255,.1) 0%,transparent 65%);
+  pointer-events:none;
+}
+.cta h2{font-size:clamp(1.8rem,3.5vw,2.6rem);color:#fff;font-weight:900;letter-spacing:-.03em;margin-bottom:14px;position:relative}
+.cta p{font-size:1rem;color:rgba(255,255,255,.5);max-width:460px;margin:0 auto 30px;line-height:1.75;position:relative}
+.cta-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;position:relative}
+
+/* ── FOOTER ── */
+footer{background:#0A1420;border-top:1px solid rgba(0,207,255,.08);padding:32px 0}
+.footer-inner{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
+.footer-links{display:flex;gap:20px}
+.footer-links a{font-size:.82rem;color:var(--slate);transition:color .2s}
+.footer-links a:hover{color:var(--text)}
+.footer-copy{font-size:.75rem;color:rgba(255,255,255,.25)}
+
+/* ── RESPONSIVE ── */
+@media(max-width:960px){
+  .hero-grid{grid-template-columns:1fr}
+  .panel{display:none}
+  .pricing-grid{grid-template-columns:repeat(2,1fr)}
+  .flow-row{justify-content:flex-start}
+}
+@media(max-width:680px){
+  .personas-grid{grid-template-columns:1fr}
+  .pricing-grid{grid-template-columns:1fr}
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+  .stat:nth-child(2){border-right:none}
+  .nav-links{display:none}
+  .flow-node{min-width:120px}
+}
+
+/* ── ALTERNATING SECTION BACKGROUNDS ── */
+#how{background:#060D1A}
+#for{background:#0A1420 !important}
+#pricing{background:#060D1A}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="container">
+    <div class="nav-inner">
+      <div class="logo">Master<span>Commander</span></div>
+      <div class="nav-links">
+        <a href="#how">How It Works</a>
+        <a href="#for">Who It's For</a>
+        <a href="#pricing">Pricing</a>
+        <a href="/">← Main Site</a>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <a href="https://wa.me/13055601031" class="btn btn-outline">WhatsApp Us</a>
+        <a href="#pricing" class="btn btn-sky">Get Started</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-grid">
+      <div>
+        <div class="tag"><span class="tag-dot"></span>AI Boat Intelligence</div>
+        <h1>Your boat, <em>always talking.</em><br>You, always knowing.</h1>
+        <p class="hero-sub">MasterCommander puts a private AI on any vessel — monitoring NMEA 2000 data, sending WhatsApp alerts, and managing your entire fleet without relying on the cloud.</p>
+        <div class="hero-ctas">
+          <a href="https://wa.me/13055601031" class="btn btn-sky btn-lg">Chat on WhatsApp</a>
+          <a href="#how" class="btn btn-outline btn-lg">See How It Works</a>
+        </div>
+        <div class="chips">
+          <span class="chip">⚡ NMEA 2000</span>
+          <span class="chip">🤖 Qwen 14B on-board</span>
+          <span class="chip">📲 WhatsApp alerts</span>
+          <span class="chip">🌐 Offline-first</span>
+        </div>
+      </div>
+      <!-- Live panel mockup -->
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-boat">⚓ CAMELOT III</div>
+          <div style="display:flex;align-items:center;gap:6px;"><div class="blink"></div><span class="live-tag">Live</span></div>
+        </div>
+        <div class="panel-body">
+          <div class="pcard">
+            <div class="pcard-title">Engine Systems</div>
+            <div class="prow"><span class="plabel"><span class="dot dot-g"></span>Port Engine</span><span class="pval">2,400 rpm · 94°F</span></div>
+            <div class="prow"><span class="plabel"><span class="dot dot-g"></span>Starboard</span><span class="pval">2,380 rpm · 91°F</span></div>
+            <div class="prow"><span class="plabel"><span class="dot dot-y"></span>Fuel</span><span class="pval" style="color:#FFB800">47% · ~6h range</span></div>
+            <div class="prow"><span class="plabel"><span class="dot dot-g"></span>Bilge</span><span class="pval">Dry</span></div>
+          </div>
+          <div class="pcard">
+            <div class="pcard-title">Navigation</div>
+            <div class="prow"><span class="plabel">📍 Position</span><span class="pval">23°04'N 82°21'W</span></div>
+            <div class="prow"><span class="plabel">🌊 Depth</span><span class="pval">42 ft</span></div>
+            <div class="prow"><span class="plabel">💨 Wind</span><span class="pval">12 kts SE</span></div>
+          </div>
+          <div class="ai-box">
+            <div style="font-size:1.1rem;flex-shrink:0;margin-top:1px">🤖</div>
+            <div class="ai-box-text">
+              <strong>Commander AI</strong>
+              Fuel at 47% — recommend topping up before the Gulf crossing. Next marina 8.4 nm ahead.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS BAR -->
+<div class="stats">
+  <div class="container">
+    <div class="stats-grid">
+      <div class="stat"><div class="stat-n">NMEA</div><div class="stat-l">2000 + 0183 compatible</div></div>
+      <div class="stat"><div class="stat-n">100%</div><div class="stat-l">Works without internet</div></div>
+      <div class="stat"><div class="stat-n">Qwen</div><div class="stat-l">14B AI runs on-board</div></div>
+      <div class="stat"><div class="stat-n">4</div><div class="stat-l">User types, one system</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- HOW IT WORKS — n8n DIAGRAM -->
+<section class="section" id="how">
+  <div class="container">
+    <div class="eyebrow">The System</div>
+    <h2 class="section-title">From sensor to insight in seconds.</h2>
+    <p class="section-sub">A private AI runs directly on your boat's hardware — no cloud required. Remote access, WhatsApp alerts, and fleet management layer on top when you have connectivity.</p>
+
+    <div class="flow-wrap">
+
+      <!-- LAYER 1: ON BOARD -->
+      <div class="flow-label on-board">⚓ On Board — No Internet Required</div>
+      <div class="flow-row">
+        <div class="flow-node highlight">
+          <div class="flow-node-tag tag-sky">Trigger</div>
+          <div class="flow-node-icon">🛥️</div>
+          <div class="flow-node-title">Boat Sensors</div>
+          <div class="flow-node-sub">NMEA 2000 signals — engine, fuel, depth, GPS, wind, AIS, bilge</div>
+        </div>
+        <div class="flow-connector sky"></div>
+        <div class="flow-node highlight">
+          <div class="flow-node-tag tag-sky">Hardware</div>
+          <div class="flow-node-icon">💻</div>
+          <div class="flow-node-title">Raspberry Pi 5 / Mac Mini M4</div>
+          <div class="flow-node-sub">On-board computer — receives all sensor data via Actisense NGX-1</div>
+        </div>
+        <div class="flow-connector sky"></div>
+        <div class="flow-node highlight">
+          <div class="flow-node-tag tag-sky">AI Engine</div>
+          <div class="flow-node-icon">🤖</div>
+          <div class="flow-node-title">Qwen 14B AI</div>
+          <div class="flow-node-sub">Private LLM runs locally — interprets data, generates alerts and answers</div>
+        </div>
+        <div class="flow-connector sky"></div>
+        <div class="flow-node highlight">
+          <div class="flow-node-tag tag-sky">On-Board App</div>
+          <div class="flow-node-icon">📱</div>
+          <div class="flow-node-title">Commander App</div>
+          <div class="flow-node-sub">Connect via boat WiFi — full dashboard, AI chat, no internet needed</div>
+        </div>
+      </div>
+
+      <!-- DOWN ARROW -->
+      <div style="display:flex;align-items:center;gap:12px;margin:4px 0 4px auto;width:fit-content;padding-right:calc(14px + 1px)">
+        <span style="font-size:.72rem;font-weight:600;color:var(--slate)">When underway with Starlink / marina WiFi</span>
+        <div style="display:flex;flex-direction:column;align-items:center">
+          <div style="width:2px;height:28px;background:linear-gradient(to bottom,#00CFFF,#00C88A);border-radius:2px;position:relative;">
+            <div style="position:absolute;bottom:-5px;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:#00C88A;border-bottom:none;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LAYER 2: CLOUD -->
+      <div class="flow-label cloud">☁️ Cloud / Master — Remote & Fleet Layer</div>
+      <div class="flow-row">
+        <div class="flow-node highlight-green">
+          <div class="flow-node-tag tag-green">Connection</div>
+          <div class="flow-node-icon">🛰️</div>
+          <div class="flow-node-title">Starlink / WiFi</div>
+          <div class="flow-node-sub">Internet uplink from the vessel — activates remote features</div>
+        </div>
+        <div class="flow-connector green"></div>
+        <div class="flow-node highlight-green">
+          <div class="flow-node-tag tag-green">Cloud</div>
+          <div class="flow-node-icon">🌐</div>
+          <div class="flow-node-title">Master Cloud</div>
+          <div class="flow-node-sub">Routes data, stores history, manages fleet access and push alerts</div>
+        </div>
+        <div class="flow-connector green"></div>
+        <div class="flow-node highlight-green">
+          <div class="flow-node-tag tag-amber">Alert</div>
+          <div class="flow-node-icon">📲</div>
+          <div class="flow-node-title">WhatsApp Alerts</div>
+          <div class="flow-node-sub">Instant AI-written alerts to captain, owner, or fleet manager</div>
+        </div>
+        <div class="flow-connector green"></div>
+        <div class="flow-node highlight-green">
+          <div class="flow-node-tag tag-green">Dashboard</div>
+          <div class="flow-node-icon">📊</div>
+          <div class="flow-node-title">Fleet Dashboard</div>
+          <div class="flow-node-sub">All vessels in one view — status, position, alerts, history</div>
+        </div>
+      </div>
+
+      <!-- LAYER 3: USERS -->
+      <div style="margin-top:20px">
+        <div class="flow-label users">👥 Who Sees What</div>
+        <div class="flow-row" style="gap:12px;flex-wrap:wrap">
+          <div class="flow-node highlight-violet" style="min-width:0;flex:1">
+            <div class="flow-node-tag tag-sky">Fleet Manager</div>
+            <div class="flow-node-icon">🚢</div>
+            <div class="flow-node-title">All boats · Full dashboard</div>
+            <div class="flow-node-sub">Charter & marina operators</div>
+          </div>
+          <div class="flow-node highlight-violet" style="min-width:0;flex:1">
+            <div class="flow-node-tag tag-green">Yacht Owner</div>
+            <div class="flow-node-icon">⛵</div>
+            <div class="flow-node-title">Their boat · WhatsApp</div>
+            <div class="flow-node-sub">Private owners & live-aboards</div>
+          </div>
+          <div class="flow-node highlight-violet" style="min-width:0;flex:1">
+            <div class="flow-node-tag tag-amber">Delivery Captain</div>
+            <div class="flow-node-icon">🧭</div>
+            <div class="flow-node-title">Per trip · Owner updates</div>
+            <div class="flow-node-sub">Professional delivery skippers</div>
+          </div>
+          <div class="flow-node highlight-violet" style="min-width:0;flex:1">
+            <div class="flow-node-tag tag-violet">Marine Technician</div>
+            <div class="flow-node-icon">🔧</div>
+            <div class="flow-node-title">Diagnostic scan · Report</div>
+            <div class="flow-node-sub">Surveyors & service pros</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- WHO IT'S FOR -->
+<section class="section" style="background:#0A1420;padding-top:72px;padding-bottom:72px" id="for">
+  <div class="container">
+    <div class="eyebrow">Built For</div>
+    <h2 class="section-title">One system. Every captain.</h2>
+    <p class="section-sub">MasterCommander adapts to how you use your boat — whether you're managing a fleet or delivering a single yacht across an ocean.</p>
+    <div class="personas-grid">
+
+      <div class="persona sky">
+        <div class="persona-top">
+          <div>
+            <div class="persona-icon">🚢</div>
+            <div class="persona-name">Fleet Manager</div>
+            <div class="persona-desc">Charter operators & marina managers</div>
+          </div>
+          <span class="flow-node-tag tag-sky" style="font-size:.7rem;padding:3px 9px;border-radius:6px">Charter / Marina</span>
+        </div>
+        <div class="persona-list">
+          <div class="persona-item"><span class="pi-check sky">✓</span>Monitor all vessels from a single dashboard</div>
+          <div class="persona-item"><span class="pi-check sky">✓</span>Instant alerts for any boat in your fleet</div>
+          <div class="persona-item"><span class="pi-check sky">✓</span>Automated turnaround checklists per vessel</div>
+          <div class="persona-item"><span class="pi-check sky">✓</span>Charter handover reports via WhatsApp</div>
+          <div class="persona-item"><span class="pi-check sky">✓</span>Historical data and analytics per vessel</div>
+        </div>
+      </div>
+
+      <div class="persona emerald">
+        <div class="persona-top">
+          <div>
+            <div class="persona-icon">⛵</div>
+            <div class="persona-name">Yacht Owner</div>
+            <div class="persona-desc">Private owners, live-aboards & bluewater sailors</div>
+          </div>
+          <span class="flow-node-tag tag-green" style="font-size:.7rem;padding:3px 9px;border-radius:6px">Private</span>
+        </div>
+        <div class="persona-list">
+          <div class="persona-item"><span class="pi-check emerald">✓</span>Know your boat's status from anywhere</div>
+          <div class="persona-item"><span class="pi-check emerald">✓</span>WhatsApp alerts while away from the boat</div>
+          <div class="persona-item"><span class="pi-check emerald">✓</span>AI answers questions about your systems</div>
+          <div class="persona-item"><span class="pi-check emerald">✓</span>Anchor drag, bilge, and security alerts</div>
+          <div class="persona-item"><span class="pi-check emerald">✓</span>Full offline capability while underway</div>
+        </div>
+      </div>
+
+      <div class="persona amber">
+        <div class="persona-top">
+          <div>
+            <div class="persona-icon">🧭</div>
+            <div class="persona-name">Delivery Captain</div>
+            <div class="persona-desc">Professional captains & delivery skippers</div>
+          </div>
+          <span class="flow-node-tag tag-amber" style="font-size:.7rem;padding:3px 9px;border-radius:6px">Delivery</span>
+        </div>
+        <div class="persona-list">
+          <div class="persona-item"><span class="pi-check amber">✓</span>Per-trip setup — no ongoing commitment</div>
+          <div class="persona-item"><span class="pi-check amber">✓</span>Owner gets live WhatsApp updates en route</div>
+          <div class="persona-item"><span class="pi-check amber">✓</span>Automatic passage report on arrival</div>
+          <div class="persona-item"><span class="pi-check amber">✓</span>Works on any NMEA 2000 vessel</div>
+          <div class="persona-item"><span class="pi-check amber">✓</span>Plug in, sail, unplug. Done.</div>
+        </div>
+      </div>
+
+      <div class="persona violet">
+        <div class="persona-top">
+          <div>
+            <div class="persona-icon">🔧</div>
+            <div class="persona-name">Marine Technician</div>
+            <div class="persona-desc">Surveyors, mechanics & service professionals</div>
+          </div>
+          <span class="flow-node-tag tag-violet" style="font-size:.7rem;padding:3px 9px;border-radius:6px">Professional</span>
+        </div>
+        <div class="persona-list">
+          <div class="persona-item"><span class="pi-check violet">✓</span>Full NMEA 2000 diagnostic scan</div>
+          <div class="persona-item"><span class="pi-check violet">✓</span>AI-assisted fault identification</div>
+          <div class="persona-item"><span class="pi-check violet">✓</span>Exportable service reports per vessel</div>
+          <div class="persona-item"><span class="pi-check violet">✓</span>Per-boat pricing, no subscription needed</div>
+          <div class="persona-item"><span class="pi-check violet">✓</span>Builds a data history for each vessel</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="section" id="pricing">
+  <div class="container">
+    <div class="eyebrow">Pricing</div>
+    <h2 class="section-title">Simple. Fair. No surprises.</h2>
+    <p class="section-sub">Every plan includes the full MasterCommander system. Try it free — pay for what you use.</p>
+    <div class="pricing-grid">
+
+      <!-- Fleet -->
+      <div class="price-card dark">
+        <span class="price-badge">Most Popular</span>
+        <div class="price-persona">Fleet Manager</div>
+        <div class="price-name">Fleet Plan</div>
+        <div class="price-amount">$249</div>
+        <div class="price-period">/boat/year · min 5 boats</div>
+        <div class="price-trial">50% off first year</div>
+        <hr class="price-divider">
+        <div class="price-feats">
+          <div class="price-feat"><span class="pfcheck">✓</span>Fleet-wide dashboard</div>
+          <div class="price-feat"><span class="pfcheck">✓</span>WhatsApp alerts per vessel</div>
+          <div class="price-feat"><span class="pfcheck">✓</span>Charter turnaround tools</div>
+          <div class="price-feat"><span class="pfcheck">✓</span>Historical data & reports</div>
+          <div class="price-feat"><span class="pfcheck">✓</span>Priority support</div>
+        </div>
+        <a href="https://wa.me/13055601031" class="btn btn-ghost-white" style="width:100%;justify-content:center;">Get Started</a>
+        <div class="price-note">From $124.50/boat in year one</div>
+      </div>
+
+      <!-- Private -->
+      <div class="price-card">
+        <div class="price-persona" style="color:#00E5A0">Yacht Owner</div>
+        <div class="price-name">Private Plan</div>
+        <div class="price-amount">$99</div>
+        <div class="price-period">/boat/year</div>
+        <div class="price-trial">Intro rate — first year</div>
+        <hr class="price-divider">
+        <div class="price-feats">
+          <div class="price-feat"><span class="pfcheck">✓</span>Full on-board dashboard</div>
+          <div class="price-feat"><span class="pfcheck">✓</span>WhatsApp alerts anywhere</div>
+          <div class="price-feat"><span class="pfcheck">✓</span>Anchor drag & bilge alerts</div>
+          <div class="price-feat"><span class="pfcheck">✓</span>AI co-pilot underway</div>
+          <div class="price-feat"><span class="pfcheck">✓</span>100% offline-capable</div>
+        </div>
+        <a href="https://wa.me/13055601031" class="btn btn-sky" style="width:100%;justify-content:center;">Get Started</a>
+        <div class="price-note">Early adopter pricing</div>
+      </div>
+
+      <!-- Delivery -->
+      <div class="price-card">
+        <div class="price-persona" style="color:#FFB800">Delivery Captain</div>
+        <div class="price-name">Per-Trip Plan</div>
+        <div class="price-amount">$175</div>
+        <div class="price-period">/delivery · max 30 days</div>
+        <div class="price-trial">First delivery free</div>
+        <hr class="price-divider">
+        <div class="price-feats">
+          <div class="price-feat"><span class="pfcheck">✓</span>Activate per voyage</div>
+          <div class="price-feat"><span class="pfcheck">✓</span>Owner gets live updates</div>
+          <div class="price-feat"><span class="pfcheck">✓</span>Auto arrival report</div>
+          <div class="price-feat"><span class="pfcheck">✓</span>Any NMEA 2000 vessel</div>
+          <div class="price-feat"><span class="pfcheck">✓</span>No subscription needed</div>
+        </div>
+        <a href="https://wa.me/13055601031" class="btn btn-outline" style="width:100%;justify-content:center;">Get Started</a>
+        <div class="price-note">Try your first delivery free</div>
+      </div>
+
+      <!-- Marine Tech -->
+      <div class="price-card">
+        <div class="price-persona" style="color:#A78BFA">Marine Technician</div>
+        <div class="price-name">Per-Boat Plan</div>
+        <div class="price-amount">$175</div>
+        <div class="price-period">/boat · max 30 days</div>
+        <div class="price-trial">First scan free</div>
+        <hr class="price-divider">
+        <div class="price-feats">
+          <div class="price-feat"><span class="pfcheck">✓</span>Full NMEA 2000 diagnostic</div>
+          <div class="price-feat"><span class="pfcheck">✓</span>AI fault analysis</div>
+          <div class="price-feat"><span class="pfcheck">✓</span>Exportable service reports</div>
+          <div class="price-feat"><span class="pfcheck">✓</span>No subscription</div>
+          <div class="price-feat"><span class="pfcheck">✓</span>Per-boat pricing</div>
+        </div>
+        <a href="https://wa.me/13055601031" class="btn btn-outline" style="width:100%;justify-content:center;">Get Started</a>
+        <div class="price-note">Scan your first boat free</div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta">
+  <div class="container">
+    <h2>Ready to put AI on your boat?</h2>
+    <p>Whether you're managing a fleet or setting off solo — MasterCommander is ready. Chat with us to get started.</p>
+    <div class="cta-btns">
+      <a href="https://wa.me/13055601031" class="btn btn-sky btn-lg">Chat on WhatsApp</a>
+      <a href="/" class="btn btn-ghost-white btn-lg">View Main Site</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <div class="footer-inner">
+      <div class="logo">Master<span>Commander</span></div>
+      <div class="footer-links">
+        <a href="#how">How It Works</a>
+        <a href="#for">Who It's For</a>
+        <a href="#pricing">Pricing</a>
+        <a href="/">Main Site</a>
+        <a href="https://wa.me/13055601031">Contact</a>
+      </div>
+      <div class="footer-copy">© 2026 MasterCommander</div>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
