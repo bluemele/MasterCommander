@@ -8,254 +8,216 @@
 <title>Perfect Moments</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Inter:wght@300;400;500;600&display=swap');
-
 :root {
-  --deep: #0a0a1a;
-  --night: #111128;
-  --surface: #1a1a3e;
-  --surface-light: #252560;
-  --gold: #d4a853;
-  --gold-light: #f0d68a;
-  --warm: #e8c4a0;
-  --text: #e8e4f0;
-  --text-dim: #9990b0;
-  --text-bright: #ffffff;
-  --accent: #7b68ee;
-  --accent-soft: #9b8afb;
-  --rose: #e07888;
-  --sage: #6eb89c;
+  --deep: #0a0a1a; --night: #111128; --surface: #1a1a3e; --surface-light: #252560;
+  --gold: #d4a853; --gold-light: #f0d68a; --warm: #e8c4a0;
+  --text: #e8e4f0; --text-dim: #9990b0; --text-bright: #ffffff;
+  --accent: #7b68ee; --accent-soft: #9b8afb; --rose: #e07888; --sage: #6eb89c;
+  --f-faith: #b48aea; --f-family: #e07888; --f-fitness: #6eb89c; --f-finances: #d4a853; --f-fun: #e8945a;
   --serif: 'Cormorant Garamond', Georgia, serif;
   --sans: 'Inter', -apple-system, sans-serif;
 }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:16px;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
+body{font-family:var(--sans);background:var(--deep);color:var(--text);min-height:100vh;min-height:100dvh;overflow-x:hidden;overscroll-behavior:none}
+h1,h2,h3,h4{font-family:var(--serif);font-weight:300;line-height:1.2}
+button{font-family:var(--sans);cursor:pointer;border:none;outline:none;-webkit-appearance:none}
+input,textarea,select{font-family:var(--sans);background:transparent;border:none;outline:none;color:var(--text);-webkit-appearance:none}
 
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+.bg{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0}
+.orb{position:absolute;border-radius:50%;filter:blur(80px);opacity:0.3;animation:float 20s ease-in-out infinite,pulse 20s ease-in-out infinite}
+.orb-1{width:300px;height:300px;left:10%;top:20%;background:rgba(123,104,238,0.15)}
+.orb-2{width:250px;height:250px;right:-5%;top:50%;background:rgba(212,168,83,0.12);animation-delay:3s;animation-duration:25s}
+.orb-3{width:200px;height:200px;left:30%;bottom:10%;background:rgba(110,184,156,0.1);animation-delay:6s;animation-duration:28s}
 
-html {
-  font-size: 16px;
-  -webkit-font-smoothing: antialiased;
-  -webkit-tap-highlight-color: transparent;
-}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-20px)}}
+@keyframes pulse{0%,100%{opacity:0.25}50%{opacity:0.4}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes glow{0%,100%{opacity:0.15}50%{opacity:0.35}}
 
-body {
-  font-family: var(--sans);
-  background: var(--deep);
-  color: var(--text);
-  min-height: 100vh;
-  min-height: 100dvh;
-  overflow-x: hidden;
-  overscroll-behavior: none;
-}
+.screen{display:none;position:relative;z-index:1;min-height:100vh;min-height:100dvh;padding:24px 20px 40px}
+.screen.active{display:flex;flex-direction:column;animation:fadeUp 0.6s cubic-bezier(0.16,1,0.3,1)}
+.has-topbar{padding-top:68px}
+.has-bottomnav{padding-bottom:90px}
+.center{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;flex:1;gap:20px}
 
-h1, h2, h3, h4 { font-family: var(--serif); font-weight: 300; line-height: 1.2; }
-button { font-family: var(--sans); cursor: pointer; border: none; outline: none; -webkit-appearance: none; }
-input, textarea, select { font-family: var(--sans); background: transparent; border: none; outline: none; color: var(--text); -webkit-appearance: none; }
+.topbar{position:fixed;top:0;left:0;right:0;z-index:100;padding:14px 20px;display:flex;align-items:center;gap:10px;background:rgba(10,10,26,0.88);backdrop-filter:blur(12px);border-bottom:1px solid rgba(123,104,238,0.1)}
+.topbar .logo{font-family:var(--serif);font-size:1rem;color:var(--gold);margin-right:auto;cursor:pointer}
+.topbar .dot{width:10px;height:10px;border-radius:50%;background:var(--surface-light);transition:all 0.4s}
+.topbar .dot.active{background:var(--gold);box-shadow:0 0 10px rgba(212,168,83,0.4)}
+.topbar .dot.done{background:var(--sage)}
+.topbar .tline{width:20px;height:2px;background:var(--surface-light)}
+.topbar .tline.done{background:var(--sage)}
 
-/* === Background === */
-.bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
-.orb {
-  position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.3;
-  animation: float 20s ease-in-out infinite, pulse 20s ease-in-out infinite;
-}
-.orb-1 { width: 300px; height: 300px; left: 10%; top: 20%; background: rgba(123,104,238,0.15); }
-.orb-2 { width: 250px; height: 250px; right: -5%; top: 50%; background: rgba(212,168,83,0.12); animation-delay: 3s; animation-duration: 25s; }
-.orb-3 { width: 200px; height: 200px; left: 30%; bottom: 10%; background: rgba(110,184,156,0.1); animation-delay: 6s; animation-duration: 28s; }
+.bottomnav{position:fixed;bottom:0;left:0;right:0;z-index:100;display:flex;background:rgba(10,10,26,0.92);backdrop-filter:blur(12px);border-top:1px solid rgba(123,104,238,0.1);padding:6px 0 env(safe-area-inset-bottom,8px)}
+.bottomnav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;background:none;color:var(--text-dim);font-size:0.65rem;transition:color 0.3s}
+.bottomnav button.active{color:var(--gold)}
+.bottomnav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 
-@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
-@keyframes pulse { 0%, 100% { opacity: 0.25; } 50% { opacity: 0.4; } }
-@keyframes fadeUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-@keyframes scaleIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
-@keyframes glow { 0%, 100% { opacity: 0.15; } 50% { opacity: 0.35; } }
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:14px 28px;border-radius:50px;font-size:0.95rem;font-weight:500;letter-spacing:0.02em;transition:all 0.3s;width:100%;max-width:320px}
+.btn-primary{background:linear-gradient(135deg,var(--gold),#c4953f);color:var(--deep)}
+.btn-primary:active{transform:scale(0.97)}
+.btn-secondary{background:rgba(123,104,238,0.15);color:var(--accent-soft);border:1px solid rgba(123,104,238,0.3)}
+.btn-ghost{background:transparent;color:var(--text-dim);padding:10px 20px}
+.btn-small{padding:10px 20px;font-size:0.85rem;width:auto}
+.btn-danger{background:rgba(224,120,136,0.15);color:var(--rose);border:1px solid rgba(224,120,136,0.2)}
 
-/* === Layout === */
-.screen {
-  display: none; position: relative; z-index: 1;
-  min-height: 100vh; min-height: 100dvh;
-  padding: 24px 20px 40px;
-}
-.screen.active { display: flex; flex-direction: column; animation: fadeUp 0.7s cubic-bezier(0.16,1,0.3,1); }
+.field{width:100%;margin-bottom:16px}
+.field label{display:block;font-size:0.85rem;color:var(--gold-light);margin-bottom:8px;font-weight:500}
+.field input,.field textarea,.field select{width:100%;padding:14px 16px;font-size:1rem;background:rgba(10,10,26,0.5);border:1px solid rgba(123,104,238,0.2);border-radius:12px;color:var(--text);transition:border-color 0.3s}
+.field input:focus,.field textarea:focus{border-color:var(--gold)}
+.field textarea{resize:vertical;min-height:80px;line-height:1.6}
+.field input::placeholder,.field textarea::placeholder{color:var(--text-dim);opacity:0.5}
+.field select{cursor:pointer}
+.field select option{background:var(--night);color:var(--text)}
 
-.center { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; flex: 1; gap: 20px; }
+.card{background:rgba(26,26,62,0.4);backdrop-filter:blur(12px);border:1px solid rgba(123,104,238,0.1);border-radius:12px;padding:16px;margin-bottom:10px;transition:all 0.3s}
+.card.selected{border-color:var(--gold);background:rgba(212,168,83,0.06)}
+.card-title{font-size:0.9rem;font-weight:500;color:var(--text-bright);margin-bottom:4px}
+.card-sub{font-size:0.85rem;color:var(--text-dim);line-height:1.5}
 
-/* === Top Bar === */
-.topbar {
-  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-  padding: 14px 20px; display: flex; align-items: center; gap: 10px;
-  background: rgba(10,10,26,0.85); backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(123,104,238,0.1);
-}
-.topbar .logo { font-family: var(--serif); font-size: 1rem; color: var(--gold); margin-right: auto; }
-.topbar .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--surface-light); transition: all 0.4s; }
-.topbar .dot.active { background: var(--gold); box-shadow: 0 0 10px rgba(212,168,83,0.4); }
-.topbar .dot.done { background: var(--sage); }
-.topbar .line { width: 24px; height: 2px; background: var(--surface-light); }
-.topbar .line.done { background: var(--sage); }
-.has-topbar { padding-top: 72px; }
+.chip{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;font-size:0.8rem}
+.chip-gold{background:rgba(212,168,83,0.12);color:var(--gold)}
+.chip-accent{background:rgba(123,104,238,0.12);color:var(--accent-soft)}
+.chip-sage{background:rgba(110,184,156,0.12);color:var(--sage)}
 
-/* === Buttons === */
-.btn {
-  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-  padding: 14px 28px; border-radius: 50px; font-size: 0.95rem; font-weight: 500;
-  letter-spacing: 0.02em; transition: all 0.3s; width: 100%; max-width: 320px;
-}
-.btn-primary { background: linear-gradient(135deg, var(--gold), #c4953f); color: var(--deep); }
-.btn-primary:active { transform: scale(0.97); }
-.btn-secondary { background: rgba(123,104,238,0.15); color: var(--accent-soft); border: 1px solid rgba(123,104,238,0.3); }
-.btn-ghost { background: transparent; color: var(--text-dim); padding: 10px 20px; }
-.btn-small { padding: 10px 20px; font-size: 0.85rem; width: auto; }
+.dots{display:flex;justify-content:center;gap:10px;margin-bottom:24px}
+.dots button{width:36px;height:36px;border-radius:50%;font-size:0.85rem;background:rgba(26,26,62,0.6);border:1px solid rgba(123,104,238,0.2);color:var(--text-dim);transition:all 0.3s}
+.dots button.active{border-color:var(--gold);color:var(--gold);background:rgba(212,168,83,0.1);transform:scale(1.1)}
+.dots button.done{background:rgba(110,184,156,0.12);border-color:var(--sage);color:var(--sage)}
 
-/* === Inputs === */
-.field { width: 100%; margin-bottom: 16px; }
-.field label { display: block; font-size: 0.85rem; color: var(--gold-light); margin-bottom: 8px; font-weight: 500; }
-.field input, .field textarea, .field select {
-  width: 100%; padding: 14px 16px; font-size: 1rem;
-  background: rgba(10,10,26,0.5); border: 1px solid rgba(123,104,238,0.2);
-  border-radius: 12px; color: var(--text); transition: border-color 0.3s;
-}
-.field input:focus, .field textarea:focus { border-color: var(--gold); }
-.field textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
-.field input::placeholder, .field textarea::placeholder { color: var(--text-dim); opacity: 0.5; }
-.field select { cursor: pointer; }
-.field select option { background: var(--night); color: var(--text); }
+.moment-label{font-size:0.75rem;text-transform:uppercase;letter-spacing:0.15em;color:var(--accent-soft)}
+.section-title{font-size:clamp(1.8rem,6vw,2.5rem);color:var(--text-bright)}
+.section-sub{font-size:1rem;line-height:1.7;color:var(--text-dim);max-width:480px}
+.section-lead{font-size:1.05rem;line-height:1.7;color:var(--text);max-width:480px}
+.section-guidance{font-size:0.9rem;color:var(--text-dim);font-style:italic;max-width:440px;line-height:1.6}
 
-/* === Cards === */
-.card {
-  background: rgba(26,26,62,0.4); backdrop-filter: blur(12px);
-  border: 1px solid rgba(123,104,238,0.1); border-radius: 12px;
-  padding: 16px; margin-bottom: 10px; transition: all 0.3s;
-}
-.card.selected { border-color: var(--gold); background: rgba(212,168,83,0.06); }
-.card-title { font-size: 0.9rem; font-weight: 500; color: var(--text-bright); margin-bottom: 4px; }
-.card-sub { font-size: 0.85rem; color: var(--text-dim); line-height: 1.5; }
+.stage-steps{text-align:left;width:100%;max-width:400px}
+.stage-step{padding:10px 0;font-size:0.95rem;color:var(--text-dim);line-height:1.6}
+.stage-step strong{color:var(--gold)}
 
-/* === Tags / Chips === */
-.chip {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 6px 14px; border-radius: 20px; font-size: 0.8rem;
-}
-.chip-gold { background: rgba(212,168,83,0.12); color: var(--gold); }
-.chip-accent { background: rgba(123,104,238,0.12); color: var(--accent-soft); }
-.chip-sage { background: rgba(110,184,156,0.12); color: var(--sage); }
+.saved-check{width:56px;height:56px;border-radius:50%;background:rgba(110,184,156,0.15);border:2px solid var(--sage);color:var(--sage);font-size:1.4rem;display:flex;align-items:center;justify-content:center}
 
-/* === Dots nav === */
-.dots { display: flex; justify-content: center; gap: 10px; margin-bottom: 32px; }
-.dots button {
-  width: 38px; height: 38px; border-radius: 50%; font-size: 0.85rem;
-  background: rgba(26,26,62,0.6); border: 1px solid rgba(123,104,238,0.2);
-  color: var(--text-dim); transition: all 0.3s;
-}
-.dots button.active { border-color: var(--gold); color: var(--gold); background: rgba(212,168,83,0.1); transform: scale(1.1); }
-.dots button.done { background: rgba(110,184,156,0.12); border-color: var(--sage); color: var(--sage); }
+.glow-circle{width:120px;height:120px;border-radius:50%;background:radial-gradient(circle,rgba(212,168,83,0.25) 0%,transparent 70%);animation:glow 4s ease-in-out infinite}
+.landing-stages{display:flex;align-items:center;gap:10px;margin-top:24px;font-size:0.82rem;color:var(--text-dim);flex-wrap:wrap;justify-content:center}
+.landing-stages .num{width:24px;height:24px;border-radius:50%;background:rgba(123,104,238,0.15);border:1px solid rgba(123,104,238,0.3);display:flex;align-items:center;justify-content:center;font-size:0.72rem;color:var(--accent-soft);flex-shrink:0}
+.landing-stages .divider{width:16px;height:1px;background:rgba(123,104,238,0.2)}
+.actions{display:flex;gap:12px;margin-top:16px;justify-content:center;flex-wrap:wrap}
+.quote{font-family:var(--serif);font-size:1.2rem;font-style:italic;color:var(--warm);max-width:400px;line-height:1.6;text-align:center}
+.scroll-area{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:20px}
+.section-divider{width:100%;height:1px;background:rgba(123,104,238,0.08);margin:24px 0}
+.ref-label{font-size:0.75rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-dim);margin-bottom:8px;font-weight:500}
+.ref-grid{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.ref-card{padding:8px 14px;background:rgba(26,26,62,0.4);border:1px solid rgba(123,104,238,0.1);border-radius:10px;font-size:0.82rem;color:var(--text);cursor:pointer;transition:all 0.3s}
+.add-row{display:flex;gap:8px;align-items:center}
+.add-row input{flex:1}
+.add-row .btn-small{flex-shrink:0}
 
-/* === Specific sections === */
-.moment-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.15em; color: var(--accent-soft); }
-.section-title { font-size: clamp(1.8rem, 6vw, 2.5rem); color: var(--text-bright); }
-.section-sub { font-size: 1rem; line-height: 1.7; color: var(--text-dim); max-width: 480px; }
-.section-lead { font-size: 1.05rem; line-height: 1.7; color: var(--text); max-width: 480px; }
-.section-guidance { font-size: 0.9rem; color: var(--text-dim); font-style: italic; max-width: 440px; line-height: 1.6; }
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%;margin:16px 0}
+.stat{text-align:center;padding:18px 12px;background:rgba(26,26,62,0.4);border:1px solid rgba(123,104,238,0.1);border-radius:12px}
+.stat-num{display:block;font-family:var(--serif);font-size:2.2rem;color:var(--gold);line-height:1;margin-bottom:6px}
+.stat-label{font-size:0.75rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.05em}
 
-.stage-steps { text-align: left; width: 100%; max-width: 400px; }
-.stage-step { padding: 10px 0; font-size: 0.95rem; color: var(--text-dim); line-height: 1.6; }
-.stage-step strong { color: var(--gold); }
+/* Five F's */
+.f-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:16px;font-size:0.75rem;font-weight:500}
+.f-faith{background:rgba(180,138,234,0.12);color:var(--f-faith);border:1px solid rgba(180,138,234,0.2)}
+.f-family{background:rgba(224,120,136,0.12);color:var(--f-family);border:1px solid rgba(224,120,136,0.2)}
+.f-fitness{background:rgba(110,184,156,0.12);color:var(--f-fitness);border:1px solid rgba(110,184,156,0.2)}
+.f-finances{background:rgba(212,168,83,0.12);color:var(--f-finances);border:1px solid rgba(212,168,83,0.2)}
+.f-fun{background:rgba(232,148,90,0.12);color:var(--f-fun);border:1px solid rgba(232,148,90,0.2)}
 
-.saved-check {
-  width: 56px; height: 56px; border-radius: 50%;
-  background: rgba(110,184,156,0.15); border: 2px solid var(--sage);
-  color: var(--sage); font-size: 1.4rem;
-  display: flex; align-items: center; justify-content: center;
-}
+.f-goal-card{padding:16px;margin-bottom:12px;border-radius:14px;border:1px solid rgba(123,104,238,0.1);background:rgba(26,26,62,0.3)}
+.f-goal-card h4{font-size:1.1rem;margin-bottom:10px}
 
-.insight-card {
-  display: flex; align-items: flex-start; gap: 10px;
-  padding: 12px; background: rgba(110,184,156,0.06);
-  border: 1px solid rgba(110,184,156,0.15); border-radius: 10px; margin-bottom: 8px;
-}
-.insight-card p { flex: 1; font-size: 0.88rem; line-height: 1.5; }
-.insight-remove { font-size: 0.75rem; color: var(--text-dim); opacity: 0.5; padding: 4px; background: none; }
+/* Daily routine */
+.routine-block{margin-bottom:20px}
+.routine-block-title{font-size:0.72rem;text-transform:uppercase;letter-spacing:0.12em;color:var(--gold);margin-bottom:10px;font-weight:600;display:flex;align-items:center;gap:8px}
+.routine-block-title::after{content:'';flex:1;height:1px;background:rgba(212,168,83,0.15)}
+.routine-item{display:flex;align-items:center;gap:12px;padding:12px 14px;margin-bottom:6px;border-radius:10px;background:rgba(26,26,62,0.3);border:1px solid rgba(123,104,238,0.08);transition:all 0.3s}
+.routine-item.checked{opacity:0.5;border-color:rgba(110,184,156,0.2)}
+.routine-item.checked .ri-text{text-decoration:line-through;color:var(--text-dim)}
+.ri-check{width:24px;height:24px;border-radius:50%;border:2px solid rgba(123,104,238,0.3);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.3s;cursor:pointer;background:transparent;color:transparent;font-size:0.7rem}
+.ri-check.done{border-color:var(--sage);background:rgba(110,184,156,0.2);color:var(--sage)}
+.ri-text{flex:1;font-size:0.9rem;line-height:1.4}
+.ri-sub{font-size:0.78rem;color:var(--text-dim)}
 
-.plan-item {
-  display: flex; align-items: center; gap: 10px;
-  padding: 14px 16px; margin-bottom: 8px;
-}
-.plan-num {
-  width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
-  background: rgba(212,168,83,0.15); color: var(--gold);
-  display: flex; align-items: center; justify-content: center; font-size: 0.8rem;
-}
-.plan-freq { padding: 3px 10px; border-radius: 20px; background: rgba(123,104,238,0.12); color: var(--accent-soft); font-size: 0.72rem; flex-shrink: 0; }
-.plan-text { flex: 1; font-size: 0.92rem; line-height: 1.5; }
-.plan-remove { font-size: 1.2rem; color: var(--text-dim); opacity: 0.3; padding: 4px; background: none; }
+/* A-Tasks */
+.atask{display:flex;align-items:center;gap:10px;padding:12px 14px;margin-bottom:6px;border-radius:10px;background:rgba(26,26,62,0.3);border:1px solid rgba(123,104,238,0.08)}
+.atask.done .atask-text{text-decoration:line-through;opacity:0.5}
+.atask-text{flex:1;font-size:0.9rem}
+.atask-remove{background:none;color:var(--text-dim);opacity:0.3;font-size:1rem;padding:4px}
 
-.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; margin: 16px 0; }
-.stat { text-align: center; padding: 18px 12px; background: rgba(26,26,62,0.4); border: 1px solid rgba(123,104,238,0.1); border-radius: 12px; }
-.stat-num { display: block; font-family: var(--serif); font-size: 2.2rem; color: var(--gold); line-height: 1; margin-bottom: 6px; }
-.stat-label { font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; }
+/* Dashboard header */
+.dash-header{text-align:center;margin-bottom:20px}
+.dash-date{font-size:0.8rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.1em}
+.dash-greeting{font-family:var(--serif);font-size:1.8rem;color:var(--text-bright);margin:4px 0}
+.dash-day{font-size:0.85rem;color:var(--gold)}
+.dash-progress{margin-top:12px}
+.progress-bar{width:100%;height:6px;background:rgba(123,104,238,0.1);border-radius:3px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--gold));border-radius:3px;transition:width 0.5s}
+.progress-label{font-size:0.78rem;color:var(--text-dim);margin-top:6px}
 
-.glow-circle {
-  width: 120px; height: 120px; border-radius: 50%;
-  background: radial-gradient(circle, rgba(212,168,83,0.25) 0%, transparent 70%);
-  animation: glow 4s ease-in-out infinite;
-}
+/* Review */
+.review-f{margin-bottom:16px}
+.review-f label{display:block;font-size:0.88rem;color:var(--text);margin-bottom:8px}
+.review-f .rating{display:flex;gap:6px}
+.review-f .rating button{width:36px;height:36px;border-radius:8px;font-size:0.85rem;background:rgba(26,26,62,0.4);border:1px solid rgba(123,104,238,0.15);color:var(--text-dim);transition:all 0.2s}
+.review-f .rating button.sel{background:rgba(212,168,83,0.2);border-color:var(--gold);color:var(--gold)}
 
-.landing-stages { display: flex; align-items: center; gap: 12px; margin-top: 24px; font-size: 0.85rem; color: var(--text-dim); }
-.landing-stages .num {
-  width: 26px; height: 26px; border-radius: 50%;
-  background: rgba(123,104,238,0.15); border: 1px solid rgba(123,104,238,0.3);
-  display: flex; align-items: center; justify-content: center; font-size: 0.75rem; color: var(--accent-soft);
-}
-.landing-stages .divider { width: 20px; height: 1px; background: rgba(123,104,238,0.2); }
+/* Tabs */
+.tabs{display:flex;gap:4px;background:rgba(26,26,62,0.4);border-radius:12px;padding:4px;margin-bottom:20px}
+.tab{flex:1;padding:10px 8px;font-size:0.82rem;font-weight:500;color:var(--text-dim);background:transparent;border-radius:8px;transition:all 0.3s;text-align:center}
+.tab.active{background:rgba(123,104,238,0.15);color:var(--accent-soft)}
 
-.row { display: flex; gap: 10px; width: 100%; }
-.row .field { flex: 1; }
-.actions { display: flex; gap: 12px; margin-top: 16px; justify-content: center; flex-wrap: wrap; }
+.plan-item{display:flex;align-items:center;gap:10px;padding:14px 16px;margin-bottom:8px}
+.plan-num{width:26px;height:26px;border-radius:50%;flex-shrink:0;background:rgba(212,168,83,0.15);color:var(--gold);display:flex;align-items:center;justify-content:center;font-size:0.8rem}
+.plan-text{flex:1;font-size:0.92rem;line-height:1.5}
+.plan-remove{font-size:1.2rem;color:var(--text-dim);opacity:0.3;padding:4px;background:none}
 
-.quote { font-family: var(--serif); font-size: 1.2rem; font-style: italic; color: var(--warm); max-width: 400px; line-height: 1.6; text-align: center; }
+.insight-card{display:flex;align-items:flex-start;gap:10px;padding:12px;background:rgba(110,184,156,0.06);border:1px solid rgba(110,184,156,0.15);border-radius:10px;margin-bottom:8px}
+.insight-card p{flex:1;font-size:0.88rem;line-height:1.5}
+.insight-remove{font-size:0.75rem;color:var(--text-dim);opacity:0.5;padding:4px;background:none}
 
-.tabs { display: flex; gap: 4px; background: rgba(26,26,62,0.4); border-radius: 12px; padding: 4px; margin-bottom: 28px; }
-.tab {
-  flex: 1; padding: 10px 12px; font-size: 0.85rem; font-weight: 500;
-  color: var(--text-dim); background: transparent; border-radius: 8px; transition: all 0.3s;
-}
-.tab.active { background: rgba(123,104,238,0.15); color: var(--accent-soft); }
+.theme-q{font-size:0.95rem;color:var(--text);line-height:1.6;text-align:center;margin-bottom:16px}
 
-.scroll-area { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: 20px; }
-
-.bottom-action {
-  position: fixed; bottom: 0; left: 0; right: 0; padding: 16px 20px;
-  background: linear-gradient(to top, var(--deep) 70%, transparent);
-  z-index: 50; text-align: center;
-}
-
-.ref-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-dim); margin-bottom: 8px; font-weight: 500; }
-.ref-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
-.ref-card { padding: 8px 14px; background: rgba(26,26,62,0.4); border: 1px solid rgba(123,104,238,0.1); border-radius: 10px; font-size: 0.82rem; color: var(--text); cursor: pointer; transition: all 0.3s; }
-.ref-card.selected { border-color: var(--gold); background: rgba(212,168,83,0.06); }
-
-.theme-q { font-size: 0.95rem; color: var(--text); line-height: 1.6; text-align: center; margin-bottom: 16px; }
-
-.add-row { display: flex; gap: 8px; align-items: center; }
-.add-row input { flex: 1; }
-.add-row .btn-small { flex-shrink: 0; }
-
-.section-divider { width: 100%; height: 1px; background: rgba(123,104,238,0.08); margin: 24px 0; }
+/* Review due banner */
+.review-banner{padding:14px 16px;border-radius:12px;background:rgba(212,168,83,0.08);border:1px solid rgba(212,168,83,0.2);margin-bottom:16px;text-align:center;cursor:pointer}
+.review-banner p{font-size:0.88rem;color:var(--gold);font-weight:500}
+.review-banner span{font-size:0.78rem;color:var(--text-dim)}
 </style>
 </head>
 <body>
 
-<div class="bg">
-  <div class="orb orb-1"></div>
-  <div class="orb orb-2"></div>
-  <div class="orb orb-3"></div>
-</div>
+<div class="bg"><div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div></div>
 
-<!-- ===== TOP BAR ===== -->
+<!-- TOPBAR -->
 <div class="topbar" id="topbar" style="display:none">
   <span class="logo" onclick="goHome()">Perfect Moments</span>
-  <div class="dot" id="dot1"></div>
-  <div class="line" id="line1"></div>
-  <div class="dot" id="dot2"></div>
-  <div class="line" id="line2"></div>
-  <div class="dot" id="dot3"></div>
+  <div class="dot" id="dot1"></div><div class="tline" id="line1"></div>
+  <div class="dot" id="dot2"></div><div class="tline" id="line2"></div>
+  <div class="dot" id="dot3"></div><div class="tline" id="line3"></div>
+  <div class="dot" id="dot4"></div>
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="bottomnav" id="bottomnav" style="display:none">
+  <button onclick="navTo('dashboard')" id="nav-dashboard">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    Today
+  </button>
+  <button onclick="navTo('tasks')" id="nav-tasks">
+    <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+    Tasks
+  </button>
+  <button onclick="navTo('journal')" id="nav-journal">
+    <svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+    Journal
+  </button>
+  <button onclick="navTo('profile')" id="nav-profile">
+    <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    Profile
+  </button>
 </div>
 
 <!-- ===== LANDING ===== -->
@@ -263,14 +225,14 @@ input, textarea, select { font-family: var(--sans); background: transparent; bor
   <div class="center">
     <div class="glow-circle"></div>
     <h1 class="section-title" style="font-size:clamp(2.8rem,8vw,4.5rem);line-height:1">Perfect<br>Moments</h1>
-    <p class="section-sub">Discover what makes your most meaningful experiences possible, and learn to create more of them.</p>
+    <p class="section-sub">Most people lack clarity on <em>why</em> they do things. This app brings out your perfect moments, and reveals what it takes to build that life.</p>
     <button class="btn btn-primary" onclick="showScreen('auth')">Begin Your Journey</button>
     <div class="landing-stages">
-      <span class="num">1</span><span>Reflect</span>
-      <span class="divider"></span>
-      <span class="num">2</span><span>Realize</span>
-      <span class="divider"></span>
-      <span class="num">3</span><span>Plan</span>
+      <span class="num">1</span><span>Reflect</span><span class="divider"></span>
+      <span class="num">2</span><span>Realize</span><span class="divider"></span>
+      <span class="num">3</span><span>Principles</span><span class="divider"></span>
+      <span class="num">4</span><span>Five F's</span><span class="divider"></span>
+      <span class="num">5</span><span>Live It</span>
     </div>
   </div>
 </div>
@@ -292,11 +254,13 @@ input, textarea, select { font-family: var(--sans); background: transparent; bor
 <div class="screen" id="screen-ready">
   <div class="center">
     <h2 class="section-title">Welcome, <span id="ready-name"></span></h2>
-    <p class="section-sub">You're about to embark on a journey of self-discovery. Think of five moments in your life that felt truly perfect.</p>
+    <p class="section-sub">You're about to build a life operating system — rooted in what actually matters to you.</p>
     <div class="stage-steps">
       <div class="stage-step"><strong>Reflect</strong> — Revisit your 5 most perfect moments</div>
       <div class="stage-step"><strong>Realize</strong> — Discover the patterns that connect them</div>
-      <div class="stage-step"><strong>Plan</strong> — Turn insights into principles and habits</div>
+      <div class="stage-step"><strong>Principles</strong> — Define the truths that enable those moments</div>
+      <div class="stage-step"><strong>Five F's</strong> — Set annual goals across Faith, Family, Fitness, Finances, Fun</div>
+      <div class="stage-step"><strong>Live It</strong> — Daily routines, A-Tasks, and periodic reviews</div>
     </div>
     <button class="btn btn-primary" onclick="startReflection()">I'm Ready</button>
   </div>
@@ -310,7 +274,7 @@ input, textarea, select { font-family: var(--sans); background: transparent; bor
     <h2 class="section-title" id="reflect-title"></h2>
     <p class="section-lead" id="reflect-lead"></p>
     <p class="section-guidance" id="reflect-guidance"></p>
-    <button class="btn btn-primary" onclick="showScreen('reflect-form')">I Have a Moment</button>
+    <button class="btn btn-primary" onclick="showReflectForm()">I Have a Moment</button>
   </div>
 </div>
 
@@ -343,7 +307,6 @@ input, textarea, select { font-family: var(--sans); background: transparent; bor
     <span class="moment-label">Stage 2</span>
     <h2 class="section-title">Realizations</h2>
     <p class="section-sub">Your five moments contain hidden patterns — threads that connect the best experiences of your life.</p>
-    <p class="section-sub" style="font-size:0.9rem">We'll walk through six lenses. For each, look at your moments and capture what you notice.</p>
     <div id="realize-chips" style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:12px 0"></div>
     <button class="btn btn-primary" onclick="startRealizations()">Begin Exploration</button>
   </div>
@@ -378,570 +341,676 @@ input, textarea, select { font-family: var(--sans); background: transparent; bor
   <div class="scroll-area" id="realize-summary-list"></div>
   <div class="actions" style="padding-top:12px">
     <button class="btn btn-ghost btn-small" onclick="startRealizations()">Explore More</button>
-    <button class="btn btn-primary btn-small" onclick="startPlanning()">Continue to Planning</button>
+    <button class="btn btn-primary btn-small" onclick="startPrinciples()">Continue to Principles</button>
   </div>
 </div>
 
-<!-- ===== PLANNING ===== -->
-<div class="screen has-topbar" id="screen-planning">
-  <div class="tabs">
-    <button class="tab active" id="tab-principles" onclick="showPlanTab('principles')">Principles</button>
-    <button class="tab" id="tab-habits" onclick="showPlanTab('habits')">Habits</button>
-    <button class="tab" id="tab-review" onclick="showPlanTab('review')">Review</button>
-  </div>
-
-  <!-- Principles -->
-  <div id="plan-principles">
-    <span class="moment-label">Stage 3</span>
-    <h2 style="color:var(--text-bright);font-size:1.8rem;margin:8px 0 12px">Define Your Principles</h2>
-    <p class="section-sub" style="font-size:0.9rem;margin-bottom:16px">What truths have you uncovered about what makes perfect moments possible?</p>
-    <div id="plan-realizations-ref"></div>
+<!-- ===== PRINCIPLES ===== -->
+<div class="screen has-topbar" id="screen-principles">
+  <span class="moment-label" style="text-align:center;display:block">Stage 3</span>
+  <h2 style="text-align:center;color:var(--text-bright);font-size:1.8rem;margin:8px 0 8px">Your Principles</h2>
+  <p class="section-sub" style="text-align:center;font-size:0.9rem;margin:0 auto 20px">What truths about yourself will enable these perfect moments to come more often? These principles define how you live.</p>
+  <div class="scroll-area">
+    <div id="princ-realizations-ref"></div>
     <div class="field">
       <label>Write a guiding principle:</label>
       <div class="add-row">
-        <input type="text" id="principle-input" placeholder='e.g., "Prioritize presence over productivity"'>
+        <input type="text" id="principle-input" placeholder='e.g., "Presence over productivity"'>
         <button class="btn btn-secondary btn-small" onclick="addPrinciple()">Add</button>
       </div>
     </div>
     <div id="principles-list"></div>
-    <div class="actions" style="margin-top:20px">
-      <button class="btn btn-primary" onclick="showPlanTab('habits')">Next: Build Habits</button>
-    </div>
   </div>
-
-  <!-- Habits -->
-  <div id="plan-habits" style="display:none">
-    <span class="moment-label">Stage 3</span>
-    <h2 style="color:var(--text-bright);font-size:1.8rem;margin:8px 0 12px">Build Your Habits</h2>
-    <p class="section-sub" style="font-size:0.9rem;margin-bottom:16px">Turn your principles into concrete actions.</p>
-    <div id="plan-principles-ref"></div>
-    <div class="field">
-      <label>Define a habit:</label>
-      <div class="add-row">
-        <input type="text" id="habit-input" placeholder='e.g., "10min phone-free time at dinner"'>
-        <select id="habit-freq" style="width:100px;padding:10px;background:rgba(10,10,26,0.5);border:1px solid rgba(123,104,238,0.2);border-radius:10px;font-size:0.85rem">
-          <option value="daily">daily</option>
-          <option value="weekly">weekly</option>
-          <option value="monthly">monthly</option>
-        </select>
-        <button class="btn btn-secondary btn-small" onclick="addHabit()">Add</button>
-      </div>
-    </div>
-    <div id="habits-list"></div>
-    <div class="actions" style="margin-top:20px">
-      <button class="btn btn-ghost btn-small" onclick="showPlanTab('principles')">Back</button>
-      <button class="btn btn-primary btn-small" onclick="showPlanTab('review')">Review Plan</button>
-    </div>
-  </div>
-
-  <!-- Review -->
-  <div id="plan-review" style="display:none">
-    <span class="moment-label">Your Plan</span>
-    <h2 style="color:var(--text-bright);font-size:1.8rem;margin:8px 0 20px">Path to More Perfect Moments</h2>
-    <div id="review-content"></div>
-    <div class="actions" style="margin-top:24px">
-      <button class="btn btn-ghost btn-small" onclick="showPlanTab('habits')">Back</button>
-      <button class="btn btn-primary" onclick="completeJourney()">Complete My Journey</button>
-    </div>
+  <div class="actions" style="padding-top:12px">
+    <button class="btn btn-primary" onclick="startFiveFs()">Continue to Five F's</button>
   </div>
 </div>
 
-<!-- ===== COMPLETE ===== -->
-<div class="screen" id="screen-complete">
+<!-- ===== FIVE F'S GOALS ===== -->
+<div class="screen has-topbar" id="screen-fivefs">
+  <span class="moment-label" style="text-align:center;display:block">Stage 4 &mdash; The Five F's</span>
+  <h2 style="text-align:center;color:var(--text-bright);font-size:1.8rem;margin:8px 0 8px">Annual Goals</h2>
+  <p class="section-sub" style="text-align:center;font-size:0.88rem;margin:0 auto 20px">Set one annual goal in each pillar of a fulfilled life. Your principles will guide your habits, which build the foundation.</p>
+  <div class="scroll-area" id="fivefs-form"></div>
+  <div class="actions" style="padding-top:12px">
+    <button class="btn btn-ghost btn-small" onclick="showScreen('principles')">Back</button>
+    <button class="btn btn-primary btn-small" onclick="saveFiveFs()">Continue to Blueprint</button>
+  </div>
+</div>
+
+<!-- ===== BLUEPRINT ===== -->
+<div class="screen has-topbar" id="screen-blueprint">
   <div class="center" style="gap:16px">
-    <div class="glow-circle"></div>
-    <h1 class="section-title">Journey Complete</h1>
-    <p class="section-sub" id="complete-sub"></p>
-    <div class="stat-grid" id="complete-stats"></div>
-    <div id="complete-principles"></div>
-    <div id="complete-habits"></div>
-    <div class="section-divider"></div>
-    <p class="quote">"The quality of your life is determined by the quality of your moments."</p>
-    <div class="actions">
-      <button class="btn btn-primary" onclick="newJourney()">Start a New Journey</button>
-      <button class="btn btn-ghost" onclick="goHome()">Return Home</button>
+    <span class="moment-label">Stage 5</span>
+    <h2 class="section-title" style="font-size:1.8rem">Your Daily Blueprint</h2>
+    <p class="section-sub" style="font-size:0.9rem">This is the daily rhythm that moves you toward your perfect moments. Commit to it and watch your life transform.</p>
+    <div style="text-align:left;width:100%;max-width:400px">
+      <div class="stage-step"><strong>Morning Rise</strong> — Movement, sunlight, gratitude meditation</div>
+      <div class="stage-step"><strong>Morning Work</strong> — A-Tasks: the most important items per your Five F's</div>
+      <div class="stage-step"><strong>Midday Reset</strong> — Meal + brief meditation to reclaim energy</div>
+      <div class="stage-step"><strong>Afternoon Focus</strong> — Continue A-Tasks, maintain balance across the F's</div>
+      <div class="stage-step"><strong>Evening Connection</strong> — Workout (group if possible), meal with connection</div>
+      <div class="stage-step"><strong>Wind Down</strong> — Journal, plan tomorrow, meditation, bath, 8hr sleep</div>
     </div>
+    <p class="section-sub" style="font-size:0.85rem;margin-top:8px">Weekly, monthly, and 90-day reviews will keep you on track and help adjust your course.</p>
+    <button class="btn btn-primary" onclick="completeOnboarding()">Launch My Journey</button>
+  </div>
+</div>
+
+<!-- ===== DASHBOARD ===== -->
+<div class="screen has-bottomnav" id="screen-dashboard">
+  <div class="dash-header">
+    <div class="dash-date" id="dash-date"></div>
+    <div class="dash-greeting" id="dash-greeting"></div>
+    <div class="dash-day" id="dash-day"></div>
+    <div class="dash-progress"><div class="progress-bar"><div class="progress-fill" id="dash-progress-fill"></div></div><div class="progress-label" id="dash-progress-label"></div></div>
+  </div>
+  <div id="dash-review-banner"></div>
+  <div class="scroll-area" id="dash-routine"></div>
+</div>
+
+<!-- ===== TASKS ===== -->
+<div class="screen has-bottomnav" id="screen-tasks">
+  <h2 style="text-align:center;color:var(--text-bright);font-size:1.6rem;margin-bottom:4px">A-Tasks</h2>
+  <p style="text-align:center;font-size:0.82rem;color:var(--text-dim);margin-bottom:16px">Your most important items — organized by the Five F's</p>
+  <div class="field">
+    <div class="add-row">
+      <input type="text" id="atask-input" placeholder="Add an A-Task...">
+      <select id="atask-cat" style="width:90px;padding:10px;background:rgba(10,10,26,0.5);border:1px solid rgba(123,104,238,0.2);border-radius:10px;font-size:0.8rem">
+        <option value="faith">Faith</option>
+        <option value="family">Family</option>
+        <option value="fitness">Fitness</option>
+        <option value="finances">Finances</option>
+        <option value="fun">Fun</option>
+      </select>
+      <button class="btn btn-secondary btn-small" onclick="addATask()">Add</button>
+    </div>
+  </div>
+  <div class="tabs" id="task-tabs">
+    <button class="tab active" onclick="showTaskTab('today')">Today</button>
+    <button class="tab" onclick="showTaskTab('tomorrow')">Tomorrow</button>
+  </div>
+  <div class="scroll-area" id="tasks-list"></div>
+</div>
+
+<!-- ===== JOURNAL ===== -->
+<div class="screen has-bottomnav" id="screen-journal">
+  <h2 style="text-align:center;color:var(--text-bright);font-size:1.6rem;margin-bottom:4px">Journal</h2>
+  <p style="text-align:center;font-size:0.82rem;color:var(--text-dim);margin-bottom:16px">Get it all out. Clear your mind for tomorrow.</p>
+  <div class="field">
+    <textarea id="journal-text" placeholder="What's on your mind tonight..." rows="8" style="min-height:200px"></textarea>
+  </div>
+  <div class="actions">
+    <button class="btn btn-primary btn-small" onclick="saveJournal()">Save Entry</button>
+  </div>
+  <div id="journal-past" style="margin-top:24px"></div>
+</div>
+
+<!-- ===== REVIEW (Weekly / Monthly / 90-Day) ===== -->
+<div class="screen has-bottomnav" id="screen-review">
+  <h2 style="text-align:center;color:var(--text-bright);font-size:1.6rem;margin-bottom:4px" id="review-title">Weekly Review</h2>
+  <p style="text-align:center;font-size:0.82rem;color:var(--text-dim);margin-bottom:20px" id="review-sub">Rate your progress in each of the Five F's this week</p>
+  <div class="scroll-area">
+    <div id="review-fields"></div>
+    <div class="field" style="margin-top:16px">
+      <label>Reflections &amp; adjustments:</label>
+      <textarea id="review-notes" placeholder="What worked? What needs to change?" rows="4"></textarea>
+    </div>
+    <div class="field">
+      <label>Top A-Tasks for next period:</label>
+      <textarea id="review-next-tasks" placeholder="What are your most important objectives?" rows="3"></textarea>
+    </div>
+  </div>
+  <div class="actions" style="padding-top:12px">
+    <button class="btn btn-ghost btn-small" onclick="navTo('dashboard')">Cancel</button>
+    <button class="btn btn-primary btn-small" onclick="saveReview()">Save Review</button>
+  </div>
+</div>
+
+<!-- ===== PROFILE ===== -->
+<div class="screen has-bottomnav" id="screen-profile">
+  <h2 style="text-align:center;color:var(--text-bright);font-size:1.6rem;margin-bottom:4px" id="profile-name"></h2>
+  <p style="text-align:center;font-size:0.82rem;color:var(--text-dim);margin-bottom:20px" id="profile-since"></p>
+  <div class="tabs">
+    <button class="tab active" id="ptab-goals" onclick="showProfileTab('goals')">Goals</button>
+    <button class="tab" id="ptab-principles" onclick="showProfileTab('principles')">Principles</button>
+    <button class="tab" id="ptab-moments" onclick="showProfileTab('moments')">Moments</button>
+    <button class="tab" id="ptab-reviews" onclick="showProfileTab('reviews')">Reviews</button>
+  </div>
+  <div class="scroll-area" id="profile-content"></div>
+  <div class="actions" style="padding-top:12px">
+    <button class="btn btn-danger btn-small" onclick="resetApp()">Reset Everything</button>
   </div>
 </div>
 
 <script>
-// ===== DATA =====
-const STORE_KEY = 'perfect_moments';
+// ============================================================
+// DATA
+// ============================================================
+const STORE='perfect_moments_v2';
+const FKEYS=['faith','family','fitness','finances','fun'];
+const FLABELS={faith:'Faith',family:'Family & Friends',fitness:'Fitness',finances:'Finances',fun:'Fun'};
+const FICONS={faith:'Pray/Reflect',family:'Connect',fitness:'Move',finances:'Build',fun:'Play'};
 
-function load() {
-  try { return JSON.parse(localStorage.getItem(STORE_KEY)) || defaultData(); }
-  catch { return defaultData(); }
-}
+function defaultData(){return{name:'',startDate:null,moments:[],realizations:[],principles:[],annualGoals:{faith:{goal:'',why:''},family:{goal:'',why:''},fitness:{goal:'',why:''},finances:{goal:'',why:''},fun:{goal:'',why:''}},dailyLogs:{},reviews:[],stage:'landing',onboardingComplete:false}}
+function load(){try{return JSON.parse(localStorage.getItem(STORE))||defaultData()}catch(e){return defaultData()}}
+function save(){localStorage.setItem(STORE,JSON.stringify(D))}
+let D=load();
+let currentSlot=1,currentLens=0,currentReviewType='weekly',taskTab='today';
 
-function save() { localStorage.setItem(STORE_KEY, JSON.stringify(data)); }
+function today(){return new Date().toISOString().slice(0,10)}
+function tomorrow(){const d=new Date();d.setDate(d.getDate()+1);return d.toISOString().slice(0,10)}
+function daysSince(dateStr){if(!dateStr)return 0;return Math.floor((Date.now()-new Date(dateStr).getTime())/86400000)}
+function getLog(date){if(!D.dailyLogs[date])D.dailyLogs[date]={routine:{},aTasks:[],journal:'',tomorrowTasks:[]};return D.dailyLogs[date]}
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML}
 
-function defaultData() {
-  return { name: '', moments: [], realizations: [], principles: [], habits: [], stage: 'landing' };
-}
-
-let data = load();
-let currentSlot = 1;
-let currentLens = 0;
-
-// ===== PROMPTS =====
-const prompts = [
-  { title: 'Your First Perfect Moment', lead: 'Close your eyes and breathe. Think back to a time when everything felt exactly right.', guidance: 'It could be anything — a quiet sunrise, a conversation that changed you, a moment of pure joy.' },
-  { title: 'Your Second Perfect Moment', lead: 'Think of another time you felt completely alive and present.', guidance: 'Maybe it was unexpected. Maybe you\'d waited for it. Let the feeling return.' },
-  { title: 'Your Third Perfect Moment', lead: 'Remember a moment that still makes you smile.', guidance: 'Perhaps it involved someone special. Perhaps you were alone. Either way, it was perfect.' },
-  { title: 'Your Fourth Perfect Moment', lead: 'Think of a time you felt deeply connected — to yourself, to others, or to the world.', guidance: 'Connection can come in many forms. What made this moment resonate?' },
-  { title: 'Your Fifth Perfect Moment', lead: 'Your final moment. The one that keeps coming back to you.', guidance: 'This moment defines something essential about who you are.' },
-];
-
-const fields = [
-  { key: 'title', label: 'Give this moment a name', placeholder: 'e.g., "Sunset on the lake"', type: 'input' },
-  { key: 'story', label: 'What happened?', placeholder: 'Describe the moment...', type: 'textarea' },
-  { key: 'location', label: 'Where were you?', placeholder: 'The place, the setting...', type: 'input' },
-  { key: 'people', label: 'Who was there?', placeholder: 'People who shared this (or just you)...', type: 'input' },
-  { key: 'emotions', label: 'What did you feel?', placeholder: 'The emotions that filled you...', type: 'input' },
-  { key: 'senses', label: 'What do you remember seeing, hearing, feeling?', placeholder: 'Sensory details...', type: 'textarea' },
-  { key: 'time_of_life', label: 'When in your life was this?', placeholder: 'e.g., "College years", "Last summer"', type: 'input' },
-];
-
-const lenses = [
-  { key: 'people', label: 'People & Connection', q: 'Who keeps appearing in your perfect moments? What kind of relationships were present?', field: 'people' },
-  { key: 'place', label: 'Place & Environment', q: 'Where did your perfect moments happen? Do certain environments come up again?', field: 'location' },
-  { key: 'state', label: 'State of Being', q: 'How were you feeling? Were you relaxed? Open? Present?', field: 'emotions' },
-  { key: 'activity', label: 'Activities & Actions', q: 'What were you doing? Action or stillness?', field: 'story' },
-  { key: 'surprise', label: 'Surprise & Spontaneity', q: 'Were your moments planned or unexpected? What role did surprise play?', field: 'story' },
-  { key: 'meaning', label: 'Deeper Meaning', q: 'Looking across all five moments, what is your life telling you about what matters most?', field: 'emotions' },
-];
-
-// ===== NAVIGATION =====
-function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  const el = document.getElementById('screen-' + id);
-  if (el) { el.classList.add('active'); el.style.animation = 'none'; el.offsetHeight; el.style.animation = ''; }
-
-  const hasBar = ['reflect-prompt','reflect-form','reflect-saved','realize-overview','realize-explore','realize-summary','planning'].includes(id);
-  document.getElementById('topbar').style.display = hasBar ? 'flex' : 'none';
+// ============================================================
+// NAVIGATION
+// ============================================================
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  const el=document.getElementById('screen-'+id);
+  if(el){el.classList.add('active');el.style.animation='none';el.offsetHeight;el.style.animation=''}
+  const onboard=['reflect-prompt','reflect-form','reflect-saved','realize-overview','realize-explore','realize-summary','principles','fivefs','blueprint'];
+  document.getElementById('topbar').style.display=onboard.includes(id)?'flex':'none';
+  document.getElementById('bottomnav').style.display=D.onboardingComplete&&['dashboard','tasks','journal','profile','review'].includes(id)?'flex':'none';
   updateTopbar();
+  if(D.onboardingComplete)updateBottomNav(id);
 }
 
-function updateTopbar() {
-  const stages = { reflection: 0, realizations: 1, planning: 2, complete: 3 };
-  const idx = stages[data.stage] || 0;
-  ['dot1','dot2','dot3'].forEach((d, i) => {
-    const el = document.getElementById(d);
-    el.className = 'dot' + (i < idx ? ' done' : '') + (i === idx ? ' active' : '');
+function updateTopbar(){
+  const stages={reflection:0,realizations:1,principles:2,fivefs:3,blueprint:3,complete:4};
+  const idx=stages[D.stage]||0;
+  for(let i=1;i<=4;i++){const el=document.getElementById('dot'+i);if(el)el.className='dot'+(i-1<idx?' done':'')+(i-1===idx?' active':'')}
+  for(let i=1;i<=3;i++){const el=document.getElementById('line'+i);if(el)el.className='tline'+(i-1<idx?' done':'')}
+}
+
+function updateBottomNav(id){
+  ['dashboard','tasks','journal','profile'].forEach(n=>{
+    const el=document.getElementById('nav-'+n);
+    if(el)el.className=id===n?'active':'';
   });
-  ['line1','line2'].forEach((l, i) => {
-    document.getElementById(l).className = 'line' + (i < idx ? ' done' : '');
-  });
 }
 
-function goHome() {
-  if (data.name) {
-    showScreen('ready');
-  } else {
-    showScreen('landing');
-  }
+function navTo(id){
+  if(id==='dashboard')renderDashboard();
+  if(id==='tasks')renderTasks();
+  if(id==='journal')renderJournal();
+  if(id==='profile')renderProfile();
+  showScreen(id);
 }
 
-// ===== AUTH =====
-function handleAuth() {
-  const name = document.getElementById('input-name').value.trim();
-  if (!name) return;
-  data.name = name;
-  save();
-  document.getElementById('ready-name').textContent = name;
+function goHome(){if(D.onboardingComplete)navTo('dashboard');else if(D.name)showScreen('ready');else showScreen('landing')}
+
+// ============================================================
+// AUTH
+// ============================================================
+function handleAuth(){
+  const n=document.getElementById('input-name').value.trim();
+  if(!n)return;
+  D.name=n;save();
+  document.getElementById('ready-name').textContent=n;
   showScreen('ready');
 }
 
-// ===== REFLECTION =====
-function startReflection() {
-  data.stage = 'reflection';
-  save();
-  currentSlot = 1;
-  showReflectPrompt();
-}
+// ============================================================
+// PROMPTS & FIELDS
+// ============================================================
+const prompts=[
+  {title:'Your First Perfect Moment',lead:'Close your eyes and breathe. Think back to a time when everything felt exactly right.',guidance:'It could be anything \u2014 a quiet sunrise, a conversation that changed you, a moment of pure joy.'},
+  {title:'Your Second Perfect Moment',lead:'Think of another time you felt completely alive and present.',guidance:'Maybe it was unexpected. Maybe you\'d waited for it. Let the feeling return.'},
+  {title:'Your Third Perfect Moment',lead:'Remember a moment that still makes you smile.',guidance:'Perhaps it involved someone special. Perhaps you were alone. Either way, it was perfect.'},
+  {title:'Your Fourth Perfect Moment',lead:'Think of a time you felt deeply connected \u2014 to yourself, to others, or to the world.',guidance:'Connection can come in many forms. What made this moment resonate?'},
+  {title:'Your Fifth Perfect Moment',lead:'Your final moment. The one that keeps coming back to you.',guidance:'This moment defines something essential about who you are.'},
+];
+const fields=[
+  {key:'title',label:'Give this moment a name',placeholder:'e.g., "Sunset on the lake"',type:'input'},
+  {key:'story',label:'What happened?',placeholder:'Describe the moment...',type:'textarea'},
+  {key:'location',label:'Where were you?',placeholder:'The place, the setting...',type:'input'},
+  {key:'people',label:'Who was there?',placeholder:'People who shared this...',type:'input'},
+  {key:'emotions',label:'What did you feel?',placeholder:'The emotions that filled you...',type:'input'},
+  {key:'senses',label:'What do you remember seeing, hearing, feeling?',placeholder:'Sensory details...',type:'textarea'},
+  {key:'time_of_life',label:'When in your life was this?',placeholder:'e.g., "College years"',type:'input'},
+];
+const lenses=[
+  {key:'people',label:'People & Connection',q:'Who keeps appearing in your perfect moments? What kind of relationships were present?',field:'people'},
+  {key:'place',label:'Place & Environment',q:'Where did your perfect moments happen? Do certain environments come up again?',field:'location'},
+  {key:'state',label:'State of Being',q:'How were you feeling? Were you relaxed? Open? Present?',field:'emotions'},
+  {key:'activity',label:'Activities & Actions',q:'What were you doing? Action or stillness?',field:'story'},
+  {key:'surprise',label:'Surprise & Spontaneity',q:'Were your moments planned or unexpected? What role did surprise play?',field:'story'},
+  {key:'meaning',label:'Deeper Meaning',q:'Looking across all five moments, what is your life telling you about what matters most?',field:'emotions'},
+];
 
-function showReflectPrompt() {
+// ============================================================
+// REFLECTION
+// ============================================================
+function startReflection(){D.stage='reflection';save();currentSlot=1;showReflectPrompt()}
+
+function showReflectPrompt(){
   renderDots('reflect-dots');
-  const p = prompts[currentSlot - 1];
-  document.getElementById('reflect-label').textContent = `Moment ${currentSlot} of 5`;
-  document.getElementById('reflect-title').textContent = p.title;
-  document.getElementById('reflect-lead').textContent = p.lead;
-  document.getElementById('reflect-guidance').textContent = p.guidance;
+  const p=prompts[currentSlot-1];
+  document.getElementById('reflect-label').textContent='Moment '+currentSlot+' of 5';
+  document.getElementById('reflect-title').textContent=p.title;
+  document.getElementById('reflect-lead').textContent=p.lead;
+  document.getElementById('reflect-guidance').textContent=p.guidance;
   showScreen('reflect-prompt');
 }
 
-function renderDots(containerId) {
-  const c = document.getElementById(containerId);
-  c.innerHTML = '';
-  for (let i = 1; i <= 5; i++) {
-    const btn = document.createElement('button');
-    btn.textContent = i;
-    const isDone = data.moments.some(m => m.slot === i);
-    btn.className = (i === currentSlot ? 'active ' : '') + (isDone ? 'done' : '');
-    btn.onclick = () => { currentSlot = i; showReflectPrompt(); };
-    c.appendChild(btn);
-  }
+function renderDots(id){
+  const c=document.getElementById(id);c.innerHTML='';
+  for(let i=1;i<=5;i++){const b=document.createElement('button');b.textContent=i;const done=D.moments.some(m=>m.slot===i);b.className=(i===currentSlot?'active ':'')+(done?'done':'');b.onclick=()=>{currentSlot=i;showReflectPrompt()};c.appendChild(b)}
 }
 
-function showReflectForm() {
+function showReflectForm(){
   renderDots('reflect-form-dots');
-  const p = prompts[currentSlot - 1];
-  document.getElementById('reflect-form-label').textContent = `Moment ${currentSlot} of 5`;
-  document.getElementById('reflect-form-title').textContent = p.title;
-
-  const existing = data.moments.find(m => m.slot === currentSlot) || {};
-  const container = document.getElementById('reflect-fields');
-  container.innerHTML = '';
-  fields.forEach(f => {
-    const div = document.createElement('div');
-    div.className = 'field';
-    const label = document.createElement('label');
-    label.textContent = f.label;
-    div.appendChild(label);
-    if (f.type === 'textarea') {
-      const ta = document.createElement('textarea');
-      ta.placeholder = f.placeholder;
-      ta.value = existing[f.key] || '';
-      ta.id = 'field-' + f.key;
-      ta.rows = 3;
-      div.appendChild(ta);
-    } else {
-      const inp = document.createElement('input');
-      inp.type = 'text';
-      inp.placeholder = f.placeholder;
-      inp.value = existing[f.key] || '';
-      inp.id = 'field-' + f.key;
-      div.appendChild(inp);
-    }
-    container.appendChild(div);
+  const p=prompts[currentSlot-1];
+  document.getElementById('reflect-form-label').textContent='Moment '+currentSlot+' of 5';
+  document.getElementById('reflect-form-title').textContent=p.title;
+  const existing=D.moments.find(m=>m.slot===currentSlot)||{};
+  const c=document.getElementById('reflect-fields');c.innerHTML='';
+  fields.forEach(f=>{
+    const d=document.createElement('div');d.className='field';
+    const l=document.createElement('label');l.textContent=f.label;d.appendChild(l);
+    if(f.type==='textarea'){const t=document.createElement('textarea');t.placeholder=f.placeholder;t.value=existing[f.key]||'';t.id='field-'+f.key;t.rows=3;d.appendChild(t)}
+    else{const inp=document.createElement('input');inp.type='text';inp.placeholder=f.placeholder;inp.value=existing[f.key]||'';inp.id='field-'+f.key;d.appendChild(inp)}
+    c.appendChild(d);
   });
-
   showScreen('reflect-form');
-  // Focus the title field
-  setTimeout(() => { const t = document.getElementById('field-title'); if (t && !existing.title) t.focus(); }, 300);
+  setTimeout(()=>{const t=document.getElementById('field-title');if(t&&!existing.title)t.focus()},300);
 }
 
-// Wire up "I Have a Moment" to show form
-document.querySelector('#screen-reflect-prompt .btn-primary').onclick = showReflectForm;
-
-function saveMoment() {
-  const title = document.getElementById('field-title')?.value.trim();
-  if (!title) return;
-
-  const moment = { slot: currentSlot };
-  fields.forEach(f => { moment[f.key] = document.getElementById('field-' + f.key)?.value.trim() || ''; });
-
-  const idx = data.moments.findIndex(m => m.slot === currentSlot);
-  if (idx >= 0) data.moments[idx] = moment;
-  else data.moments.push(moment);
-  save();
-
-  document.getElementById('saved-title').textContent = title;
-  const count = data.moments.length;
-  document.getElementById('saved-count').textContent = `${count} of 5 moments captured`;
-
-  const actions = document.getElementById('saved-actions');
-  actions.innerHTML = '';
-
-  if (currentSlot < 5) {
-    const next = document.createElement('button');
-    next.className = 'btn btn-primary';
-    next.textContent = 'Next Moment';
-    next.onclick = () => { currentSlot++; showReflectPrompt(); };
-    actions.appendChild(next);
-  }
-
-  if (count >= 5) {
-    const cont = document.createElement('button');
-    cont.className = 'btn btn-primary';
-    cont.style.marginTop = '8px';
-    cont.textContent = 'Continue to Realizations';
-    cont.onclick = () => { data.stage = 'realizations'; save(); showRealizeOverview(); };
-    actions.appendChild(cont);
-  }
-
-  const edit = document.createElement('button');
-  edit.className = 'btn btn-ghost';
-  edit.textContent = 'Edit This Moment';
-  edit.onclick = showReflectForm;
-  actions.appendChild(edit);
-
+function saveMoment(){
+  const title=document.getElementById('field-title')?.value.trim();if(!title)return;
+  const m={slot:currentSlot};
+  fields.forEach(f=>{m[f.key]=document.getElementById('field-'+f.key)?.value.trim()||''});
+  const idx=D.moments.findIndex(x=>x.slot===currentSlot);
+  if(idx>=0)D.moments[idx]=m;else D.moments.push(m);save();
+  document.getElementById('saved-title').textContent=title;
+  document.getElementById('saved-count').textContent=D.moments.length+' of 5 moments captured';
+  const a=document.getElementById('saved-actions');a.innerHTML='';
+  if(currentSlot<5){const b=document.createElement('button');b.className='btn btn-primary';b.textContent='Next Moment';b.onclick=()=>{currentSlot++;showReflectPrompt()};a.appendChild(b)}
+  if(D.moments.length>=5){const b=document.createElement('button');b.className='btn btn-primary';b.style.marginTop='8px';b.textContent='Continue to Realizations';b.onclick=()=>{D.stage='realizations';save();showRealizeOverview()};a.appendChild(b)}
+  const e=document.createElement('button');e.className='btn btn-ghost';e.textContent='Edit This Moment';e.onclick=showReflectForm;a.appendChild(e);
   showScreen('reflect-saved');
 }
 
-// ===== REALIZATIONS =====
-function showRealizeOverview() {
-  const chips = document.getElementById('realize-chips');
-  chips.innerHTML = '';
-  data.moments.forEach(m => {
-    const div = document.createElement('div');
-    div.className = 'chip chip-gold';
-    div.innerHTML = `<span style="font-weight:600">${m.slot}</span> ${m.title}`;
-    chips.appendChild(div);
-  });
+// ============================================================
+// REALIZATIONS
+// ============================================================
+function showRealizeOverview(){
+  const c=document.getElementById('realize-chips');c.innerHTML='';
+  D.moments.forEach(m=>{const d=document.createElement('div');d.className='chip chip-gold';d.innerHTML='<span style="font-weight:600">'+m.slot+'</span> '+esc(m.title);c.appendChild(d)});
   showScreen('realize-overview');
 }
 
-function startRealizations() {
-  currentLens = 0;
-  showLens();
+function startRealizations(){currentLens=0;showLens()}
+
+function showLens(){
+  const dots=document.getElementById('realize-dots');dots.innerHTML='';
+  lenses.forEach((l,i)=>{const b=document.createElement('button');b.textContent=i+1;b.className=i===currentLens?'active':(i<currentLens?'done':'');b.onclick=()=>{currentLens=i;showLens()};dots.appendChild(b)});
+  const lens=lenses[currentLens];
+  document.getElementById('realize-label').textContent='Lens '+(currentLens+1)+' of '+lenses.length;
+  document.getElementById('realize-title').textContent=lens.label;
+  document.getElementById('realize-question').textContent=lens.q;
+  document.getElementById('realize-insight').value='';
+  const cards=document.getElementById('realize-cards');cards.innerHTML='';
+  D.moments.forEach(m=>{const d=document.createElement('div');d.className='card';d.innerHTML='<div class="card-title"><span class="chip chip-gold" style="margin-right:6px">'+m.slot+'</span> '+esc(m.title)+'</div><div class="card-sub">'+(esc(m[lens.field])||'No details recorded')+'</div>';cards.appendChild(d)});
+  renderLensRealizations();showScreen('realize-explore');
 }
 
-function showLens() {
-  // Dots
-  const dots = document.getElementById('realize-dots');
-  dots.innerHTML = '';
-  lenses.forEach((l, i) => {
-    const btn = document.createElement('button');
-    btn.textContent = i + 1;
-    btn.className = i === currentLens ? 'active' : (i < currentLens ? 'done' : '');
-    btn.onclick = () => { currentLens = i; showLens(); };
-    dots.appendChild(btn);
-  });
-
-  const lens = lenses[currentLens];
-  document.getElementById('realize-label').textContent = `Lens ${currentLens + 1} of ${lenses.length}`;
-  document.getElementById('realize-title').textContent = lens.label;
-  document.getElementById('realize-question').textContent = lens.q;
-  document.getElementById('realize-insight').value = '';
-
-  // Moment cards
-  const cards = document.getElementById('realize-cards');
-  cards.innerHTML = '';
-  data.moments.forEach(m => {
-    const div = document.createElement('div');
-    div.className = 'card';
-    div.innerHTML = `<div class="card-title"><span class="chip chip-gold" style="margin-right:6px">${m.slot}</span> ${m.title}</div><div class="card-sub">${m[lens.field] || 'No details recorded'}</div>`;
-    cards.appendChild(div);
-  });
-
-  // Saved realizations for this lens
-  renderLensRealizations();
-  showScreen('realize-explore');
+function renderLensRealizations(){
+  const lens=lenses[currentLens];const s=document.getElementById('realize-saved');
+  const fl=D.realizations.filter(r=>r.theme===lens.key);
+  if(!fl.length){s.innerHTML='';return}
+  s.innerHTML='<div class="ref-label">Your realizations for this lens:</div>';
+  fl.forEach(r=>{const d=document.createElement('div');d.className='insight-card';const gi=D.realizations.indexOf(r);d.innerHTML='<p>'+esc(r.insight)+'</p><button class="insight-remove" onclick="removeRealization('+gi+')">&times;</button>';s.appendChild(d)});
 }
 
-function renderLensRealizations() {
-  const lens = lenses[currentLens];
-  const saved = document.getElementById('realize-saved');
-  const forLens = data.realizations.filter(r => r.theme === lens.key);
-  if (forLens.length === 0) { saved.innerHTML = ''; return; }
+function saveRealization(){const t=document.getElementById('realize-insight').value.trim();if(!t)return;D.realizations.push({insight:t,theme:lenses[currentLens].key});save();document.getElementById('realize-insight').value='';renderLensRealizations()}
+function removeRealization(i){D.realizations.splice(i,1);save();renderLensRealizations()}
+function nextLens(){if(currentLens<lenses.length-1){currentLens++;showLens()}else showRealizeSummary()}
 
-  saved.innerHTML = `<div class="ref-label">Your realizations for this lens:</div>`;
-  forLens.forEach((r, i) => {
-    const div = document.createElement('div');
-    div.className = 'insight-card';
-    div.innerHTML = `<p>${r.insight}</p><button class="insight-remove" onclick="removeRealization(${data.realizations.indexOf(r)})">&times;</button>`;
-    saved.appendChild(div);
-  });
-}
-
-function saveRealization() {
-  const text = document.getElementById('realize-insight').value.trim();
-  if (!text) return;
-  data.realizations.push({ insight: text, theme: lenses[currentLens].key });
-  save();
-  document.getElementById('realize-insight').value = '';
-  renderLensRealizations();
-}
-
-function removeRealization(idx) {
-  data.realizations.splice(idx, 1);
-  save();
-  renderLensRealizations();
-}
-
-function nextLens() {
-  if (currentLens < lenses.length - 1) {
-    currentLens++;
-    showLens();
-  } else {
-    showRealizeSummary();
-  }
-}
-
-function showRealizeSummary() {
-  const list = document.getElementById('realize-summary-list');
-  list.innerHTML = '';
-  if (data.realizations.length === 0) {
-    list.innerHTML = '<div style="text-align:center;padding:40px 0;color:var(--text-dim)"><p>No realizations captured yet.</p></div>';
-  } else {
-    data.realizations.forEach(r => {
-      const div = document.createElement('div');
-      div.className = 'card';
-      div.style.animation = 'fadeUp 0.5s ease both';
-      const themeName = lenses.find(l => l.key === r.theme)?.label || 'Insight';
-      div.innerHTML = `<span class="chip chip-accent" style="margin-bottom:8px">${themeName}</span><p style="font-size:0.95rem;line-height:1.6">${r.insight}</p>`;
-      list.appendChild(div);
-    });
-  }
+function showRealizeSummary(){
+  const l=document.getElementById('realize-summary-list');l.innerHTML='';
+  if(!D.realizations.length){l.innerHTML='<div style="text-align:center;padding:40px 0;color:var(--text-dim)">No realizations yet.</div>';showScreen('realize-summary');return}
+  D.realizations.forEach(r=>{const d=document.createElement('div');d.className='card';const tn=lenses.find(x=>x.key===r.theme)?.label||'Insight';d.innerHTML='<span class="chip chip-accent" style="margin-bottom:8px">'+tn+'</span><p style="font-size:0.95rem;line-height:1.6">'+esc(r.insight)+'</p>';l.appendChild(d)});
   showScreen('realize-summary');
 }
 
-// ===== PLANNING =====
-function startPlanning() {
-  data.stage = 'planning';
-  save();
-  showPlanTab('principles');
-  showScreen('planning');
+// ============================================================
+// PRINCIPLES
+// ============================================================
+function startPrinciples(){D.stage='principles';save();renderPrinciples();showScreen('principles')}
+
+function renderPrinciples(){
+  const ref=document.getElementById('princ-realizations-ref');
+  if(D.realizations.length){ref.innerHTML='<div class="ref-label">Your Realizations</div><div class="ref-grid">'+D.realizations.map(r=>'<div class="ref-card">'+esc(r.insight)+'</div>').join('')+'</div>'}else ref.innerHTML='';
+  const list=document.getElementById('principles-list');list.innerHTML='';
+  D.principles.forEach((p,i)=>{const d=document.createElement('div');d.className='plan-item card';d.innerHTML='<div class="plan-num">'+(i+1)+'</div><div class="plan-text">'+esc(p.text)+'</div><button class="plan-remove" onclick="removePrinciple('+i+')">&times;</button>';list.appendChild(d)});
 }
 
-function showPlanTab(tab) {
-  ['principles','habits','review'].forEach(t => {
-    document.getElementById('plan-' + t).style.display = t === tab ? 'block' : 'none';
-    document.getElementById('tab-' + t).className = 'tab' + (t === tab ? ' active' : '');
-  });
+function addPrinciple(){const inp=document.getElementById('principle-input');const t=inp.value.trim();if(!t)return;D.principles.push({text:t});save();inp.value='';renderPrinciples()}
+function removePrinciple(i){D.principles.splice(i,1);save();renderPrinciples()}
 
-  if (tab === 'principles') renderPrinciples();
-  if (tab === 'habits') renderHabits();
-  if (tab === 'review') renderReview();
-}
+// ============================================================
+// FIVE F'S GOALS
+// ============================================================
+function startFiveFs(){D.stage='fivefs';save();renderFiveFs();showScreen('fivefs')}
 
-function renderPrinciples() {
-  // Realizations reference
-  const ref = document.getElementById('plan-realizations-ref');
-  if (data.realizations.length > 0) {
-    ref.innerHTML = '<div class="ref-label">Your Realizations</div><div class="ref-grid">' +
-      data.realizations.map(r => `<div class="ref-card">${r.insight}</div>`).join('') + '</div>';
-  } else { ref.innerHTML = ''; }
-
-  // Principles list
-  const list = document.getElementById('principles-list');
-  list.innerHTML = '';
-  data.principles.forEach((p, i) => {
-    const div = document.createElement('div');
-    div.className = 'plan-item card';
-    div.innerHTML = `<div class="plan-num">${i + 1}</div><div class="plan-text">${p.text}</div><button class="plan-remove" onclick="removePrinciple(${i})">&times;</button>`;
-    list.appendChild(div);
+function renderFiveFs(){
+  const c=document.getElementById('fivefs-form');c.innerHTML='';
+  FKEYS.forEach(k=>{
+    const g=D.annualGoals[k]||{goal:'',why:''};
+    c.innerHTML+='<div class="f-goal-card"><h4><span class="f-badge f-'+k+'">'+FLABELS[k]+'</span></h4><p style="font-size:0.82rem;color:var(--text-dim);margin-bottom:10px">'+getFFDesc(k)+'</p><div class="field"><label>Annual Goal</label><input type="text" id="fg-'+k+'" value="'+esc(g.goal)+'" placeholder="Your one-year goal for '+FLABELS[k]+'"></div><div class="field"><label>Why does this matter?</label><input type="text" id="fw-'+k+'" value="'+esc(g.why)+'" placeholder="Connect it to your principles..."></div></div>';
   });
 }
 
-function addPrinciple() {
-  const input = document.getElementById('principle-input');
-  const text = input.value.trim();
-  if (!text) return;
-  data.principles.push({ text });
-  save();
-  input.value = '';
-  renderPrinciples();
+function getFFDesc(k){
+  const d={faith:'Your personal connection to the thing greater than you.',family:'Those connections that feed you \u2014 family, friendships, community.',fitness:'Self-love of the body. Fine-tuning your best self.',finances:'Allowing you to have choices and freedom.',fun:'Planning those things that make life worth living in the short term.'};
+  return d[k]||'';
 }
 
-function removePrinciple(idx) {
-  data.principles.splice(idx, 1);
-  save();
-  renderPrinciples();
+function saveFiveFs(){
+  FKEYS.forEach(k=>{
+    D.annualGoals[k]={goal:document.getElementById('fg-'+k)?.value.trim()||'',why:document.getElementById('fw-'+k)?.value.trim()||''};
+  });
+  D.stage='blueprint';save();showScreen('blueprint');
 }
 
-function renderHabits() {
-  // Principles reference
-  const ref = document.getElementById('plan-principles-ref');
-  if (data.principles.length > 0) {
-    ref.innerHTML = '<div class="ref-label">Your Principles</div><div class="ref-grid">' +
-      data.principles.map(p => `<div class="ref-card">${p.text}</div>`).join('') + '</div>';
-  } else { ref.innerHTML = ''; }
+// ============================================================
+// ONBOARDING COMPLETE
+// ============================================================
+function completeOnboarding(){
+  D.onboardingComplete=true;D.startDate=D.startDate||today();D.stage='dashboard';save();
+  navTo('dashboard');
+}
 
-  // Habits list
-  const list = document.getElementById('habits-list');
-  list.innerHTML = '';
-  data.habits.forEach((h, i) => {
-    const div = document.createElement('div');
-    div.className = 'plan-item card';
-    div.innerHTML = `<div class="plan-freq">${h.frequency}</div><div class="plan-text">${h.text}</div><button class="plan-remove" onclick="removeHabit(${i})">&times;</button>`;
-    list.appendChild(div);
+// ============================================================
+// DASHBOARD
+// ============================================================
+const ROUTINE=[
+  {block:'Morning Rise',items:[
+    {key:'movement',text:'Morning Movement',sub:'20 min \u2014 get your body going'},
+    {key:'sunlight',text:'Morning Sunlight',sub:'10 min \u2014 natural light exposure'},
+    {key:'gratitude',text:'Gratitude Meditation',sub:'10 min \u2014 focus on what you\'re thankful for'},
+  ]},
+  {block:'Morning Work Session',items:[
+    {key:'morning_atasks',text:'Complete Morning A-Tasks',sub:'Focus on the most important items per your Five F\'s'},
+  ]},
+  {block:'Midday Reset',items:[
+    {key:'midday_meal',text:'Nourishing Meal',sub:'Fuel your body intentionally'},
+    {key:'midday_meditation',text:'Brief Meditation',sub:'5 min \u2014 reclaim your energy'},
+  ]},
+  {block:'Afternoon Focus',items:[
+    {key:'afternoon_atasks',text:'Afternoon A-Tasks',sub:'Continue the day\'s important work'},
+  ]},
+  {block:'Evening Connection',items:[
+    {key:'evening_workout',text:'Workout',sub:'Group or connection-based if possible'},
+    {key:'evening_meal',text:'Meal with Connection',sub:'Share food, share presence'},
+    {key:'social_time',text:'Social Time',sub:'Be present with the people who matter'},
+  ]},
+  {block:'Wind Down',items:[
+    {key:'journal',text:'Journal',sub:'Get it all out on paper'},
+    {key:'plan_tomorrow',text:'Plan Tomorrow\'s A-Tasks',sub:'Find your top priorities for the next day'},
+    {key:'calm_meditation',text:'Calming Meditation',sub:'Settle the mind'},
+    {key:'bath',text:'Epsom Salt Bath',sub:'Warm water, limited blue light'},
+    {key:'sleep',text:'Lights Out',sub:'Minimum 8 hours of quality sleep'},
+  ]},
+];
+
+function renderDashboard(){
+  const d=today();const log=getLog(d);
+  const ds=daysSince(D.startDate);
+  const dateObj=new Date();
+  const dayNames=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const monthNames=['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+  document.getElementById('dash-date').textContent=dayNames[dateObj.getDay()]+', '+monthNames[dateObj.getMonth()]+' '+dateObj.getDate();
+  document.getElementById('dash-greeting').textContent=getGreeting()+', '+D.name;
+  document.getElementById('dash-day').textContent='Day '+(ds+1)+' of your journey';
+
+  // Progress
+  const totalItems=ROUTINE.reduce((a,b)=>a+b.items.length,0);
+  const checked=ROUTINE.reduce((a,b)=>a+b.items.filter(it=>log.routine[it.key]).length,0);
+  const pct=totalItems?Math.round(checked/totalItems*100):0;
+  document.getElementById('dash-progress-fill').style.width=pct+'%';
+  document.getElementById('dash-progress-label').textContent=checked+' of '+totalItems+' completed \u2014 '+pct+'%';
+
+  // Review banner
+  const banner=document.getElementById('dash-review-banner');banner.innerHTML='';
+  const reviewDue=checkReviewDue();
+  if(reviewDue){
+    banner.innerHTML='<div class="review-banner" onclick="startReview(\''+reviewDue+'\')"><p>'+reviewDue.charAt(0).toUpperCase()+reviewDue.slice(1)+' Review Due</p><span>Tap to assess your Five F\'s progress</span></div>';
+  }
+
+  // Routine
+  const rc=document.getElementById('dash-routine');rc.innerHTML='';
+  ROUTINE.forEach(block=>{
+    let html='<div class="routine-block"><div class="routine-block-title">'+block.block+'</div>';
+    block.items.forEach(item=>{
+      const isDone=!!log.routine[item.key];
+      html+='<div class="routine-item'+(isDone?' checked':'')+'" onclick="toggleRoutine(\''+item.key+'\')">';
+      html+='<div class="ri-check'+(isDone?' done':'')+'">&#10003;</div>';
+      html+='<div><div class="ri-text">'+item.text+'</div><div class="ri-sub">'+item.sub+'</div></div></div>';
+    });
+    html+='</div>';
+    rc.innerHTML+=html;
+  });
+
+  // Today's A-Tasks on dashboard
+  const tasks=log.aTasks||[];
+  if(tasks.length){
+    let html='<div class="routine-block"><div class="routine-block-title">Today\'s A-Tasks</div>';
+    tasks.forEach((t,i)=>{
+      html+='<div class="atask'+(t.done?' done':'')+'" onclick="toggleATask(\''+d+'\','+i+')">';
+      html+='<div class="ri-check'+(t.done?' done':'')+'">&#10003;</div>';
+      html+='<span class="f-badge f-'+t.cat+'" style="font-size:0.7rem">'+FLABELS[t.cat]+'</span>';
+      html+='<span class="atask-text">'+esc(t.text)+'</span></div>';
+    });
+    html+='</div>';
+    rc.innerHTML+=html;
+  }
+}
+
+function getGreeting(){const h=new Date().getHours();if(h<12)return'Good morning';if(h<17)return'Good afternoon';return'Good evening'}
+
+function toggleRoutine(key){
+  const log=getLog(today());log.routine[key]=!log.routine[key];save();renderDashboard();
+}
+
+function checkReviewDue(){
+  const ds=daysSince(D.startDate);
+  const lastReview=(type)=>{const rs=D.reviews.filter(r=>r.type===type);return rs.length?rs[rs.length-1].date:null};
+  if(ds>=90&&daysSince(lastReview('90day'))>=90)return'90-day';
+  if(ds>=30&&daysSince(lastReview('monthly'))>=30)return'monthly';
+  if(ds>=7&&daysSince(lastReview('weekly'))>=7)return'weekly';
+  return null;
+}
+
+// ============================================================
+// A-TASKS
+// ============================================================
+function renderTasks(){
+  const d=taskTab==='today'?today():tomorrow();
+  const log=getLog(d);
+  const list=document.getElementById('tasks-list');list.innerHTML='';
+  document.querySelectorAll('#task-tabs .tab').forEach((t,i)=>{t.className='tab'+((i===0&&taskTab==='today')||(i===1&&taskTab==='tomorrow')?' active':'')});
+
+  const tasks=taskTab==='today'?log.aTasks:(log.tomorrowTasks||[]);
+  if(!tasks.length){list.innerHTML='<div style="text-align:center;padding:40px 0;color:var(--text-dim)"><p>No A-Tasks yet. Add your most important items above.</p></div>';return}
+
+  FKEYS.forEach(k=>{
+    const catTasks=tasks.filter(t=>t.cat===k);
+    if(!catTasks.length)return;
+    let html='<div style="margin-bottom:16px"><div style="margin-bottom:8px"><span class="f-badge f-'+k+'">'+FLABELS[k]+'</span></div>';
+    catTasks.forEach((t,ci)=>{
+      const gi=tasks.indexOf(t);
+      html+='<div class="atask'+(t.done?' done':'')+'">';
+      html+='<div class="ri-check'+(t.done?' done':'')+'" onclick="toggleATask(\''+d+'\','+gi+(taskTab!=='today'?',true':'')+')">&#10003;</div>';
+      html+='<span class="atask-text">'+esc(t.text)+'</span>';
+      html+='<button class="atask-remove" onclick="removeATask(\''+d+'\','+gi+(taskTab!=='today'?',true':'')+')">&times;</button></div>';
+    });
+    html+='</div>';
+    list.innerHTML+=html;
   });
 }
 
-function addHabit() {
-  const input = document.getElementById('habit-input');
-  const text = input.value.trim();
-  if (!text) return;
-  const freq = document.getElementById('habit-freq').value;
-  data.habits.push({ text, frequency: freq });
-  save();
-  input.value = '';
-  renderHabits();
+function showTaskTab(tab){taskTab=tab;renderTasks()}
+
+function addATask(){
+  const inp=document.getElementById('atask-input');const text=inp.value.trim();if(!text)return;
+  const cat=document.getElementById('atask-cat').value;
+  const d=taskTab==='today'?today():tomorrow();
+  const log=getLog(d);
+  const arr=taskTab==='today'?'aTasks':'tomorrowTasks';
+  if(!log[arr])log[arr]=[];
+  log[arr].push({text,cat,done:false});
+  save();inp.value='';renderTasks();
 }
 
-function removeHabit(idx) {
-  data.habits.splice(idx, 1);
-  save();
-  renderHabits();
+function toggleATask(d,i,isTomorrow){
+  const log=getLog(d);const arr=isTomorrow?log.tomorrowTasks:log.aTasks;
+  if(arr&&arr[i])arr[i].done=!arr[i].done;save();
+  if(document.getElementById('screen-tasks').classList.contains('active'))renderTasks();
+  else renderDashboard();
 }
 
-function renderReview() {
-  const content = document.getElementById('review-content');
-  let html = '';
+function removeATask(d,i,isTomorrow){
+  const log=getLog(d);const arr=isTomorrow?'tomorrowTasks':'aTasks';
+  if(log[arr])log[arr].splice(i,1);save();renderTasks();
+}
 
-  if (data.principles.length > 0) {
-    html += '<h3 style="color:var(--gold);font-size:1.3rem;margin-bottom:12px">Guiding Principles</h3>';
-    data.principles.forEach((p, i) => {
-      html += `<div class="plan-item card"><div class="plan-num">${i + 1}</div><p class="plan-text">${p.text}</p></div>`;
+// ============================================================
+// JOURNAL
+// ============================================================
+function renderJournal(){
+  const log=getLog(today());
+  document.getElementById('journal-text').value=log.journal||'';
+  const past=document.getElementById('journal-past');past.innerHTML='';
+  const dates=Object.keys(D.dailyLogs).sort().reverse().filter(d=>d!==today()&&D.dailyLogs[d].journal);
+  if(dates.length){
+    past.innerHTML='<div class="ref-label">Past Entries</div>';
+    dates.slice(0,10).forEach(d=>{
+      const j=D.dailyLogs[d].journal;
+      past.innerHTML+='<div class="card" style="margin-bottom:8px"><div class="card-title">'+d+'</div><div class="card-sub">'+esc(j).substring(0,150)+(j.length>150?'...':'')+'</div></div>';
+    });
+  }
+}
+
+function saveJournal(){
+  const log=getLog(today());log.journal=document.getElementById('journal-text').value.trim();save();
+  // Show confirmation
+  const btn=document.querySelector('#screen-journal .btn-primary');
+  const orig=btn.textContent;btn.textContent='Saved!';setTimeout(()=>btn.textContent=orig,1500);
+}
+
+// ============================================================
+// REVIEWS
+// ============================================================
+function startReview(type){
+  currentReviewType=type;
+  const titles={weekly:'Weekly Review',monthly:'Monthly Review','90day':'90-Day Review'};
+  const subs={weekly:'Rate your progress in each of the Five F\'s this past week.',monthly:'Assess your monthly progress. Are you moving toward your annual goals?','90day':'Major checkpoint. Reflect deeply on each F. Consider adjusting your annual goals.'};
+  document.getElementById('review-title').textContent=titles[type]||'Review';
+  document.getElementById('review-sub').textContent=subs[type]||'';
+  document.getElementById('review-notes').value='';
+  document.getElementById('review-next-tasks').value='';
+
+  const rf=document.getElementById('review-fields');rf.innerHTML='';
+  FKEYS.forEach(k=>{
+    const goal=D.annualGoals[k]?.goal;
+    let html='<div class="review-f"><label><span class="f-badge f-'+k+'" style="margin-right:6px">'+FLABELS[k]+'</span>';
+    if(goal)html+='<span style="font-size:0.78rem;color:var(--text-dim);margin-left:4px">Goal: '+esc(goal)+'</span>';
+    html+='</label><div class="rating" id="rating-'+k+'">';
+    for(let i=1;i<=10;i++)html+='<button onclick="setRating(\''+k+'\','+i+')">'+i+'</button>';
+    html+='</div></div>';
+    rf.innerHTML+=html;
+  });
+  showScreen('review');
+}
+
+const reviewRatings={};
+function setRating(k,v){
+  reviewRatings[k]=v;
+  document.querySelectorAll('#rating-'+k+' button').forEach((b,i)=>{b.className=i<v?'sel':''});
+}
+
+function saveReview(){
+  const r={type:currentReviewType,date:today(),ratings:{},notes:document.getElementById('review-notes').value.trim(),nextTasks:document.getElementById('review-next-tasks').value.trim()};
+  FKEYS.forEach(k=>{r.ratings[k]=reviewRatings[k]||0});
+  D.reviews.push(r);save();
+  Object.keys(reviewRatings).forEach(k=>delete reviewRatings[k]);
+  navTo('dashboard');
+}
+
+// ============================================================
+// PROFILE
+// ============================================================
+function renderProfile(){
+  document.getElementById('profile-name').textContent=D.name;
+  document.getElementById('profile-since').textContent=D.startDate?'Journey started '+D.startDate+' \u2014 Day '+(daysSince(D.startDate)+1):'';
+  showProfileTab('goals');
+}
+
+function showProfileTab(tab){
+  ['goals','principles','moments','reviews'].forEach(t=>{
+    const el=document.getElementById('ptab-'+t);if(el)el.className='tab'+(t===tab?' active':'');
+  });
+  const c=document.getElementById('profile-content');c.innerHTML='';
+
+  if(tab==='goals'){
+    FKEYS.forEach(k=>{
+      const g=D.annualGoals[k];
+      c.innerHTML+='<div class="f-goal-card"><span class="f-badge f-'+k+'">'+FLABELS[k]+'</span><p style="font-size:0.95rem;margin-top:8px;color:var(--text-bright)">'+(esc(g?.goal)||'<em style="color:var(--text-dim)">No goal set</em>')+'</p>'+(g?.why?'<p style="font-size:0.82rem;color:var(--text-dim);margin-top:4px">Why: '+esc(g.why)+'</p>':'')+'</div>';
     });
   }
 
-  if (data.habits.length > 0) {
-    html += '<h3 style="color:var(--gold);font-size:1.3rem;margin:20px 0 12px">Habits & Practices</h3>';
-    data.habits.forEach(h => {
-      html += `<div class="plan-item card"><div class="plan-freq">${h.frequency}</div><p class="plan-text">${h.text}</p></div>`;
+  if(tab==='principles'){
+    if(!D.principles.length){c.innerHTML='<p style="text-align:center;color:var(--text-dim);padding:40px 0">No principles defined yet.</p>';return}
+    D.principles.forEach((p,i)=>{c.innerHTML+='<div class="plan-item card"><div class="plan-num">'+(i+1)+'</div><div class="plan-text">'+esc(p.text)+'</div></div>'});
+  }
+
+  if(tab==='moments'){
+    if(!D.moments.length){c.innerHTML='<p style="text-align:center;color:var(--text-dim);padding:40px 0">No moments captured yet.</p>';return}
+    D.moments.sort((a,b)=>a.slot-b.slot).forEach(m=>{
+      c.innerHTML+='<div class="card"><div class="card-title"><span class="chip chip-gold" style="margin-right:6px">'+m.slot+'</span>'+esc(m.title)+'</div><div class="card-sub">'+esc(m.story||'')+'</div>'+(m.emotions?'<div style="margin-top:6px"><span class="chip chip-accent">'+esc(m.emotions)+'</span></div>':'')+'</div>';
     });
   }
 
-  if (!html) html = '<p style="text-align:center;color:var(--text-dim);padding:40px 0">Add some principles and habits first.</p>';
-  content.innerHTML = html;
-}
-
-function completeJourney() {
-  data.stage = 'complete';
-  save();
-  showComplete();
-}
-
-function showComplete() {
-  document.getElementById('complete-sub').textContent =
-    `${data.name}, you've uncovered the patterns behind your perfect moments and built a plan to create more of them.`;
-
-  document.getElementById('complete-stats').innerHTML = [
-    { n: data.moments.length, l: 'Moments' },
-    { n: data.realizations.length, l: 'Realizations' },
-    { n: data.principles.length, l: 'Principles' },
-    { n: data.habits.length, l: 'Habits' },
-  ].map(s => `<div class="stat"><span class="stat-num">${s.n}</span><span class="stat-label">${s.l}</span></div>`).join('');
-
-  let phtml = '';
-  if (data.principles.length) {
-    phtml = '<h3 style="color:var(--gold);font-size:1.3rem;margin:8px 0 12px">Your Principles</h3>';
-    data.principles.forEach((p, i) => {
-      phtml += `<div class="plan-item card"><div class="plan-num">${i+1}</div><p class="plan-text">${p.text}</p></div>`;
+  if(tab==='reviews'){
+    const rs=D.reviews.slice().reverse();
+    if(!rs.length){c.innerHTML='<p style="text-align:center;color:var(--text-dim);padding:40px 0">No reviews completed yet.</p>';return}
+    rs.forEach(r=>{
+      let html='<div class="card"><div class="card-title">'+r.type.charAt(0).toUpperCase()+r.type.slice(1)+' Review \u2014 '+r.date+'</div>';
+      html+='<div style="display:flex;flex-wrap:wrap;gap:6px;margin:8px 0">';
+      FKEYS.forEach(k=>{html+='<span class="f-badge f-'+k+'">'+FLABELS[k]+': '+(r.ratings[k]||'-')+'/10</span>'});
+      html+='</div>';
+      if(r.notes)html+='<div class="card-sub">'+esc(r.notes)+'</div>';
+      html+='</div>';
+      c.innerHTML+=html;
     });
   }
-  document.getElementById('complete-principles').innerHTML = phtml;
+}
 
-  let hhtml = '';
-  if (data.habits.length) {
-    hhtml = '<h3 style="color:var(--gold);font-size:1.3rem;margin:16px 0 12px">Your Habits</h3>';
-    data.habits.forEach(h => {
-      hhtml += `<div class="plan-item card"><div class="plan-freq">${h.frequency}</div><p class="plan-text">${h.text}</p></div>`;
-    });
+function resetApp(){
+  if(confirm('This will erase everything. Are you sure?')){
+    D=defaultData();save();showScreen('landing');
+    document.getElementById('bottomnav').style.display='none';
   }
-  document.getElementById('complete-habits').innerHTML = hhtml;
-
-  showScreen('complete');
 }
 
-function newJourney() {
-  data = defaultData();
-  data.name = '';
-  save();
-  showScreen('landing');
-}
-
-// ===== INIT =====
-function init() {
-  if (data.name) {
-    document.getElementById('ready-name').textContent = data.name;
-    if (data.stage === 'complete') { showComplete(); return; }
-    if (data.stage === 'planning') { startPlanning(); return; }
-    if (data.stage === 'realizations') { showRealizeOverview(); return; }
-    if (data.stage === 'reflection' && data.moments.length > 0) { startReflection(); return; }
+// ============================================================
+// INIT
+// ============================================================
+function init(){
+  if(D.onboardingComplete){navTo('dashboard');return}
+  if(D.name){
+    document.getElementById('ready-name').textContent=D.name;
+    if(D.stage==='fivefs'){renderFiveFs();showScreen('fivefs');return}
+    if(D.stage==='principles'){renderPrinciples();showScreen('principles');return}
+    if(D.stage==='blueprint'){showScreen('blueprint');return}
+    if(D.stage==='realizations'){showRealizeOverview();return}
+    if(D.stage==='reflection'&&D.moments.length>0){startReflection();return}
     showScreen('ready');
   } else {
     showScreen('landing');
