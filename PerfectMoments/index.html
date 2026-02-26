@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Perfect Moments</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Inter:wght@300;400;500;600&display=swap');
+
+:root {
+  --deep: #0a0a1a;
+  --night: #111128;
+  --surface: #1a1a3e;
+  --surface-light: #252560;
+  --gold: #d4a853;
+  --gold-light: #f0d68a;
+  --warm: #e8c4a0;
+  --text: #e8e4f0;
+  --text-dim: #9990b0;
+  --text-bright: #ffffff;
+  --accent: #7b68ee;
+  --accent-soft: #9b8afb;
+  --rose: #e07888;
+  --sage: #6eb89c;
+  --serif: 'Cormorant Garamond', Georgia, serif;
+  --sans: 'Inter', -apple-system, sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: var(--sans);
+  background: var(--deep);
+  color: var(--text);
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  overscroll-behavior: none;
+}
+
+h1, h2, h3, h4 { font-family: var(--serif); font-weight: 300; line-height: 1.2; }
+button { font-family: var(--sans); cursor: pointer; border: none; outline: none; -webkit-appearance: none; }
+input, textarea, select { font-family: var(--sans); background: transparent; border: none; outline: none; color: var(--text); -webkit-appearance: none; }
+
+/* === Background === */
+.bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+.orb {
+  position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.3;
+  animation: float 20s ease-in-out infinite, pulse 20s ease-in-out infinite;
+}
+.orb-1 { width: 300px; height: 300px; left: 10%; top: 20%; background: rgba(123,104,238,0.15); }
+.orb-2 { width: 250px; height: 250px; right: -5%; top: 50%; background: rgba(212,168,83,0.12); animation-delay: 3s; animation-duration: 25s; }
+.orb-3 { width: 200px; height: 200px; left: 30%; bottom: 10%; background: rgba(110,184,156,0.1); animation-delay: 6s; animation-duration: 28s; }
+
+@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
+@keyframes pulse { 0%, 100% { opacity: 0.25; } 50% { opacity: 0.4; } }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes scaleIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+@keyframes glow { 0%, 100% { opacity: 0.15; } 50% { opacity: 0.35; } }
+
+/* === Layout === */
+.screen {
+  display: none; position: relative; z-index: 1;
+  min-height: 100vh; min-height: 100dvh;
+  padding: 24px 20px 40px;
+}
+.screen.active { display: flex; flex-direction: column; animation: fadeUp 0.7s cubic-bezier(0.16,1,0.3,1); }
+
+.center { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; flex: 1; gap: 20px; }
+
+/* === Top Bar === */
+.topbar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  padding: 14px 20px; display: flex; align-items: center; gap: 10px;
+  background: rgba(10,10,26,0.85); backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(123,104,238,0.1);
+}
+.topbar .logo { font-family: var(--serif); font-size: 1rem; color: var(--gold); margin-right: auto; }
+.topbar .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--surface-light); transition: all 0.4s; }
+.topbar .dot.active { background: var(--gold); box-shadow: 0 0 10px rgba(212,168,83,0.4); }
+.topbar .dot.done { background: var(--sage); }
+.topbar .line { width: 24px; height: 2px; background: var(--surface-light); }
+.topbar .line.done { background: var(--sage); }
+.has-topbar { padding-top: 72px; }
+
+/* === Buttons === */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 14px 28px; border-radius: 50px; font-size: 0.95rem; font-weight: 500;
+  letter-spacing: 0.02em; transition: all 0.3s; width: 100%; max-width: 320px;
+}
+.btn-primary { background: linear-gradient(135deg, var(--gold), #c4953f); color: var(--deep); }
+.btn-primary:active { transform: scale(0.97); }
+.btn-secondary { background: rgba(123,104,238,0.15); color: var(--accent-soft); border: 1px solid rgba(123,104,238,0.3); }
+.btn-ghost { background: transparent; color: var(--text-dim); padding: 10px 20px; }
+.btn-small { padding: 10px 20px; font-size: 0.85rem; width: auto; }
+
+/* === Inputs === */
+.field { width: 100%; margin-bottom: 16px; }
+.field label { display: block; font-size: 0.85rem; color: var(--gold-light); margin-bottom: 8px; font-weight: 500; }
+.field input, .field textarea, .field select {
+  width: 100%; padding: 14px 16px; font-size: 1rem;
+  background: rgba(10,10,26,0.5); border: 1px solid rgba(123,104,238,0.2);
+  border-radius: 12px; color: var(--text); transition: border-color 0.3s;
+}
+.field input:focus, .field textarea:focus { border-color: var(--gold); }
+.field textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
+.field input::placeholder, .field textarea::placeholder { color: var(--text-dim); opacity: 0.5; }
+.field select { cursor: pointer; }
+.field select option { background: var(--night); color: var(--text); }
+
+/* === Cards === */
+.card {
+  background: rgba(26,26,62,0.4); backdrop-filter: blur(12px);
+  border: 1px solid rgba(123,104,238,0.1); border-radius: 12px;
+  padding: 16px; margin-bottom: 10px; transition: all 0.3s;
+}
+.card.selected { border-color: var(--gold); background: rgba(212,168,83,0.06); }
+.card-title { font-size: 0.9rem; font-weight: 500; color: var(--text-bright); margin-bottom: 4px; }
+.card-sub { font-size: 0.85rem; color: var(--text-dim); line-height: 1.5; }
+
+/* === Tags / Chips === */
+.chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 14px; border-radius: 20px; font-size: 0.8rem;
+}
+.chip-gold { background: rgba(212,168,83,0.12); color: var(--gold); }
+.chip-accent { background: rgba(123,104,238,0.12); color: var(--accent-soft); }
+.chip-sage { background: rgba(110,184,156,0.12); color: var(--sage); }
+
+/* === Dots nav === */
+.dots { display: flex; justify-content: center; gap: 10px; margin-bottom: 32px; }
+.dots button {
+  width: 38px; height: 38px; border-radius: 50%; font-size: 0.85rem;
+  background: rgba(26,26,62,0.6); border: 1px solid rgba(123,104,238,0.2);
+  color: var(--text-dim); transition: all 0.3s;
+}
+.dots button.active { border-color: var(--gold); color: var(--gold); background: rgba(212,168,83,0.1); transform: scale(1.1); }
+.dots button.done { background: rgba(110,184,156,0.12); border-color: var(--sage); color: var(--sage); }
+
+/* === Specific sections === */
+.moment-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.15em; color: var(--accent-soft); }
+.section-title { font-size: clamp(1.8rem, 6vw, 2.5rem); color: var(--text-bright); }
+.section-sub { font-size: 1rem; line-height: 1.7; color: var(--text-dim); max-width: 480px; }
+.section-lead { font-size: 1.05rem; line-height: 1.7; color: var(--text); max-width: 480px; }
+.section-guidance { font-size: 0.9rem; color: var(--text-dim); font-style: italic; max-width: 440px; line-height: 1.6; }
+
+.stage-steps { text-align: left; width: 100%; max-width: 400px; }
+.stage-step { padding: 10px 0; font-size: 0.95rem; color: var(--text-dim); line-height: 1.6; }
+.stage-step strong { color: var(--gold); }
+
+.saved-check {
+  width: 56px; height: 56px; border-radius: 50%;
+  background: rgba(110,184,156,0.15); border: 2px solid var(--sage);
+  color: var(--sage); font-size: 1.4rem;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.insight-card {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 12px; background: rgba(110,184,156,0.06);
+  border: 1px solid rgba(110,184,156,0.15); border-radius: 10px; margin-bottom: 8px;
+}
+.insight-card p { flex: 1; font-size: 0.88rem; line-height: 1.5; }
+.insight-remove { font-size: 0.75rem; color: var(--text-dim); opacity: 0.5; padding: 4px; background: none; }
+
+.plan-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 14px 16px; margin-bottom: 8px;
+}
+.plan-num {
+  width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+  background: rgba(212,168,83,0.15); color: var(--gold);
+  display: flex; align-items: center; justify-content: center; font-size: 0.8rem;
+}
+.plan-freq { padding: 3px 10px; border-radius: 20px; background: rgba(123,104,238,0.12); color: var(--accent-soft); font-size: 0.72rem; flex-shrink: 0; }
+.plan-text { flex: 1; font-size: 0.92rem; line-height: 1.5; }
+.plan-remove { font-size: 1.2rem; color: var(--text-dim); opacity: 0.3; padding: 4px; background: none; }
+
+.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; margin: 16px 0; }
+.stat { text-align: center; padding: 18px 12px; background: rgba(26,26,62,0.4); border: 1px solid rgba(123,104,238,0.1); border-radius: 12px; }
+.stat-num { display: block; font-family: var(--serif); font-size: 2.2rem; color: var(--gold); line-height: 1; margin-bottom: 6px; }
+.stat-label { font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; }
+
+.glow-circle {
+  width: 120px; height: 120px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(212,168,83,0.25) 0%, transparent 70%);
+  animation: glow 4s ease-in-out infinite;
+}
+
+.landing-stages { display: flex; align-items: center; gap: 12px; margin-top: 24px; font-size: 0.85rem; color: var(--text-dim); }
+.landing-stages .num {
+  width: 26px; height: 26px; border-radius: 50%;
+  background: rgba(123,104,238,0.15); border: 1px solid rgba(123,104,238,0.3);
+  display: flex; align-items: center; justify-content: center; font-size: 0.75rem; color: var(--accent-soft);
+}
+.landing-stages .divider { width: 20px; height: 1px; background: rgba(123,104,238,0.2); }
+
+.row { display: flex; gap: 10px; width: 100%; }
+.row .field { flex: 1; }
+.actions { display: flex; gap: 12px; margin-top: 16px; justify-content: center; flex-wrap: wrap; }
+
+.quote { font-family: var(--serif); font-size: 1.2rem; font-style: italic; color: var(--warm); max-width: 400px; line-height: 1.6; text-align: center; }
+
+.tabs { display: flex; gap: 4px; background: rgba(26,26,62,0.4); border-radius: 12px; padding: 4px; margin-bottom: 28px; }
+.tab {
+  flex: 1; padding: 10px 12px; font-size: 0.85rem; font-weight: 500;
+  color: var(--text-dim); background: transparent; border-radius: 8px; transition: all 0.3s;
+}
+.tab.active { background: rgba(123,104,238,0.15); color: var(--accent-soft); }
+
+.scroll-area { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: 20px; }
+
+.bottom-action {
+  position: fixed; bottom: 0; left: 0; right: 0; padding: 16px 20px;
+  background: linear-gradient(to top, var(--deep) 70%, transparent);
+  z-index: 50; text-align: center;
+}
+
+.ref-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-dim); margin-bottom: 8px; font-weight: 500; }
+.ref-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.ref-card { padding: 8px 14px; background: rgba(26,26,62,0.4); border: 1px solid rgba(123,104,238,0.1); border-radius: 10px; font-size: 0.82rem; color: var(--text); cursor: pointer; transition: all 0.3s; }
+.ref-card.selected { border-color: var(--gold); background: rgba(212,168,83,0.06); }
+
+.theme-q { font-size: 0.95rem; color: var(--text); line-height: 1.6; text-align: center; margin-bottom: 16px; }
+
+.add-row { display: flex; gap: 8px; align-items: center; }
+.add-row input { flex: 1; }
+.add-row .btn-small { flex-shrink: 0; }
+
+.section-divider { width: 100%; height: 1px; background: rgba(123,104,238,0.08); margin: 24px 0; }
+</style>
+</head>
+<body>
+
+<div class="bg">
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+</div>
+
+<!-- ===== TOP BAR ===== -->
+<div class="topbar" id="topbar" style="display:none">
+  <span class="logo" onclick="goHome()">Perfect Moments</span>
+  <div class="dot" id="dot1"></div>
+  <div class="line" id="line1"></div>
+  <div class="dot" id="dot2"></div>
+  <div class="line" id="line2"></div>
+  <div class="dot" id="dot3"></div>
+</div>
+
+<!-- ===== LANDING ===== -->
+<div class="screen active" id="screen-landing">
+  <div class="center">
+    <div class="glow-circle"></div>
+    <h1 class="section-title" style="font-size:clamp(2.8rem,8vw,4.5rem);line-height:1">Perfect<br>Moments</h1>
+    <p class="section-sub">Discover what makes your most meaningful experiences possible, and learn to create more of them.</p>
+    <button class="btn btn-primary" onclick="showScreen('auth')">Begin Your Journey</button>
+    <div class="landing-stages">
+      <span class="num">1</span><span>Reflect</span>
+      <span class="divider"></span>
+      <span class="num">2</span><span>Realize</span>
+      <span class="divider"></span>
+      <span class="num">3</span><span>Plan</span>
+    </div>
+  </div>
+</div>
+
+<!-- ===== AUTH ===== -->
+<div class="screen" id="screen-auth">
+  <div class="center">
+    <h2 class="section-title">Welcome</h2>
+    <p class="section-sub">Before we begin, tell us your name.</p>
+    <div style="width:100%;max-width:340px">
+      <div class="field"><input type="text" id="input-name" placeholder="Your name" autocomplete="off"></div>
+    </div>
+    <button class="btn btn-primary" onclick="handleAuth()">Continue</button>
+    <button class="btn btn-ghost" onclick="showScreen('landing')">Back</button>
+  </div>
+</div>
+
+<!-- ===== READY ===== -->
+<div class="screen" id="screen-ready">
+  <div class="center">
+    <h2 class="section-title">Welcome, <span id="ready-name"></span></h2>
+    <p class="section-sub">You're about to embark on a journey of self-discovery. Think of five moments in your life that felt truly perfect.</p>
+    <div class="stage-steps">
+      <div class="stage-step"><strong>Reflect</strong> — Revisit your 5 most perfect moments</div>
+      <div class="stage-step"><strong>Realize</strong> — Discover the patterns that connect them</div>
+      <div class="stage-step"><strong>Plan</strong> — Turn insights into principles and habits</div>
+    </div>
+    <button class="btn btn-primary" onclick="startReflection()">I'm Ready</button>
+  </div>
+</div>
+
+<!-- ===== REFLECTION: PROMPT ===== -->
+<div class="screen has-topbar" id="screen-reflect-prompt">
+  <div class="dots" id="reflect-dots"></div>
+  <div class="center">
+    <span class="moment-label" id="reflect-label"></span>
+    <h2 class="section-title" id="reflect-title"></h2>
+    <p class="section-lead" id="reflect-lead"></p>
+    <p class="section-guidance" id="reflect-guidance"></p>
+    <button class="btn btn-primary" onclick="showScreen('reflect-form')">I Have a Moment</button>
+  </div>
+</div>
+
+<!-- ===== REFLECTION: FORM ===== -->
+<div class="screen has-topbar" id="screen-reflect-form">
+  <div class="dots" id="reflect-form-dots"></div>
+  <span class="moment-label" id="reflect-form-label" style="text-align:center;display:block;margin-bottom:8px"></span>
+  <h2 style="text-align:center;color:var(--text-bright);font-size:1.6rem;margin-bottom:20px" id="reflect-form-title"></h2>
+  <div class="scroll-area" id="reflect-fields"></div>
+  <div class="actions" style="padding-top:12px">
+    <button class="btn btn-ghost btn-small" onclick="showReflectPrompt()">Back</button>
+    <button class="btn btn-primary btn-small" onclick="saveMoment()">Save This Moment</button>
+  </div>
+</div>
+
+<!-- ===== REFLECTION: SAVED ===== -->
+<div class="screen has-topbar" id="screen-reflect-saved">
+  <div class="center">
+    <div class="saved-check">&#10003;</div>
+    <h3 class="section-title" style="font-size:1.8rem">Moment Saved</h3>
+    <p style="color:var(--gold);font-style:italic" id="saved-title"></p>
+    <p class="section-sub" id="saved-count"></p>
+    <div id="saved-actions"></div>
+  </div>
+</div>
+
+<!-- ===== REALIZATIONS: OVERVIEW ===== -->
+<div class="screen has-topbar" id="screen-realize-overview">
+  <div class="center">
+    <span class="moment-label">Stage 2</span>
+    <h2 class="section-title">Realizations</h2>
+    <p class="section-sub">Your five moments contain hidden patterns — threads that connect the best experiences of your life.</p>
+    <p class="section-sub" style="font-size:0.9rem">We'll walk through six lenses. For each, look at your moments and capture what you notice.</p>
+    <div id="realize-chips" style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:12px 0"></div>
+    <button class="btn btn-primary" onclick="startRealizations()">Begin Exploration</button>
+  </div>
+</div>
+
+<!-- ===== REALIZATIONS: EXPLORE ===== -->
+<div class="screen has-topbar" id="screen-realize-explore">
+  <div class="dots" id="realize-dots"></div>
+  <span class="moment-label" id="realize-label" style="text-align:center;display:block"></span>
+  <h2 style="text-align:center;color:var(--text-bright);font-size:1.6rem;margin:8px 0 12px" id="realize-title"></h2>
+  <p class="theme-q" id="realize-question"></p>
+  <div class="scroll-area">
+    <div id="realize-cards"></div>
+    <div style="margin-top:20px">
+      <div class="field">
+        <label>What pattern do you see?</label>
+        <textarea id="realize-insight" placeholder="Write your realization here..." rows="3"></textarea>
+      </div>
+      <div class="actions">
+        <button class="btn btn-secondary btn-small" onclick="saveRealization()">Save Realization</button>
+        <button class="btn btn-primary btn-small" onclick="nextLens()">Next Lens</button>
+      </div>
+    </div>
+    <div id="realize-saved" style="margin-top:20px"></div>
+  </div>
+</div>
+
+<!-- ===== REALIZATIONS: SUMMARY ===== -->
+<div class="screen has-topbar" id="screen-realize-summary">
+  <span class="moment-label" style="text-align:center;display:block;margin-bottom:4px">Your Realizations</span>
+  <h2 style="text-align:center;color:var(--text-bright);font-size:2rem;margin-bottom:20px">What You Discovered</h2>
+  <div class="scroll-area" id="realize-summary-list"></div>
+  <div class="actions" style="padding-top:12px">
+    <button class="btn btn-ghost btn-small" onclick="startRealizations()">Explore More</button>
+    <button class="btn btn-primary btn-small" onclick="startPlanning()">Continue to Planning</button>
+  </div>
+</div>
+
+<!-- ===== PLANNING ===== -->
+<div class="screen has-topbar" id="screen-planning">
+  <div class="tabs">
+    <button class="tab active" id="tab-principles" onclick="showPlanTab('principles')">Principles</button>
+    <button class="tab" id="tab-habits" onclick="showPlanTab('habits')">Habits</button>
+    <button class="tab" id="tab-review" onclick="showPlanTab('review')">Review</button>
+  </div>
+
+  <!-- Principles -->
+  <div id="plan-principles">
+    <span class="moment-label">Stage 3</span>
+    <h2 style="color:var(--text-bright);font-size:1.8rem;margin:8px 0 12px">Define Your Principles</h2>
+    <p class="section-sub" style="font-size:0.9rem;margin-bottom:16px">What truths have you uncovered about what makes perfect moments possible?</p>
+    <div id="plan-realizations-ref"></div>
+    <div class="field">
+      <label>Write a guiding principle:</label>
+      <div class="add-row">
+        <input type="text" id="principle-input" placeholder='e.g., "Prioritize presence over productivity"'>
+        <button class="btn btn-secondary btn-small" onclick="addPrinciple()">Add</button>
+      </div>
+    </div>
+    <div id="principles-list"></div>
+    <div class="actions" style="margin-top:20px">
+      <button class="btn btn-primary" onclick="showPlanTab('habits')">Next: Build Habits</button>
+    </div>
+  </div>
+
+  <!-- Habits -->
+  <div id="plan-habits" style="display:none">
+    <span class="moment-label">Stage 3</span>
+    <h2 style="color:var(--text-bright);font-size:1.8rem;margin:8px 0 12px">Build Your Habits</h2>
+    <p class="section-sub" style="font-size:0.9rem;margin-bottom:16px">Turn your principles into concrete actions.</p>
+    <div id="plan-principles-ref"></div>
+    <div class="field">
+      <label>Define a habit:</label>
+      <div class="add-row">
+        <input type="text" id="habit-input" placeholder='e.g., "10min phone-free time at dinner"'>
+        <select id="habit-freq" style="width:100px;padding:10px;background:rgba(10,10,26,0.5);border:1px solid rgba(123,104,238,0.2);border-radius:10px;font-size:0.85rem">
+          <option value="daily">daily</option>
+          <option value="weekly">weekly</option>
+          <option value="monthly">monthly</option>
+        </select>
+        <button class="btn btn-secondary btn-small" onclick="addHabit()">Add</button>
+      </div>
+    </div>
+    <div id="habits-list"></div>
+    <div class="actions" style="margin-top:20px">
+      <button class="btn btn-ghost btn-small" onclick="showPlanTab('principles')">Back</button>
+      <button class="btn btn-primary btn-small" onclick="showPlanTab('review')">Review Plan</button>
+    </div>
+  </div>
+
+  <!-- Review -->
+  <div id="plan-review" style="display:none">
+    <span class="moment-label">Your Plan</span>
+    <h2 style="color:var(--text-bright);font-size:1.8rem;margin:8px 0 20px">Path to More Perfect Moments</h2>
+    <div id="review-content"></div>
+    <div class="actions" style="margin-top:24px">
+      <button class="btn btn-ghost btn-small" onclick="showPlanTab('habits')">Back</button>
+      <button class="btn btn-primary" onclick="completeJourney()">Complete My Journey</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== COMPLETE ===== -->
+<div class="screen" id="screen-complete">
+  <div class="center" style="gap:16px">
+    <div class="glow-circle"></div>
+    <h1 class="section-title">Journey Complete</h1>
+    <p class="section-sub" id="complete-sub"></p>
+    <div class="stat-grid" id="complete-stats"></div>
+    <div id="complete-principles"></div>
+    <div id="complete-habits"></div>
+    <div class="section-divider"></div>
+    <p class="quote">"The quality of your life is determined by the quality of your moments."</p>
+    <div class="actions">
+      <button class="btn btn-primary" onclick="newJourney()">Start a New Journey</button>
+      <button class="btn btn-ghost" onclick="goHome()">Return Home</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== DATA =====
+const STORE_KEY = 'perfect_moments';
+
+function load() {
+  try { return JSON.parse(localStorage.getItem(STORE_KEY)) || defaultData(); }
+  catch { return defaultData(); }
+}
+
+function save() { localStorage.setItem(STORE_KEY, JSON.stringify(data)); }
+
+function defaultData() {
+  return { name: '', moments: [], realizations: [], principles: [], habits: [], stage: 'landing' };
+}
+
+let data = load();
+let currentSlot = 1;
+let currentLens = 0;
+
+// ===== PROMPTS =====
+const prompts = [
+  { title: 'Your First Perfect Moment', lead: 'Close your eyes and breathe. Think back to a time when everything felt exactly right.', guidance: 'It could be anything — a quiet sunrise, a conversation that changed you, a moment of pure joy.' },
+  { title: 'Your Second Perfect Moment', lead: 'Think of another time you felt completely alive and present.', guidance: 'Maybe it was unexpected. Maybe you\'d waited for it. Let the feeling return.' },
+  { title: 'Your Third Perfect Moment', lead: 'Remember a moment that still makes you smile.', guidance: 'Perhaps it involved someone special. Perhaps you were alone. Either way, it was perfect.' },
+  { title: 'Your Fourth Perfect Moment', lead: 'Think of a time you felt deeply connected — to yourself, to others, or to the world.', guidance: 'Connection can come in many forms. What made this moment resonate?' },
+  { title: 'Your Fifth Perfect Moment', lead: 'Your final moment. The one that keeps coming back to you.', guidance: 'This moment defines something essential about who you are.' },
+];
+
+const fields = [
+  { key: 'title', label: 'Give this moment a name', placeholder: 'e.g., "Sunset on the lake"', type: 'input' },
+  { key: 'story', label: 'What happened?', placeholder: 'Describe the moment...', type: 'textarea' },
+  { key: 'location', label: 'Where were you?', placeholder: 'The place, the setting...', type: 'input' },
+  { key: 'people', label: 'Who was there?', placeholder: 'People who shared this (or just you)...', type: 'input' },
+  { key: 'emotions', label: 'What did you feel?', placeholder: 'The emotions that filled you...', type: 'input' },
+  { key: 'senses', label: 'What do you remember seeing, hearing, feeling?', placeholder: 'Sensory details...', type: 'textarea' },
+  { key: 'time_of_life', label: 'When in your life was this?', placeholder: 'e.g., "College years", "Last summer"', type: 'input' },
+];
+
+const lenses = [
+  { key: 'people', label: 'People & Connection', q: 'Who keeps appearing in your perfect moments? What kind of relationships were present?', field: 'people' },
+  { key: 'place', label: 'Place & Environment', q: 'Where did your perfect moments happen? Do certain environments come up again?', field: 'location' },
+  { key: 'state', label: 'State of Being', q: 'How were you feeling? Were you relaxed? Open? Present?', field: 'emotions' },
+  { key: 'activity', label: 'Activities & Actions', q: 'What were you doing? Action or stillness?', field: 'story' },
+  { key: 'surprise', label: 'Surprise & Spontaneity', q: 'Were your moments planned or unexpected? What role did surprise play?', field: 'story' },
+  { key: 'meaning', label: 'Deeper Meaning', q: 'Looking across all five moments, what is your life telling you about what matters most?', field: 'emotions' },
+];
+
+// ===== NAVIGATION =====
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const el = document.getElementById('screen-' + id);
+  if (el) { el.classList.add('active'); el.style.animation = 'none'; el.offsetHeight; el.style.animation = ''; }
+
+  const hasBar = ['reflect-prompt','reflect-form','reflect-saved','realize-overview','realize-explore','realize-summary','planning'].includes(id);
+  document.getElementById('topbar').style.display = hasBar ? 'flex' : 'none';
+  updateTopbar();
+}
+
+function updateTopbar() {
+  const stages = { reflection: 0, realizations: 1, planning: 2, complete: 3 };
+  const idx = stages[data.stage] || 0;
+  ['dot1','dot2','dot3'].forEach((d, i) => {
+    const el = document.getElementById(d);
+    el.className = 'dot' + (i < idx ? ' done' : '') + (i === idx ? ' active' : '');
+  });
+  ['line1','line2'].forEach((l, i) => {
+    document.getElementById(l).className = 'line' + (i < idx ? ' done' : '');
+  });
+}
+
+function goHome() {
+  if (data.name) {
+    showScreen('ready');
+  } else {
+    showScreen('landing');
+  }
+}
+
+// ===== AUTH =====
+function handleAuth() {
+  const name = document.getElementById('input-name').value.trim();
+  if (!name) return;
+  data.name = name;
+  save();
+  document.getElementById('ready-name').textContent = name;
+  showScreen('ready');
+}
+
+// ===== REFLECTION =====
+function startReflection() {
+  data.stage = 'reflection';
+  save();
+  currentSlot = 1;
+  showReflectPrompt();
+}
+
+function showReflectPrompt() {
+  renderDots('reflect-dots');
+  const p = prompts[currentSlot - 1];
+  document.getElementById('reflect-label').textContent = `Moment ${currentSlot} of 5`;
+  document.getElementById('reflect-title').textContent = p.title;
+  document.getElementById('reflect-lead').textContent = p.lead;
+  document.getElementById('reflect-guidance').textContent = p.guidance;
+  showScreen('reflect-prompt');
+}
+
+function renderDots(containerId) {
+  const c = document.getElementById(containerId);
+  c.innerHTML = '';
+  for (let i = 1; i <= 5; i++) {
+    const btn = document.createElement('button');
+    btn.textContent = i;
+    const isDone = data.moments.some(m => m.slot === i);
+    btn.className = (i === currentSlot ? 'active ' : '') + (isDone ? 'done' : '');
+    btn.onclick = () => { currentSlot = i; showReflectPrompt(); };
+    c.appendChild(btn);
+  }
+}
+
+function showReflectForm() {
+  renderDots('reflect-form-dots');
+  const p = prompts[currentSlot - 1];
+  document.getElementById('reflect-form-label').textContent = `Moment ${currentSlot} of 5`;
+  document.getElementById('reflect-form-title').textContent = p.title;
+
+  const existing = data.moments.find(m => m.slot === currentSlot) || {};
+  const container = document.getElementById('reflect-fields');
+  container.innerHTML = '';
+  fields.forEach(f => {
+    const div = document.createElement('div');
+    div.className = 'field';
+    const label = document.createElement('label');
+    label.textContent = f.label;
+    div.appendChild(label);
+    if (f.type === 'textarea') {
+      const ta = document.createElement('textarea');
+      ta.placeholder = f.placeholder;
+      ta.value = existing[f.key] || '';
+      ta.id = 'field-' + f.key;
+      ta.rows = 3;
+      div.appendChild(ta);
+    } else {
+      const inp = document.createElement('input');
+      inp.type = 'text';
+      inp.placeholder = f.placeholder;
+      inp.value = existing[f.key] || '';
+      inp.id = 'field-' + f.key;
+      div.appendChild(inp);
+    }
+    container.appendChild(div);
+  });
+
+  showScreen('reflect-form');
+  // Focus the title field
+  setTimeout(() => { const t = document.getElementById('field-title'); if (t && !existing.title) t.focus(); }, 300);
+}
+
+// Wire up "I Have a Moment" to show form
+document.querySelector('#screen-reflect-prompt .btn-primary').onclick = showReflectForm;
+
+function saveMoment() {
+  const title = document.getElementById('field-title')?.value.trim();
+  if (!title) return;
+
+  const moment = { slot: currentSlot };
+  fields.forEach(f => { moment[f.key] = document.getElementById('field-' + f.key)?.value.trim() || ''; });
+
+  const idx = data.moments.findIndex(m => m.slot === currentSlot);
+  if (idx >= 0) data.moments[idx] = moment;
+  else data.moments.push(moment);
+  save();
+
+  document.getElementById('saved-title').textContent = title;
+  const count = data.moments.length;
+  document.getElementById('saved-count').textContent = `${count} of 5 moments captured`;
+
+  const actions = document.getElementById('saved-actions');
+  actions.innerHTML = '';
+
+  if (currentSlot < 5) {
+    const next = document.createElement('button');
+    next.className = 'btn btn-primary';
+    next.textContent = 'Next Moment';
+    next.onclick = () => { currentSlot++; showReflectPrompt(); };
+    actions.appendChild(next);
+  }
+
+  if (count >= 5) {
+    const cont = document.createElement('button');
+    cont.className = 'btn btn-primary';
+    cont.style.marginTop = '8px';
+    cont.textContent = 'Continue to Realizations';
+    cont.onclick = () => { data.stage = 'realizations'; save(); showRealizeOverview(); };
+    actions.appendChild(cont);
+  }
+
+  const edit = document.createElement('button');
+  edit.className = 'btn btn-ghost';
+  edit.textContent = 'Edit This Moment';
+  edit.onclick = showReflectForm;
+  actions.appendChild(edit);
+
+  showScreen('reflect-saved');
+}
+
+// ===== REALIZATIONS =====
+function showRealizeOverview() {
+  const chips = document.getElementById('realize-chips');
+  chips.innerHTML = '';
+  data.moments.forEach(m => {
+    const div = document.createElement('div');
+    div.className = 'chip chip-gold';
+    div.innerHTML = `<span style="font-weight:600">${m.slot}</span> ${m.title}`;
+    chips.appendChild(div);
+  });
+  showScreen('realize-overview');
+}
+
+function startRealizations() {
+  currentLens = 0;
+  showLens();
+}
+
+function showLens() {
+  // Dots
+  const dots = document.getElementById('realize-dots');
+  dots.innerHTML = '';
+  lenses.forEach((l, i) => {
+    const btn = document.createElement('button');
+    btn.textContent = i + 1;
+    btn.className = i === currentLens ? 'active' : (i < currentLens ? 'done' : '');
+    btn.onclick = () => { currentLens = i; showLens(); };
+    dots.appendChild(btn);
+  });
+
+  const lens = lenses[currentLens];
+  document.getElementById('realize-label').textContent = `Lens ${currentLens + 1} of ${lenses.length}`;
+  document.getElementById('realize-title').textContent = lens.label;
+  document.getElementById('realize-question').textContent = lens.q;
+  document.getElementById('realize-insight').value = '';
+
+  // Moment cards
+  const cards = document.getElementById('realize-cards');
+  cards.innerHTML = '';
+  data.moments.forEach(m => {
+    const div = document.createElement('div');
+    div.className = 'card';
+    div.innerHTML = `<div class="card-title"><span class="chip chip-gold" style="margin-right:6px">${m.slot}</span> ${m.title}</div><div class="card-sub">${m[lens.field] || 'No details recorded'}</div>`;
+    cards.appendChild(div);
+  });
+
+  // Saved realizations for this lens
+  renderLensRealizations();
+  showScreen('realize-explore');
+}
+
+function renderLensRealizations() {
+  const lens = lenses[currentLens];
+  const saved = document.getElementById('realize-saved');
+  const forLens = data.realizations.filter(r => r.theme === lens.key);
+  if (forLens.length === 0) { saved.innerHTML = ''; return; }
+
+  saved.innerHTML = `<div class="ref-label">Your realizations for this lens:</div>`;
+  forLens.forEach((r, i) => {
+    const div = document.createElement('div');
+    div.className = 'insight-card';
+    div.innerHTML = `<p>${r.insight}</p><button class="insight-remove" onclick="removeRealization(${data.realizations.indexOf(r)})">&times;</button>`;
+    saved.appendChild(div);
+  });
+}
+
+function saveRealization() {
+  const text = document.getElementById('realize-insight').value.trim();
+  if (!text) return;
+  data.realizations.push({ insight: text, theme: lenses[currentLens].key });
+  save();
+  document.getElementById('realize-insight').value = '';
+  renderLensRealizations();
+}
+
+function removeRealization(idx) {
+  data.realizations.splice(idx, 1);
+  save();
+  renderLensRealizations();
+}
+
+function nextLens() {
+  if (currentLens < lenses.length - 1) {
+    currentLens++;
+    showLens();
+  } else {
+    showRealizeSummary();
+  }
+}
+
+function showRealizeSummary() {
+  const list = document.getElementById('realize-summary-list');
+  list.innerHTML = '';
+  if (data.realizations.length === 0) {
+    list.innerHTML = '<div style="text-align:center;padding:40px 0;color:var(--text-dim)"><p>No realizations captured yet.</p></div>';
+  } else {
+    data.realizations.forEach(r => {
+      const div = document.createElement('div');
+      div.className = 'card';
+      div.style.animation = 'fadeUp 0.5s ease both';
+      const themeName = lenses.find(l => l.key === r.theme)?.label || 'Insight';
+      div.innerHTML = `<span class="chip chip-accent" style="margin-bottom:8px">${themeName}</span><p style="font-size:0.95rem;line-height:1.6">${r.insight}</p>`;
+      list.appendChild(div);
+    });
+  }
+  showScreen('realize-summary');
+}
+
+// ===== PLANNING =====
+function startPlanning() {
+  data.stage = 'planning';
+  save();
+  showPlanTab('principles');
+  showScreen('planning');
+}
+
+function showPlanTab(tab) {
+  ['principles','habits','review'].forEach(t => {
+    document.getElementById('plan-' + t).style.display = t === tab ? 'block' : 'none';
+    document.getElementById('tab-' + t).className = 'tab' + (t === tab ? ' active' : '');
+  });
+
+  if (tab === 'principles') renderPrinciples();
+  if (tab === 'habits') renderHabits();
+  if (tab === 'review') renderReview();
+}
+
+function renderPrinciples() {
+  // Realizations reference
+  const ref = document.getElementById('plan-realizations-ref');
+  if (data.realizations.length > 0) {
+    ref.innerHTML = '<div class="ref-label">Your Realizations</div><div class="ref-grid">' +
+      data.realizations.map(r => `<div class="ref-card">${r.insight}</div>`).join('') + '</div>';
+  } else { ref.innerHTML = ''; }
+
+  // Principles list
+  const list = document.getElementById('principles-list');
+  list.innerHTML = '';
+  data.principles.forEach((p, i) => {
+    const div = document.createElement('div');
+    div.className = 'plan-item card';
+    div.innerHTML = `<div class="plan-num">${i + 1}</div><div class="plan-text">${p.text}</div><button class="plan-remove" onclick="removePrinciple(${i})">&times;</button>`;
+    list.appendChild(div);
+  });
+}
+
+function addPrinciple() {
+  const input = document.getElementById('principle-input');
+  const text = input.value.trim();
+  if (!text) return;
+  data.principles.push({ text });
+  save();
+  input.value = '';
+  renderPrinciples();
+}
+
+function removePrinciple(idx) {
+  data.principles.splice(idx, 1);
+  save();
+  renderPrinciples();
+}
+
+function renderHabits() {
+  // Principles reference
+  const ref = document.getElementById('plan-principles-ref');
+  if (data.principles.length > 0) {
+    ref.innerHTML = '<div class="ref-label">Your Principles</div><div class="ref-grid">' +
+      data.principles.map(p => `<div class="ref-card">${p.text}</div>`).join('') + '</div>';
+  } else { ref.innerHTML = ''; }
+
+  // Habits list
+  const list = document.getElementById('habits-list');
+  list.innerHTML = '';
+  data.habits.forEach((h, i) => {
+    const div = document.createElement('div');
+    div.className = 'plan-item card';
+    div.innerHTML = `<div class="plan-freq">${h.frequency}</div><div class="plan-text">${h.text}</div><button class="plan-remove" onclick="removeHabit(${i})">&times;</button>`;
+    list.appendChild(div);
+  });
+}
+
+function addHabit() {
+  const input = document.getElementById('habit-input');
+  const text = input.value.trim();
+  if (!text) return;
+  const freq = document.getElementById('habit-freq').value;
+  data.habits.push({ text, frequency: freq });
+  save();
+  input.value = '';
+  renderHabits();
+}
+
+function removeHabit(idx) {
+  data.habits.splice(idx, 1);
+  save();
+  renderHabits();
+}
+
+function renderReview() {
+  const content = document.getElementById('review-content');
+  let html = '';
+
+  if (data.principles.length > 0) {
+    html += '<h3 style="color:var(--gold);font-size:1.3rem;margin-bottom:12px">Guiding Principles</h3>';
+    data.principles.forEach((p, i) => {
+      html += `<div class="plan-item card"><div class="plan-num">${i + 1}</div><p class="plan-text">${p.text}</p></div>`;
+    });
+  }
+
+  if (data.habits.length > 0) {
+    html += '<h3 style="color:var(--gold);font-size:1.3rem;margin:20px 0 12px">Habits & Practices</h3>';
+    data.habits.forEach(h => {
+      html += `<div class="plan-item card"><div class="plan-freq">${h.frequency}</div><p class="plan-text">${h.text}</p></div>`;
+    });
+  }
+
+  if (!html) html = '<p style="text-align:center;color:var(--text-dim);padding:40px 0">Add some principles and habits first.</p>';
+  content.innerHTML = html;
+}
+
+function completeJourney() {
+  data.stage = 'complete';
+  save();
+  showComplete();
+}
+
+function showComplete() {
+  document.getElementById('complete-sub').textContent =
+    `${data.name}, you've uncovered the patterns behind your perfect moments and built a plan to create more of them.`;
+
+  document.getElementById('complete-stats').innerHTML = [
+    { n: data.moments.length, l: 'Moments' },
+    { n: data.realizations.length, l: 'Realizations' },
+    { n: data.principles.length, l: 'Principles' },
+    { n: data.habits.length, l: 'Habits' },
+  ].map(s => `<div class="stat"><span class="stat-num">${s.n}</span><span class="stat-label">${s.l}</span></div>`).join('');
+
+  let phtml = '';
+  if (data.principles.length) {
+    phtml = '<h3 style="color:var(--gold);font-size:1.3rem;margin:8px 0 12px">Your Principles</h3>';
+    data.principles.forEach((p, i) => {
+      phtml += `<div class="plan-item card"><div class="plan-num">${i+1}</div><p class="plan-text">${p.text}</p></div>`;
+    });
+  }
+  document.getElementById('complete-principles').innerHTML = phtml;
+
+  let hhtml = '';
+  if (data.habits.length) {
+    hhtml = '<h3 style="color:var(--gold);font-size:1.3rem;margin:16px 0 12px">Your Habits</h3>';
+    data.habits.forEach(h => {
+      hhtml += `<div class="plan-item card"><div class="plan-freq">${h.frequency}</div><p class="plan-text">${h.text}</p></div>`;
+    });
+  }
+  document.getElementById('complete-habits').innerHTML = hhtml;
+
+  showScreen('complete');
+}
+
+function newJourney() {
+  data = defaultData();
+  data.name = '';
+  save();
+  showScreen('landing');
+}
+
+// ===== INIT =====
+function init() {
+  if (data.name) {
+    document.getElementById('ready-name').textContent = data.name;
+    if (data.stage === 'complete') { showComplete(); return; }
+    if (data.stage === 'planning') { startPlanning(); return; }
+    if (data.stage === 'realizations') { showRealizeOverview(); return; }
+    if (data.stage === 'reflection' && data.moments.length > 0) { startReflection(); return; }
+    showScreen('ready');
+  } else {
+    showScreen('landing');
+  }
+}
+
+init();
+</script>
+</body>
+</html>
