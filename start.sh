@@ -9,9 +9,13 @@ cd /app
 node commander.js --no-whatsapp &
 COMMANDER_PID=$!
 
-# If either process exits, stop the other
+# If signaled, stop both
 trap "kill $NGINX_PID $COMMANDER_PID 2>/dev/null; exit" SIGTERM SIGINT
 
-wait -n
+# Poll for either process dying
+while kill -0 $NGINX_PID 2>/dev/null && kill -0 $COMMANDER_PID 2>/dev/null; do
+  sleep 2
+done
+
 kill $NGINX_PID $COMMANDER_PID 2>/dev/null
 exit 1
