@@ -147,10 +147,9 @@ export class SignalKClient extends EventEmitter {
   }
 
   _discover(path) {
-    const p = path;
     // Engines
-    if (p.startsWith('propulsion.') && !p.includes('generator')) {
-      const id = p.split('.')[1];
+    if (path.startsWith('propulsion.') && !path.includes('generator')) {
+      const id = path.split('.')[1];
       if (!this.discovered.engines.includes(id)) {
         this.discovered.engines.push(id);
         console.log(`  🔍 Engine: ${id}`);
@@ -158,8 +157,8 @@ export class SignalKClient extends EventEmitter {
       }
     }
     // Batteries
-    if (p.startsWith('electrical.batteries.')) {
-      const id = p.split('.')[2];
+    if (path.startsWith('electrical.batteries.')) {
+      const id = path.split('.')[2];
       if (!this.discovered.batteries.includes(id)) {
         this.discovered.batteries.push(id);
         console.log(`  🔍 Battery: ${id}`);
@@ -167,8 +166,8 @@ export class SignalKClient extends EventEmitter {
       }
     }
     // Tanks
-    if (p.startsWith('tanks.')) {
-      const [, type, id] = p.split('.');
+    if (path.startsWith('tanks.')) {
+      const [, type, id] = path.split('.');
       const map = { fuel: 'fuel', freshWater: 'freshWater', wasteWater: 'wasteWater', blackWater: 'wasteWater' };
       const key = map[type];
       if (key && this.discovered.tanks[key] && !this.discovered.tanks[key].includes(id)) {
@@ -177,13 +176,13 @@ export class SignalKClient extends EventEmitter {
       }
     }
     // Features
-    if (p.includes('wind')) this.discovered.hasWind = true;
-    if (p.includes('depth')) this.discovered.hasDepth = true;
-    if (p.includes('autopilot')) this.discovered.hasAutopilot = true;
-    if (p.includes('anchor')) this.discovered.hasAnchor = true;
-    if (p.includes('solar')) this.discovered.hasSolar = true;
-    if (p.includes('generator')) this.discovered.hasGenerator = true;
-    if (p.includes('shore')) this.discovered.hasShore = true;
+    if (path.includes('wind')) this.discovered.hasWind = true;
+    if (path.includes('depth')) this.discovered.hasDepth = true;
+    if (path.includes('autopilot')) this.discovered.hasAutopilot = true;
+    if (path.includes('anchor')) this.discovered.hasAnchor = true;
+    if (path.includes('solar')) this.discovered.hasSolar = true;
+    if (path.includes('generator')) this.discovered.hasGenerator = true;
+    if (path.includes('shore')) this.discovered.hasShore = true;
   }
 
   // ── Query helpers ───────────────────────────────────────

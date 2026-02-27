@@ -1950,8 +1950,8 @@ document.querySelectorAll('.price-card').forEach(card => {
       msg.textContent = '';
       msg.className = 'dash-msg';
       var pw = document.getElementById('pw-new').value;
-      var confirm = document.getElementById('pw-confirm').value;
-      if (pw !== confirm) { msg.textContent = 'Passwords do not match.'; msg.className = 'dash-msg error'; return; }
+      var confirmPw = document.getElementById('pw-confirm').value;
+      if (pw !== confirmPw) { msg.textContent = 'Passwords do not match.'; msg.className = 'dash-msg error'; return; }
       try {
         var res = await fetch('/api/user/password', {
           method: 'PUT',
@@ -2203,13 +2203,13 @@ document.querySelectorAll('.price-card').forEach(card => {
     resetPassword: async function(e) {
       e.preventDefault();
       var pw = document.getElementById('reset-password').value;
-      var confirm = document.getElementById('reset-confirm').value;
+      var confirmPw = document.getElementById('reset-confirm').value;
       var err = document.getElementById('reset-error');
       var suc = document.getElementById('reset-success');
       var btn = document.getElementById('reset-submit');
       err.textContent = '';
       suc.textContent = '';
-      if (pw !== confirm) { err.textContent = 'Passwords do not match.'; return false; }
+      if (pw !== confirmPw) { err.textContent = 'Passwords do not match.'; return false; }
       btn.disabled = true;
       btn.textContent = 'Resetting...';
       try {

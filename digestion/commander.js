@@ -72,14 +72,13 @@ const COMMANDS = {
   'tanks':    () => status.tanks(),
   'help':     () => status.help(),
   'wind':     () => {
-    const sk2 = sk;
-    if (!sk2.discovered.hasWind) return '💨 No wind instruments detected';
-    const ws = sk2.get('environment.wind.speedApparent');
-    const wa2 = sk2.get('environment.wind.angleApparent');
-    const d = sk2.get('environment.depth.belowTransducer') ?? sk2.get('environment.depth.belowKeel');
-    const wt = sk2.get('environment.water.temperature');
+    if (!sk.discovered.hasWind) return '💨 No wind instruments detected';
+    const ws = sk.get('environment.wind.speedApparent');
+    const windAngle = sk.get('environment.wind.angleApparent');
+    const d = sk.get('environment.depth.belowTransducer') ?? sk.get('environment.depth.belowKeel');
+    const wt = sk.get('environment.water.temperature');
     let s = '';
-    if (ws != null) s += `💨 Wind: ${ws} kts${wa2 != null ? ` @ ${wa2}°` : ''} apparent\n`;
+    if (ws != null) s += `💨 Wind: ${ws} kts${windAngle != null ? ` @ ${windAngle}°` : ''} apparent\n`;
     if (d != null) s += `🌊 Depth: ${d}m\n`;
     if (wt != null) s += `🌡️ Water: ${wt}°C`;
     return s || '💨 No wind data available';
