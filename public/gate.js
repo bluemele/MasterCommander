@@ -242,7 +242,11 @@
       config = opts || {};
       if (!config.site) return console.error('[SiteGate] Missing site ID');
 
+      // If token exists in localStorage, start hidden — verify async, only show if invalid
+      const hasToken = !!localStorage.getItem(tokenKey());
+
       buildOverlay();
+      if (hasToken) el('site-gate-overlay').classList.add('gate-hidden');
       bindEvents();
 
       // Pre-fill name from cache
@@ -251,10 +255,15 @@
 
       const session = await checkSession();
       if (session === true) {
-        grantAccess();
+        // Already hidden if hasToken, remove overlay entirely
+        const ov = el('site-gate-overlay');
+        if (ov) ov.remove();
+      } else if (hasToken) {
+        // Token was bad — show the overlay
+        el('site-gate-overlay').classList.remove('gate-hidden');
       }
       // if session === 'nda', step 3 is already shown
-      // if false, step 1 is shown (default)
+      // if false and no token, step 1 is shown (default)
 
       // Cache name on input
       el('site-gate-name').addEventListener('blur', function () {
