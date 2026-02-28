@@ -9,6 +9,7 @@
   const API_BASE = '/api/gate';
   let config = {};
   let state = { name: '', email: '' };
+  let _verifying = false;
 
   function el(id) { return document.getElementById(id); }
 
@@ -120,11 +121,13 @@
 
   // Step 2: Verify code
   async function verifyCode() {
+    if (_verifying) return;
     const code = el('site-gate-code-input').value.trim();
     setError(2, '');
 
     if (!/^\d{6}$/.test(code)) return setError(2, 'Enter the 6-digit code from your email.');
 
+    _verifying = true;
     setBtnLoading('site-gate-btn2', true);
 
     try {
@@ -142,6 +145,7 @@
     } catch (err) {
       setError(2, err.message);
     } finally {
+      _verifying = false;
       setBtnLoading('site-gate-btn2', false, 'Verify');
     }
   }

@@ -1790,7 +1790,7 @@ function sendManual(text) {
   for (const p of nlpPatterns) {
     if (p.re.test(text)) {
       if (p.key === null) { respond(thanksResp); return; }
-      matched = demoData[p.key];
+      matched = demoData[p.key] || null;
       break;
     }
   }
@@ -1841,9 +1841,11 @@ function runAutoPlay() {
     var t = localStorage.getItem('mc_token');
     return t ? { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + t } : { 'Content-Type': 'application/json' };
   }
+  function escAttr(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 
   window.mcDashboard = {
     _editingBoatId: null,
+    _busy: false,
     open: function() {
       document.getElementById('dash-overlay').classList.add('open');
       mcDashboard.loadProfile();
@@ -1870,6 +1872,7 @@ function runAutoPlay() {
       } catch(e) {}
     },
     saveProfile: async function() {
+      if (mcDashboard._busy) return; mcDashboard._busy = true;
       var msg = document.getElementById('profile-msg'); msg.textContent = ''; msg.className = 'dash-msg';
       try {
         var res = await fetch('/api/user/profile', { method: 'PUT', headers: authHeaders(), body: JSON.stringify({ name: document.getElementById('prof-name').value, phone: document.getElementById('prof-phone').value, company: document.getElementById('prof-company').value }) });
@@ -1882,7 +1885,7 @@ function runAutoPlay() {
         document.getElementById('auth-toggle').textContent = user.name.split(' ')[0];
         document.getElementById('auth-user-name').textContent = user.name;
         document.getElementById('dash-greeting').textContent = 'Welcome, ' + user.name.split(' ')[0];
-      } catch(e) { msg.textContent = 'Connection error.'; msg.className = 'dash-msg error'; }
+      } catch(e) { msg.textContent = 'Connection error.'; msg.className = 'dash-msg error'; } finally { mcDashboard._busy = false; }
     },
     changePassword: async function() {
       var msg = document.getElementById('password-msg'); msg.textContent = ''; msg.className = 'dash-msg';
@@ -1905,12 +1908,14 @@ function runAutoPlay() {
         if (data.boats.length === 0) { grid.innerHTML = '<p style="color:var(--slate);font-size:0.85rem">No boats registered yet.</p>'; return; }
         data.boats.forEach(function(b) {
           var card = document.createElement('div'); card.className = 'boat-card';
-          var details = '';
-          if (b.model || b.year) details += '<p>' + (b.model || '') + (b.model && b.year ? ' (' + b.year + ')' : (b.year || '')) + '</p>';
-          if (b.mmsi) details += '<p>MMSI: ' + b.mmsi + '</p>';
-          if (b.home_port) details += '<p>' + b.home_port + '</p>';
-          card.innerHTML = '<h4>' + b.name + '</h4>' + details + '<div class="boat-actions"><button onclick="mcDashboard.editBoat(' + b.id + ')">Edit</button><button class="delete-btn" onclick="mcDashboard.deleteBoat(' + b.id + ',\'' + b.name.replace(/'/g, "\\'") + '\')">Delete</button></div>';
-          grid.appendChild(card);
+          var h4 = document.createElement('h4'); h4.textContent = b.name; card.appendChild(h4);
+          if (b.model || b.year) { var p1 = document.createElement('p'); p1.textContent = (b.model || '') + (b.model && b.year ? ' (' + b.year + ')' : (b.year || '')); card.appendChild(p1); }
+          if (b.mmsi) { var p2 = document.createElement('p'); p2.textContent = 'MMSI: ' + b.mmsi; card.appendChild(p2); }
+          if (b.home_port) { var p3 = document.createElement('p'); p3.textContent = b.home_port; card.appendChild(p3); }
+          var actions = document.createElement('div'); actions.className = 'boat-actions';
+          var editBtn = document.createElement('button'); editBtn.textContent = 'Edit'; editBtn.addEventListener('click', function() { mcDashboard.editBoat(b.id); }); actions.appendChild(editBtn);
+          var delBtn = document.createElement('button'); delBtn.className = 'delete-btn'; delBtn.textContent = 'Delete'; delBtn.addEventListener('click', function() { mcDashboard.deleteBoat(b.id, b.name); }); actions.appendChild(delBtn);
+          card.appendChild(actions); grid.appendChild(card);
         });
       } catch(e) {}
     },
@@ -1921,9 +1926,10 @@ function runAutoPlay() {
     },
     hideBoatForm: function() { document.getElementById('boat-form-area').innerHTML = ''; document.getElementById('add-boat-btn').style.display = ''; mcDashboard._editingBoatId = null; },
     saveBoat: async function() {
+      if (mcDashboard._busy) return; mcDashboard._busy = true;
       var msg = document.getElementById('boats-msg'); msg.textContent = ''; msg.className = 'dash-msg';
       var name = document.getElementById('bf-name').value.trim();
-      if (!name) { msg.textContent = 'Boat name is required.'; msg.className = 'dash-msg error'; return; }
+      if (!name) { msg.textContent = 'Boat name is required.'; msg.className = 'dash-msg error'; mcDashboard._busy = false; return; }
       var body = { name: name, model: document.getElementById('bf-model').value, year: document.getElementById('bf-year').value || null, mmsi: document.getElementById('bf-mmsi').value, home_port: document.getElementById('bf-port').value };
       try {
         var url = mcDashboard._editingBoatId ? '/api/boats/' + mcDashboard._editingBoatId : '/api/boats';
@@ -1932,7 +1938,7 @@ function runAutoPlay() {
         var data = await res.json();
         if (!res.ok) { msg.textContent = data.error; msg.className = 'dash-msg error'; return; }
         mcDashboard.hideBoatForm(); mcDashboard.loadBoats();
-      } catch(e) { msg.textContent = 'Connection error.'; msg.className = 'dash-msg error'; }
+      } catch(e) { msg.textContent = 'Connection error.'; msg.className = 'dash-msg error'; } finally { mcDashboard._busy = false; }
     },
     editBoat: async function(id) {
       try {
@@ -1942,18 +1948,20 @@ function runAutoPlay() {
         var boat = data.boats.find(function(b) { return b.id === id; });
         if (!boat) return;
         mcDashboard._editingBoatId = id;
-        document.getElementById('boat-form-area').innerHTML = '<div class="boat-form"><input type="text" id="bf-name" placeholder="Boat name *" value="' + (boat.name || '').replace(/"/g, '&quot;') + '"><input type="text" id="bf-model" placeholder="Model" value="' + (boat.model || '').replace(/"/g, '&quot;') + '"><input type="number" id="bf-year" placeholder="Year" min="1900" max="2099" value="' + (boat.year || '') + '"><input type="text" id="bf-mmsi" placeholder="MMSI" value="' + (boat.mmsi || '').replace(/"/g, '&quot;') + '"><input type="text" id="bf-port" placeholder="Home port" value="' + (boat.home_port || '').replace(/"/g, '&quot;') + '"><div class="boat-form-btns"><button class="save-btn" onclick="mcDashboard.saveBoat()">Save Changes</button><button class="cancel-btn" onclick="mcDashboard.hideBoatForm()">Cancel</button></div></div>';
+        document.getElementById('boat-form-area').innerHTML = '<div class="boat-form"><input type="text" id="bf-name" placeholder="Boat name *" value="' + escAttr(boat.name) + '"><input type="text" id="bf-model" placeholder="Model" value="' + escAttr(boat.model) + '"><input type="number" id="bf-year" placeholder="Year" min="1900" max="2099" value="' + escAttr(boat.year) + '"><input type="text" id="bf-mmsi" placeholder="MMSI" value="' + escAttr(boat.mmsi) + '"><input type="text" id="bf-port" placeholder="Home port" value="' + escAttr(boat.home_port) + '"><div class="boat-form-btns"><button class="save-btn" onclick="mcDashboard.saveBoat()">Save Changes</button><button class="cancel-btn" onclick="mcDashboard.hideBoatForm()">Cancel</button></div></div>';
         document.getElementById('add-boat-btn').style.display = 'none';
       } catch(e) {}
     },
     deleteBoat: async function(id, name) {
+      if (mcDashboard._busy) return;
       if (!confirm('Delete "' + name + '"? This cannot be undone.')) return;
+      mcDashboard._busy = true;
       var msg = document.getElementById('boats-msg'); msg.textContent = ''; msg.className = 'dash-msg';
       try {
         var res = await fetch('/api/boats/' + id, { method: 'DELETE', headers: authHeaders() });
         if (!res.ok) { var data = await res.json(); msg.textContent = data.error; msg.className = 'dash-msg error'; return; }
         mcDashboard.loadBoats();
-      } catch(e) { msg.textContent = 'Connection error.'; msg.className = 'dash-msg error'; }
+      } catch(e) { msg.textContent = 'Connection error.'; msg.className = 'dash-msg error'; } finally { mcDashboard._busy = false; }
     },
     resendVerify: async function() {
       try {
