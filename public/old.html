@@ -1,0 +1,2350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Master&amp;Commander &mdash; AI Boat Monitor for Charter Fleets &amp; Private Yachts</title>
+  <meta name="description" content="AI boat monitoring for charter fleets, private yachts, deliveries, and marinas. Commander Unit connects to your marine electronics, monitors every system 24/7, and sends alerts to WhatsApp. From $499/year per boat.">
+  <link rel="stylesheet" href="gate.css">
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#x2693;</text></svg>">
+</head>
+<body>
+
+<!-- Email Verification Banner -->
+<div class="verify-banner" id="verify-banner">
+  <span>Please verify your email address.</span>
+  <a href="#" id="resend-verify" onclick="mcDashboard.resendVerify();return false">Resend verification email</a>
+  <button class="verify-dismiss" onclick="document.getElementById('verify-banner').classList.remove('visible');document.body.classList.remove('has-verify-banner')">&times;</button>
+</div>
+
+<!-- Nav -->
+<nav>
+  <div class="logo"><span>&#x2693;</span> Master<span>&amp;</span>Commander</div>
+  <button class="nav-hamburger" id="nav-hamburger" aria-label="Menu">&#9776;</button>
+  <ul>
+    <li><a href="#how-it-works">How It Works</a></li>
+    <li><a href="#solutions">Solutions</a></li>
+    <li><a href="#diagnostics">Diagnostics</a></li>
+    <li><a href="#hardware">Hardware</a></li>
+    <li><a href="#pricing">Pricing</a></li>
+    <li><a href="#alerts">Alerts</a></li>
+    <li><a href="#demo">Demo</a></li>
+    <li><a href="#" onclick="alert('Coming soon! The Commander App is currently in beta.');return false;" class="nav-app-link">Download App</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+  <div class="nav-login" id="nav-login">
+    <!-- Logged-out state -->
+    <button class="nav-login-btn" id="auth-toggle" onclick="this.parentElement.classList.toggle('open')">Login</button>
+    <div class="nav-login-dropdown" id="auth-dropdown">
+      <!-- Login form (default) -->
+      <form id="auth-login" class="auth-form active" onsubmit="return mcAuth.login(event)">
+        <input type="email" id="login-email" placeholder="Email" autocomplete="email" required>
+        <input type="password" id="login-password" placeholder="Password" autocomplete="current-password" required>
+        <div class="auth-error" id="login-error"></div>
+        <button type="submit" id="login-submit">Sign In</button>
+        <div class="auth-links">
+          <a href="#" onclick="mcAuth.showForm('signup');return false">Create account</a>
+          <a href="#" onclick="mcAuth.showForm('forgot');return false">Forgot password?</a>
+        </div>
+      </form>
+      <!-- Signup form -->
+      <form id="auth-signup" class="auth-form" onsubmit="return mcAuth.signup(event)">
+        <input type="text" id="signup-name" placeholder="Full Name" autocomplete="name" required>
+        <input type="email" id="signup-email" placeholder="Email" autocomplete="email" required>
+        <input type="password" id="signup-password" placeholder="Password (8+ chars)" autocomplete="new-password" required minlength="8">
+        <div class="auth-error" id="signup-error"></div>
+        <button type="submit" id="signup-submit">Create Account</button>
+        <div class="auth-links">
+          <a href="#" onclick="mcAuth.showForm('login');return false">Already have an account?</a>
+        </div>
+      </form>
+      <!-- Forgot password form -->
+      <form id="auth-forgot" class="auth-form" onsubmit="return mcAuth.forgot(event)">
+        <input type="email" id="forgot-email" placeholder="Email" autocomplete="email" required>
+        <div class="auth-error" id="forgot-error"></div>
+        <div class="auth-success" id="forgot-success"></div>
+        <button type="submit" id="forgot-submit">Send Reset Link</button>
+        <div class="auth-links">
+          <a href="#" onclick="mcAuth.showForm('login');return false">Back to login</a>
+        </div>
+      </form>
+      <!-- Logged-in state -->
+      <div id="auth-user" class="auth-form">
+        <div class="auth-user-info">Signed in as <strong id="auth-user-name"></strong></div>
+        <button type="button" onclick="mcAuth.logout()">Sign Out</button>
+      </div>
+    </div>
+  </div>
+</nav>
+<script>
+document.getElementById('nav-hamburger').addEventListener('click', function() {
+  this.closest('nav').classList.toggle('nav-open');
+});
+document.querySelectorAll('nav ul a').forEach(function(a) {
+  a.addEventListener('click', function() { document.querySelector('nav').classList.remove('nav-open'); });
+});
+</script>
+
+<!-- Hero -->
+<section class="hero">
+  <h1>Your Yacht, <span class="highlight">always talking.</span></h1>
+  <p class="tagline">AI boat monitoring for charter fleets and private yachts. The Commander Unit connects to your marine electronics, monitors every system 24/7, and reports to you via WhatsApp, app, or cloud dashboard.</p>
+  <div class="cta-buttons hero-ctas" style="margin-bottom:2rem">
+    <a href="#solutions" class="cta-btn" onclick="setTimeout(function(){document.querySelector('.tab-btn[data-tab=charter]').click()},100)">Charter Fleets</a>
+    <a href="#solutions" class="cta-btn secondary" onclick="setTimeout(function(){document.querySelector('.tab-btn[data-tab=private]').click()},100)">Private Yachts</a>
+    <a href="#how-it-works" class="cta-btn secondary" onclick="setTimeout(function(){document.querySelector('.config-tab-btn[onclick*=delivery]')&&document.querySelector('.config-tab-btn[onclick*=delivery]').click()},100)">Delivery Captains</a>
+    <a href="#diagnostics" class="cta-btn secondary">Marine Surveys</a>
+  </div>
+  <div class="badges">
+    <span class="badge"><span class="dot"></span> 24/7 Monitoring</span>
+    <span class="badge"><span class="dot"></span> Zero Config</span>
+    <span class="badge"><span class="dot"></span> Real-Time Alerts</span>
+    <span class="badge"><span class="dot"></span> AI-Powered</span>
+  </div>
+</section>
+
+<!-- Social Proof Bar -->
+<div class="proof-bar">
+  <div class="proof-item">
+    <div class="proof-number">78+</div>
+    <div class="proof-label">Use Cases</div>
+  </div>
+  <div class="proof-item">
+    <div class="proof-number">4</div>
+    <div class="proof-label">Hardware Options</div>
+  </div>
+  <div class="proof-item">
+    <div class="proof-number">24/7</div>
+    <div class="proof-label">Monitoring</div>
+  </div>
+  <div class="proof-item">
+    <div class="proof-number">60s</div>
+    <div class="proof-label">Setup Time</div>
+  </div>
+</div>
+
+<!-- Solutions -->
+<section id="solutions">
+  <div class="section-header">
+    <h2>Solutions</h2>
+    <p>78+ use cases across charter operations, private yacht ownership, marine professionals, deliveries, and marinas.</p>
+  </div>
+
+  <!-- Main tabs -->
+  <div class="solutions-tabs">
+    <button class="tab-btn active" data-tab="charter">Charter Fleets</button>
+    <button class="tab-btn" data-tab="private">Private Yachts</button>
+    <button class="tab-btn" data-tab="marinepros">Marine Pros</button>
+  </div>
+
+  <!-- CHARTER TAB -->
+  <div class="tab-panel active" id="tab-charter">
+    <div class="sub-pills">
+      <button class="pill-btn active" data-pill="during-charter">During Charter (13)</button>
+      <button class="pill-btn" data-pill="turnaround">Turnaround (6)</button>
+      <button class="pill-btn" data-pill="fleet-dashboard">Fleet Management (9)</button>
+    </div>
+
+    <!-- During Charter -->
+    <div class="pill-panel uc-grid active" id="pill-during-charter">
+      <div class="uc-card">
+        <div class="uc-icon">&#x1F50B;</div>
+        <h4>Battery Drain Alert</h4>
+        <p>Auto-alerts when house bank drops below threshold &mdash; guests never notice until it's too late.</p>
+      </div>
+      <div class="uc-card">
+        <div class="uc-icon">&#x1F321;&#xFE0F;</div>
+        <h4>Engine Overheat Warning</h4>
+        <p>Coolant temp spikes trigger instant WhatsApp alerts before a novice skipper causes damage.</p>
+      </div>
+      <div class="uc-card">
+        <div class="uc-icon">&#x2693;</div>
+        <h4>Anchor Drag Detection</h4>
+        <p>GPS drift monitoring with configurable swing radius. Alert fires the moment anchor moves beyond safe zone.</p>
+      </div>
+      <div class="uc-card">
+        <div class="uc-icon">&#x1F6B0;</div>
+        <h4>Bilge Pump Monitoring</h4>
+        <p>Track pump cycles per hour. Abnormal frequency = water ingress detected early, not at the dock.</p>
+      </div>
+      <div class="uc-card">
+        <div class="uc-icon">&#x26FD;</div>
+        <h4>Fuel / Water Level Alerts</h4>
+        <p>Low tank warnings prevent running dry mid-charter. Guests get gentle reminders before it's a problem.</p>
+      </div>
+      <div class="uc-card">
+        <div class="uc-icon">&#x1F30A;</div>
+        <h4>Shallow Water Warning</h4>
+        <p>Depth sounder integration alerts before grounding. Configurable per-vessel draft settings.</p>
+      </div>
+      <div class="uc-card">
+        <div class="uc-icon">&#x1F4CD;</div>
+        <h4>Geofence Alerts</h4>
+        <p>Set charter zone boundaries. Get notified if a boat leaves the permitted cruising area.</p>
+      </div>
+      <div class="uc-card">
+        <div class="uc-icon">&#x1F6E2;&#xFE0F;</div>
+        <h4>Oil Pressure Monitoring</h4>
+        <p>Low oil pressure while running = immediate alert. Catch engine problems before they become engine replacements.</p>
+      </div>
+      <div class="uc-card">
+        <div class="uc-icon">&#x1F32C;&#xFE0F;</div>
+        <h4>Wind &amp; Weather Alerts</h4>
+        <p>On-board wind speed and direction with threshold alerts for high wind conditions.</p>
+      </div>
+      <div class="uc-card">
+        <div class="uc-icon">&#x26A1;</div>
+        <h4>Shore Power Disconnect</h4>
+        <p>Detect when shore power is lost or disconnected &mdash; before batteries start draining.</p>
+      </div>
+      <div class="uc-card">
+        <div class="uc-icon">&#x2699;&#xFE0F;</div>
+        <h4>Engine Hours Tracking</h4>
+        <p>Real-time engine hours per charter. Know exactly how hard each boat was used.</p>
+      </div>
+      <div class="uc-card">
+        <div class="uc-icon">&#x1F4F7;</div>
+        <h4>Security Camera Monitoring</h4>
+        <p>On-board cameras with AI vision. Detect unauthorized boarding, unusual activity, or deck incidents.</p>
+      </div>
+      <div class="uc-card">
+        <div class="uc-icon">&#x1F4AC;</div>
+        <h4>Guest Self-Service via WhatsApp</h4>
+        <p>Charterers text "status" or "help" and get instant boat info &mdash; reduces base support calls.</p>
+      </div>
+    </div>
+
+    <!-- Turnaround -->
+    <div class="pill-panel uc-grid" id="pill-turnaround">
+      <div class="uc-card">
+        <div class="uc-icon">&#x1F4CB;</div>
+        <h4>Pre-Charter Checklist</h4>
+        <p>Automated system check before each charter &mdash; batteries, tanks, engines, safety gear. One-tap readiness report.</p>
+      </div>
+      <div class="uc-card">
+        <div class="uc-icon">&#x1F527;</div>
+        <h4>Damage Detection</h4>
+        <p>Compare system readings post-charter to pre-charter baseline. Flag anomalies for inspection.</p>
+      </div>
+      <div class="uc-card">
+        <div class="uc-icon">&#x26FD;</div>
+        <h4>Tank Level Verification</h4>
+        <p>Confirm fuel and water tanks are topped off before handover. No disputes about what was full or empty.</p>
+      </div>
+      <div class="uc-card">
+        <div class="uc-icon">&#x1F50B;</div>
+        <h4>Battery Health Report</h4>
+        <p>Post-charter battery analysis: cycles, depth of discharge, charging patterns. Predict replacements before failures.</p>
+      </div>
+      <div class="uc-card">
+        <div class="uc-icon">&#x1F4CA;</div>
+        <h4>Charter Usage Summary</h4>
+        <p>Automated report: engine hours run, fuel burned, miles traveled, max speed, systems used. Full charter audit trail.</p>
+      </div>
+      <div class="uc-card">
+        <div class="uc-icon">&#x2699;&#xFE0F;</div>
+        <h4>Maintenance Flag System</h4>
+        <p>Commander flags items needing attention based on real data &mdash; not guesswork. Prioritized by urgency.</p>
+      </div>
+    </div>
+
+    <!-- Fleet Dashboard -->
+    <div class="pill-panel uc-grid" id="pill-fleet-dashboard">
+      <div class="uc-card">
+        <div class="uc-icon">&#x1F5FA;&#xFE0F;</div>
+        <h4>Live Fleet Map</h4>
+        <p>See every boat on one map. Real-time positions, heading, speed. Click any vessel for full telemetry.</p>
+      </div>
+      <div class="uc-card">
+        <div class="uc-icon">&#x1F4CA;</div>
+        <h4>Cross-Fleet Analytics</h4>
+        <p>Compare fuel consumption, battery health, engine hours, and maintenance costs across your entire fleet.</p>
+      </div>
+      <div class="uc-card">
+        <div class="uc-icon">&#x1F6E0;&#xFE0F;</div>
+        <h4>Maintenance Scheduling</h4>
+        <p>Engine hours, oil changes, haul-out dates. Commander tracks the data, Master schedules the work.</p>
+      </div>
+      <div class="uc-card">
+        <div class="uc-icon">&#x1F4F1;</div>
+        <h4>OTA Software Updates</h4>
+        <p>Push firmware and config updates to your entire fleet remotely. No boat visits needed.</p>
+      </div>
+      <div class="uc-card">
+        <div class="uc-icon">&#x1F514;</div>
+        <h4>Centralized Alert Management</h4>
+        <p>All fleet alerts in one stream. Filter by severity, boat, or type. Route critical alerts to the right team member.</p>
+      </div>
+      <div class="uc-card">
+        <div class="uc-icon">&#x1F4B0;</div>
+        <h4>Cost-Per-Charter Tracking</h4>
+        <p>Fuel, maintenance, and wear data per charter. Know your true cost per booking and optimize pricing.</p>
+      </div>
+      <div class="uc-card">
+        <div class="uc-icon">&#x1F4C8;</div>
+        <h4>Fleet Health Score</h4>
+        <p>Each boat gets an AI-generated health score based on all sensor data. Spot declining boats before breakdowns.</p>
+      </div>
+      <div class="uc-card">
+        <div class="uc-icon">&#x1F4E6;</div>
+        <h4>Provisioning &amp; Onboarding</h4>
+        <p>Add new boats to your fleet in minutes. Commander auto-discovers the vessel and syncs to your dashboard.</p>
+      </div>
+      <div class="uc-card">
+        <div class="uc-icon">&#x1F4C4;</div>
+        <h4>Compliance Reporting</h4>
+        <p>Automated logs for safety inspections, engine hours, and maintenance records. Export-ready for auditors.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- PRIVATE YACHT TAB -->
+  <div class="tab-panel" id="tab-private">
+    <div class="sub-pills">
+      <button class="pill-btn active" data-pill="active-cruiser">Active Boating (11)</button>
+      <button class="pill-btn" data-pill="boat-away">Away From Boat (9)</button>
+    </div>
+
+    <!-- Active Boating -->
+    <div class="pill-panel uc-grid active" id="pill-active-cruiser">
+      <div class="uc-card">
+        <div class="uc-icon">&#x2693;</div>
+        <h4>Anchor Watch</h4>
+        <p>Set your swing radius &mdash; Commander monitors GPS drift continuously. Sleep soundly knowing you'll be woken if it drags.</p>
+      </div>
+      <div class="uc-card">
+        <div class="uc-icon">&#x1F30A;</div>
+        <h4>Depth Monitoring</h4>
+        <p>Continuous depth tracking with configurable shallow water alerts. Essential for reef-strewn anchorages.</p>
+      </div>
+      <div class="uc-card">
+        <div class="uc-icon">&#x2699;&#xFE0F;</div>
+        <h4>Engine Diagnostics</h4>
+        <p>Coolant temp, oil pressure, RPM, alternator output. Commander knows your engine's normal &mdash; and alerts when it's not.</p>
+      </div>
+      <div class="uc-card">
+        <div class="uc-icon">&#x26FD;</div>
+        <h4>Fuel Range Estimation</h4>
+        <p>Real-time fuel burn rate + remaining fuel = estimated range at current speed. Plan passages confidently.</p>
+      </div>
+      <div class="uc-card">
+        <div class="uc-icon">&#x1F32C;&#xFE0F;</div>
+        <h4>Wind &amp; Weather</h4>
+        <p>On-board wind instruments feed real-time data. Set threshold alerts for gusts or sustained wind changes.</p>
+      </div>
+      <div class="uc-card">
+        <div class="uc-icon">&#x1F9ED;</div>
+        <h4>Passage Log</h4>
+        <p>Automatic logging of positions, speed, heading, wind, engine hours. Your passage record, built automatically.</p>
+      </div>
+      <div class="uc-card">
+        <div class="uc-icon">&#x1F9E0;</div>
+        <h4>AI Boat Assistant</h4>
+        <p>Ask questions in plain English: "How's the engine running?" "Should I worry about this battery trend?" Local AI answers instantly.</p>
+      </div>
+      <div class="uc-card">
+        <div class="uc-icon">&#x1F4F1;</div>
+        <h4>Commander App</h4>
+        <p>Full real-time gauges, camera feeds, and controls via the on-board app. Works without internet over boat WiFi or Bluetooth.</p>
+      </div>
+      <div class="uc-card">
+        <div class="uc-icon">&#x1F512;</div>
+        <h4>Night Watch Mode</h4>
+        <p>Enhanced monitoring while crew sleeps. Tighter alert thresholds, anchor watch active, AIS monitoring, depth alerts.</p>
+      </div>
+      <div class="uc-card">
+        <div class="uc-icon">&#x1F6E0;&#xFE0F;</div>
+        <h4>Maintenance Tracker</h4>
+        <p>Engine hours, oil changes, impeller replacements. Commander reminds you when it's time, based on actual usage.</p>
+      </div>
+      <div class="uc-card">
+        <div class="uc-icon">&#x1F4CA;</div>
+        <h4>Historical Analytics</h4>
+        <p>With Master: trend charts for battery health, fuel efficiency, engine performance. Your boat gets smarter over time.</p>
+      </div>
+    </div>
+
+    <!-- Away From Boat -->
+    <div class="pill-panel uc-grid" id="pill-boat-away">
+      <div class="uc-card">
+        <div class="uc-icon">&#x1F50B;</div>
+        <h4>Battery Watch</h4>
+        <p>Monitor house and start batteries while you're home. Get alerts before a dead bank means a dead weekend.</p>
+      </div>
+      <div class="uc-card">
+        <div class="uc-icon">&#x26A1;</div>
+        <h4>Shore Power Monitor</h4>
+        <p>Know instantly when shore power drops or disconnects at the marina. Batteries start draining &mdash; you'll know first.</p>
+      </div>
+      <div class="uc-card">
+        <div class="uc-icon">&#x1F6B0;</div>
+        <h4>Bilge Alarm</h4>
+        <p>Bilge pump running more than usual? Commander catches water ingress early &mdash; even if you're 1,000 miles away.</p>
+      </div>
+      <div class="uc-card">
+        <div class="uc-icon">&#x1F321;&#xFE0F;</div>
+        <h4>Temperature &amp; Humidity</h4>
+        <p>Monitor cabin conditions to prevent mold, mildew, or freeze damage. Seasonal storage peace of mind.</p>
+      </div>
+      <div class="uc-card">
+        <div class="uc-icon">&#x1F4F7;</div>
+        <h4>Security Cameras</h4>
+        <p>AI-powered intrusion detection. Get a photo and alert if someone boards your vessel unexpectedly.</p>
+      </div>
+      <div class="uc-card">
+        <div class="uc-icon">&#x2693;</div>
+        <h4>Dock Line Stress</h4>
+        <p>GPS drift + wind data detects when your boat is straining at the dock during storms.</p>
+      </div>
+      <div class="uc-card">
+        <div class="uc-icon">&#x2600;&#xFE0F;</div>
+        <h4>Solar Performance</h4>
+        <p>Track solar charge vs. consumption while at the marina. Know if panels are keeping up or need cleaning.</p>
+      </div>
+      <div class="uc-card">
+        <div class="uc-icon">&#x1F4AC;</div>
+        <h4>WhatsApp Check-In</h4>
+        <p>Text "status" anytime and get a full boat report. No app needed, no login, just a message.</p>
+      </div>
+      <div class="uc-card">
+        <div class="uc-icon">&#x1F4CA;</div>
+        <h4>Weekly Digest</h4>
+        <p>Automated weekly summary: battery trends, power usage, bilge activity, any anomalies. Delivered to WhatsApp.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- MARINE PROS TAB -->
+  <div class="tab-panel" id="tab-marinepros">
+    <div class="sub-pills">
+      <button class="pill-btn active" data-pill="diag-diagnostics">Diagnostics (5)</button>
+      <button class="pill-btn" data-pill="diag-reports">Service Reports (5)</button>
+      <button class="pill-btn" data-pill="diag-delivery">Delivery Captains (4)</button>
+    </div>
+
+    <!-- Diagnostics -->
+    <div class="pill-panel uc-grid active" id="pill-diag-diagnostics">
+      <div class="uc-card">
+        <div class="uc-icon">&#x1F50D;</div>
+        <h4>Network Scan</h4>
+        <p>Full NMEA 2000 backbone discovery &mdash; every device, every address, every PGN. Map the boat's entire data network in 24 hours.</p>
+      </div>
+      <div class="uc-card">
+        <div class="uc-icon">&#x1F50B;</div>
+        <h4>Battery Analysis</h4>
+        <p>Charging patterns, parasitic draw detection, state of health, depth of discharge cycles. Find the drain your customer can't explain.</p>
+      </div>
+      <div class="uc-card">
+        <div class="uc-icon">&#x2699;&#xFE0F;</div>
+        <h4>Engine Diagnostics</h4>
+        <p>Engine hours, error codes, coolant trends, oil pressure patterns, alternator output. Full engine health report from NMEA data.</p>
+      </div>
+      <div class="uc-card">
+        <div class="uc-icon">&#x1F321;&#xFE0F;</div>
+        <h4>Sensor Audit</h4>
+        <p>Identify out-of-spec readings, intermittent connections, and phantom sensors. Find the flaky transducer before your customer does.</p>
+      </div>
+      <div class="uc-card">
+        <div class="uc-icon">&#x26A0;&#xFE0F;</div>
+        <h4>Anomaly Detection</h4>
+        <p>AI compares readings against benchmarks for the boat class. Flags anything unusual &mdash; from voltage sags to temperature spikes.</p>
+      </div>
+    </div>
+
+    <!-- Service Reports -->
+    <div class="pill-panel uc-grid" id="pill-diag-reports">
+      <div class="uc-card">
+        <div class="uc-icon">&#x1F4CB;</div>
+        <h4>Pre-Arrival Scan</h4>
+        <p>Drop the scanner on the boat before you visit. Know what tools and parts to bring before you drive to the marina.</p>
+      </div>
+      <div class="uc-card">
+        <div class="uc-icon">&#x1F4C8;</div>
+        <h4>Maintenance History</h4>
+        <p>48 hours of continuous data reveals patterns that a 30-minute sea trial never will. Intermittent faults, charging anomalies, slow leaks.</p>
+      </div>
+      <div class="uc-card">
+        <div class="uc-icon">&#x1F4CA;</div>
+        <h4>Comparison Benchmarks</h4>
+        <p>How does this boat compare to others in its class? Battery health, fuel efficiency, engine hours vs. age. Data-driven context for your diagnosis.</p>
+      </div>
+      <div class="uc-card">
+        <div class="uc-icon">&#x1F4C4;</div>
+        <h4>Compliance Documentation</h4>
+        <p>Generate professional reports for insurance surveys, pre-purchase inspections, and annual certifications. Verified sensor data, not estimates.</p>
+      </div>
+      <div class="uc-card">
+        <div class="uc-icon">&#x1F9ED;</div>
+        <h4>Marine Survey Reports</h4>
+        <p>Back up visual inspections with 48 hours of verified sensor data. Engine health, electrical system analysis, battery condition, and network topology &mdash; evidence-based assessments for pre-purchase, insurance, and condition surveys.</p>
+      </div>
+    </div>
+
+    <!-- Delivery Captains -->
+    <div class="pill-panel uc-grid" id="pill-diag-delivery">
+      <div class="uc-card">
+        <div class="uc-icon">&#x1F6A2;</div>
+        <h4>Passage Monitoring</h4>
+        <p>Real-time engine, battery, and bilge data throughout the delivery. Know the boat's condition at every waypoint &mdash; not just departure and arrival.</p>
+      </div>
+      <div class="uc-card">
+        <div class="uc-icon">&#x1F4CD;</div>
+        <h4>Position Tracking</h4>
+        <p>Live GPS tracking with automatic position reports. Boat owner sees exactly where their vessel is at all times during the delivery.</p>
+      </div>
+      <div class="uc-card">
+        <div class="uc-icon">&#x1F4C4;</div>
+        <h4>Delivery Report</h4>
+        <p>Automated log of the entire passage &mdash; engine hours, fuel consumption, weather encountered, route taken. Professional handoff documentation.</p>
+      </div>
+      <div class="uc-card">
+        <div class="uc-icon">&#x26A0;&#xFE0F;</div>
+        <h4>Incident Alerts</h4>
+        <p>Instant alerts to owner and captain if anything goes out of spec during transit. Bilge pumps, battery voltage, engine temps &mdash; caught in real time.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- System Architecture -->
+<section class="flow-section" id="architecture">
+  <h2>System Architecture</h2>
+  <p class="subtitle">Tap any step to learn more. Data flows from your marine electronics to your phone.</p>
+  <div class="flow-tabs">
+    <button class="flow-tab-btn active" data-mode="charter" onclick="setFlowMode('charter')">Charter Fleet</button>
+    <button class="flow-tab-btn" data-mode="private" onclick="setFlowMode('private')">Private Yacht</button>
+    <button class="flow-tab-btn" data-mode="delivery" onclick="setFlowMode('delivery')">Delivery Captain</button>
+    <button class="flow-tab-btn" data-mode="diagnostic" onclick="setFlowMode('diagnostic')">Diagnostic</button>
+  </div>
+  <div id="flow-container">
+    <div id="flow-steps" class="flow-steps"></div>
+    <div id="flow-outputs" class="flow-outputs"></div>
+  </div>
+  <div id="detail-panel" class="detail-panel">
+    <button id="detail-close">&times;</button>
+    <div class="detail-content">
+      <div class="detail-info">
+        <h3 id="detail-title"></h3>
+        <p id="detail-desc"></p>
+        <div id="detail-tags" class="detail-tags"></div>
+      </div>
+      <div id="detail-mockup" class="detail-mockup" style="display:none"></div>
+    </div>
+  </div>
+</section>
+
+<!-- How It Works -->
+<section id="how-it-works">
+  <div class="section-header">
+    <h2>How It Works</h2>
+    <p>Download the app. Order the parts. Follow the guide. Your boat is connected.</p>
+  </div>
+
+  <!-- 4-config tabs -->
+  <div class="config-tabs">
+    <button class="config-tab-btn active" onclick="switchConfig('charter')">Charter Fleet</button>
+    <button class="config-tab-btn" onclick="switchConfig('private')">Private Yacht</button>
+    <button class="config-tab-btn" onclick="switchConfig('delivery')">Delivery Captain</button>
+    <button class="config-tab-btn" onclick="switchConfig('diagnostic')">Diagnostic Scanner</button>
+  </div>
+
+  <!-- Charter Fleet -->
+  <div class="config-panel active" id="config-charter">
+    <div class="hw-flow-diagram">
+      <div class="hw-flow-row">
+        <div class="hw-flow-box accent-green">
+          <div class="hw-flow-icon">⛵</div>
+          <div class="hw-flow-label">Commander</div>
+          <div class="hw-flow-sub">Monitors every system on board</div>
+        </div>
+        <div class="hw-flow-connector">WiFi &rarr;</div>
+        <div class="hw-flow-box accent-purple">
+          <div class="hw-flow-icon">☁️</div>
+          <div class="hw-flow-label">Master Cloud</div>
+          <div class="hw-flow-sub">AI analysis &middot; fleet intelligence</div>
+        </div>
+        <div class="hw-flow-connector">&rarr;</div>
+        <div class="hw-flow-box accent-cyan">
+          <div class="hw-flow-icon">📊</div>
+          <div class="hw-flow-label">Fleet Dashboard</div>
+          <div class="hw-flow-sub">All boats &middot; one screen</div>
+        </div>
+        <div class="hw-flow-connector">&rarr;</div>
+        <div class="hw-flow-box accent-orange">
+          <div class="hw-flow-icon">👤</div>
+          <div class="hw-flow-label">Charter Operator</div>
+          <div class="hw-flow-sub">Web &middot; WhatsApp &middot; App</div>
+        </div>
+      </div>
+    </div>
+    <p class="config-desc">Commander monitors every boat in your fleet. You see all of them on one dashboard, get WhatsApp alerts, and manage turnarounds from anywhere. $499/yr per boat.</p>
+  </div>
+
+  <!-- Private Yacht -->
+  <div class="config-panel" id="config-private">
+    <div class="hw-flow-diagram">
+      <div class="hw-flow-row">
+        <div class="hw-flow-box accent-green">
+          <div class="hw-flow-icon">⛵</div>
+          <div class="hw-flow-label">Commander</div>
+          <div class="hw-flow-sub">On-board AI &middot; works offline</div>
+        </div>
+        <div class="hw-flow-connector">WiFi &rarr;</div>
+        <div class="hw-flow-box accent-cyan">
+          <div class="hw-flow-icon">📱</div>
+          <div class="hw-flow-label">Commander App</div>
+          <div class="hw-flow-sub">Full dashboard on your phone</div>
+        </div>
+        <div class="hw-flow-connector">&rarr;</div>
+        <div class="hw-flow-box accent-orange">
+          <div class="hw-flow-icon">👤</div>
+          <div class="hw-flow-label">Owner</div>
+          <div class="hw-flow-sub">On board &middot; no internet needed</div>
+        </div>
+      </div>
+    </div>
+    <p class="config-desc">Everything runs locally on your boat. Open the Commander App over WiFi &mdash; no internet, no subscription, no cloud required. Optional cloud sync when you want remote access.</p>
+  </div>
+
+  <!-- Delivery Captain -->
+  <div class="config-panel" id="config-delivery">
+    <div class="hw-flow-diagram">
+      <div class="hw-flow-row">
+        <div class="hw-flow-box accent-green">
+          <div class="hw-flow-icon">⛵</div>
+          <div class="hw-flow-label">Commander</div>
+          <div class="hw-flow-sub">Plugs into any boat in 60 seconds</div>
+        </div>
+        <div class="hw-flow-connector">&rarr;</div>
+        <div class="hw-flow-box accent-cyan">
+          <div class="hw-flow-icon">📱</div>
+          <div class="hw-flow-label">Commander App</div>
+          <div class="hw-flow-sub">Captain &middot; on board</div>
+        </div>
+        <div class="hw-flow-connector">internet &rarr;</div>
+        <div class="hw-flow-box accent-purple">
+          <div class="hw-flow-icon">☁️</div>
+          <div class="hw-flow-label">Master Cloud</div>
+          <div class="hw-flow-sub">Live tracking &middot; alerts</div>
+        </div>
+        <div class="hw-flow-connector">&rarr;</div>
+        <div class="hw-flow-box accent-orange">
+          <div class="hw-flow-icon">👤</div>
+          <div class="hw-flow-label">Owner</div>
+          <div class="hw-flow-sub">WhatsApp &middot; Dashboard</div>
+        </div>
+      </div>
+    </div>
+    <p class="config-desc">Captain plugs it in and uses the Commander App on board. Owner gets live WhatsApp updates from anywhere. Moves between boats &mdash; no reconfiguration. ~$335 hardware.</p>
+  </div>
+
+  <!-- Diagnostic Scanner -->
+  <div class="config-panel" id="config-diagnostic">
+    <div class="hw-flow-diagram">
+      <div class="hw-flow-row">
+        <div class="hw-flow-box accent-green">
+          <div class="hw-flow-icon">🔍</div>
+          <div class="hw-flow-label">Scanner</div>
+          <div class="hw-flow-sub">Plugs in &middot; scans 24&ndash;48h</div>
+        </div>
+        <div class="hw-flow-connector">upload &rarr;</div>
+        <div class="hw-flow-box accent-purple">
+          <div class="hw-flow-icon">☁️</div>
+          <div class="hw-flow-label">Master Cloud</div>
+          <div class="hw-flow-sub">AI analysis &middot; report generation</div>
+        </div>
+        <div class="hw-flow-connector">&rarr;</div>
+        <div class="hw-flow-box accent-cyan">
+          <div class="hw-flow-icon">📋</div>
+          <div class="hw-flow-label">Service Portal</div>
+          <div class="hw-flow-sub">Diagnostic report &middot; network map</div>
+        </div>
+        <div class="hw-flow-connector">&rarr;</div>
+        <div class="hw-flow-box accent-orange">
+          <div class="hw-flow-icon">👤</div>
+          <div class="hw-flow-label">Marine Tech</div>
+          <div class="hw-flow-sub">Share with boat owner</div>
+        </div>
+      </div>
+    </div>
+    <p class="config-desc">Plug the scanner in for 24&ndash;48 hours. It uploads to the cloud, generates a full diagnostic report, and you share it with the boat owner. $75/scan or $149/mo unlimited.</p>
+  </div>
+
+  <div class="puck-layout">
+    <div class="puck-kit">
+      <h3>What You'll Need</h3>
+      <ul>
+        <li>Actisense NGX-1 (NMEA 2000 USB) <span>~$200</span></li>
+        <li>Raspberry Pi 5 Model B (4GB) in waterproof case <span>~$80</span></li>
+        <li>NMEA 2000 T-connector + 1m drop cable <span>~$30</span></li>
+        <li>USB-C power adapter (12V DC or AC outlet) <span>~$15</span></li>
+        <li>microSD card (32GB+) <span>~$10</span></li>
+      </ul>
+      <p class="puck-total">Total hardware: ~$335</p>
+    </div>
+
+    <div class="puck-setup" style="flex:1">
+      <div class="setup-tabs">
+        <button class="setup-tab-btn active" onclick="switchSetup('first')">Raspberry Pi Setup</button>
+        <button class="setup-tab-btn" onclick="switchSetup('mac')">Mac Mini M4 Setup</button>
+        <button class="setup-tab-btn" onclick="switchSetup('newboat')">New Boat &mdash; 60 Seconds</button>
+      </div>
+
+      <div class="setup-panel active" id="setup-first">
+        <div class="puck-steps">
+          <div class="puck-step">
+            <span>1</span>
+            <p><strong>Download Commander OS</strong> &mdash; From the Commander App, tap "New Unit" and download the disk image (~2 GB)</p>
+          </div>
+          <div class="puck-step">
+            <span>2</span>
+            <p><strong>Flash the SD Card</strong> &mdash; Insert your microSD card, open <a href="https://www.raspberrypi.com/software/" target="_blank" style="color:var(--accent)">Raspberry Pi Imager</a>, select the Commander OS image, and click Write. Takes about 5 minutes.</p>
+          </div>
+          <div class="puck-step">
+            <span>3</span>
+            <p><strong>Assemble &amp; Power On</strong> &mdash; Insert the SD card into your Pi, connect the Actisense via USB, and plug into power. The Pi boots and broadcasts a setup hotspot.</p>
+          </div>
+          <div class="puck-step">
+            <span>4</span>
+            <p><strong>Pair with the App</strong> &mdash; Connect your phone to the setup hotspot, scan the QR code, and enter your boat's WiFi or Starlink credentials. Commander links to your account and the VPN tunnel activates.</p>
+          </div>
+          <div class="puck-step">
+            <span>5</span>
+            <p><strong>Plug into the Backbone</strong> &mdash; Connect the Actisense to any open NMEA 2000 T-connector. Auto-Discovery finds every sensor on the bus. Name your boat &mdash; you're live.</p>
+          </div>
+        </div>
+        <p class="puck-note">One-time setup takes about 15 minutes. The app guides you through every step with pictures. No terminal commands, no configuration files.</p>
+      </div>
+
+      <div class="setup-panel" id="setup-mac">
+        <div class="puck-steps">
+          <div class="puck-step">
+            <span>1</span>
+            <p><strong>Download the App &amp; Create Your Account</strong> &mdash; Get the Commander app on your phone. Sign up, choose Private Yacht, and the app generates your hardware list: Mac Mini M4 and Actisense NGX-1. Optional: PoE cameras for AI Vision. ~$800 total.</p>
+          </div>
+          <div class="puck-step">
+            <span>2</span>
+            <p><strong>Restore the Disk Image</strong> &mdash; Download the pre-configured disk image from the app. Restore it to the Mac Mini using Apple Configurator or Disk Utility. Qwen 14B AI model, SignalK, Commander, and AI Vision are all pre-loaded &mdash; ready to boot.</p>
+          </div>
+          <div class="puck-step">
+            <span>3</span>
+            <p><strong>Connect &amp; Pair</strong> &mdash; Plug the Actisense into your NMEA 2000 backbone. Connect PoE cameras if you have them. Power on the Mac Mini. Open Commander App on your phone over the boat's WiFi &mdash; scan the QR code to pair. No internet needed.</p>
+          </div>
+          <div class="puck-step">
+            <span>4</span>
+            <p><strong>Auto-Discovery &amp; Two Ways to Connect</strong> &mdash; Commander maps every sensor and starts AI processing locally. <strong>On board:</strong> real-time gauges, alerts, and camera feeds over WiFi &mdash; no internet needed. <strong>Remote (optional):</strong> add Starlink or WiFi for WhatsApp alerts from anywhere and cloud analytics.</p>
+          </div>
+        </div>
+        <p class="puck-note">Everything runs locally on the Mac Mini. No cloud required for on-board use. Add internet when you want remote access.</p>
+      </div>
+
+      <div class="setup-panel" id="setup-newboat">
+        <div class="puck-steps">
+          <div class="puck-step">
+            <span>1</span>
+            <p>Unplug the unit from the previous boat and bring it aboard</p>
+          </div>
+          <div class="puck-step">
+            <span>2</span>
+            <p>Plug the NMEA 2000 cable into any open T-connector on the backbone</p>
+          </div>
+          <div class="puck-step">
+            <span>3</span>
+            <p>Plug the USB-C power into any 12V outlet or AC socket</p>
+          </div>
+          <div class="puck-step">
+            <span>4</span>
+            <p>Wait for the green light (60 seconds) &mdash; open the Commander App, the new boat appears automatically</p>
+          </div>
+        </div>
+        <p class="puck-note">No reconfiguration needed. The unit remembers your account, connects to any available internet source &mdash; Starlink, marina WiFi, or hotspot &mdash; and starts reporting via VPN tunnel.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="puck-chain">
+    <h3>How It Works for the Owner</h3>
+    <div class="chain-flow">
+      <div class="chain-node"><span class="chain-icon">&#x26F5;</span><span class="chain-label">Commander</span></div>
+      <span class="chain-arrow">&rarr;</span>
+      <div class="chain-node"><span class="chain-icon">&#x2601;&#xFE0F;</span><span class="chain-label">Master Cloud</span></div>
+      <span class="chain-arrow">&rarr;</span>
+      <div class="chain-node"><span class="chain-icon">&#x1F4AC;</span><span class="chain-label">WhatsApp</span></div>
+      <span class="chain-arrow">+</span>
+      <div class="chain-node"><span class="chain-icon">&#x1F4F1;</span><span class="chain-label">App</span></div>
+      <span class="chain-arrow">+</span>
+      <div class="chain-node"><span class="chain-icon">&#x1F4CA;</span><span class="chain-label">Dashboard</span></div>
+    </div>
+  </div>
+
+  <div class="puck-uses">
+    <div class="puck-use">
+      <div class="puck-use-icon">&#x1F6A2;</div>
+      <h4>Delivery Monitoring</h4>
+      <p>Owner tracks their boat in real-time during delivery passages. Position, engine health, fuel, ETA &mdash; all via WhatsApp. Captain plugs it in, owner gets updates. No crew involvement needed.</p>
+    </div>
+    <div class="puck-use">
+      <div class="puck-use-icon">&#x2693;</div>
+      <h4>Marina Management</h4>
+      <p>Deploy pucks across slips to monitor every vessel. Shore power status, bilge activity, battery health, security alerts. Automate dock walks and catch problems before owners call.</p>
+    </div>
+    <div class="puck-use">
+      <div class="puck-use-icon">&#x2744;&#xFE0F;</div>
+      <h4>Seasonal Storage</h4>
+      <p>Leave the puck plugged in while your boat sits on the hard or at a winter slip. Battery, bilge, and temperature alerts via cellular &mdash; even 1,000 miles away.</p>
+    </div>
+  </div>
+</section>
+
+<!-- Commander Diagnostic -->
+<section id="diagnostics">
+  <div class="section-header">
+    <h2>Commander Diagnostic</h2>
+    <p>Portable diagnostic scanning for marine professionals. Plug into any boat, scan for 24&ndash;48 hours, deliver a comprehensive report.</p>
+  </div>
+
+  <!-- Diagnostic flow — user-facing -->
+  <div class="hw-flow-diagram">
+    <div class="hw-flow-row">
+      <div class="hw-flow-box accent-green">
+        <div class="hw-flow-icon">🔍</div>
+        <div class="hw-flow-label">Plug In Scanner</div>
+        <div class="hw-flow-sub">Any boat &middot; 60 seconds</div>
+      </div>
+      <div class="hw-flow-connector">24&ndash;48h &rarr;</div>
+      <div class="hw-flow-box accent-purple">
+        <div class="hw-flow-icon">☁️</div>
+        <div class="hw-flow-label">AI Analysis</div>
+        <div class="hw-flow-sub">Deep patterns &middot; anomalies</div>
+      </div>
+      <div class="hw-flow-connector">&rarr;</div>
+      <div class="hw-flow-box accent-cyan">
+        <div class="hw-flow-icon">📋</div>
+        <div class="hw-flow-label">Diagnostic Report</div>
+        <div class="hw-flow-sub">Network map &middot; benchmarks</div>
+      </div>
+      <div class="hw-flow-connector">&rarr;</div>
+      <div class="hw-flow-box accent-orange">
+        <div class="hw-flow-icon">👤</div>
+        <div class="hw-flow-label">Share with Owner</div>
+        <div class="hw-flow-sub">PDF &middot; Service Portal</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="diag-layout">
+    <div class="diag-steps">
+      <h3>How It Works</h3>
+      <div class="diag-step">
+        <span>1</span>
+        <p><strong>Plug In</strong> &mdash; Connect the Diagnostic Scanner to any open T-connector on the boat's NMEA 2000 backbone. Same 60-second setup as the Delivery Captain.</p>
+      </div>
+      <div class="diag-step">
+        <span>2</span>
+        <p><strong>Scan 24&ndash;48h</strong> &mdash; The scanner runs Auto-Discovery, then deep analysis. It captures full operating patterns &mdash; charging cycles, parasitic draw, intermittent faults, and usage data a short test would miss.</p>
+      </div>
+      <div class="diag-step">
+        <span>3</span>
+        <p><strong>Get Report</strong> &mdash; Data uploads to Master Cloud. You receive a comprehensive diagnostic report on the Service Portal &mdash; network map, anomaly flags, benchmarks, and maintenance recommendations.</p>
+      </div>
+    </div>
+
+    <div class="diag-report">
+      <h3>What You Get</h3>
+      <ul>
+        <li><strong>Network topology map</strong> &mdash; every device on the backbone, what's connected, what's missing, address conflicts</li>
+        <li><strong>Battery health &amp; charging patterns</strong> &mdash; state of health, parasitic draw, charging efficiency, depth of discharge cycles</li>
+        <li><strong>Engine hours, error codes, maintenance flags</strong> &mdash; coolant trends, oil pressure patterns, alternator output analysis</li>
+        <li><strong>Sensor anomaly detection</strong> &mdash; out-of-spec readings, intermittent connections, phantom sensors, data gaps</li>
+        <li><strong>Comparison benchmarks</strong> &mdash; how this boat compares to others in its class for battery, fuel, engine, and overall system health</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="diag-uses">
+    <div class="diag-use">
+      <div class="diag-use-icon">&#x1F527;</div>
+      <h4>Pre-Service Diagnostics</h4>
+      <p>Drop the scanner on the boat before you visit. Know exactly what's wrong, what tools and parts to bring, and show up prepared. No more wasted trips.</p>
+    </div>
+    <div class="diag-use">
+      <div class="diag-use-icon">&#x1F4CA;</div>
+      <h4>Annual Health Check</h4>
+      <p>Offer boat owners an annual "heartbeat" scan. 48 hours of continuous monitoring reveals trends, degradation, and maintenance items they can't see on a sea trial.</p>
+    </div>
+    <div class="diag-use">
+      <div class="diag-use-icon">&#x1F4C4;</div>
+      <h4>Insurance Surveys</h4>
+      <p>Verified monitoring data for marine underwriting. Continuous sensor logs, network health, and system benchmarks &mdash; professional documentation, not estimates.</p>
+    </div>
+    <div class="diag-use">
+      <div class="diag-use-icon">&#x1F9ED;</div>
+      <h4>Marine Surveys</h4>
+      <p>Surveyors plug in the scanner during pre-purchase or condition inspections. 48 hours of continuous data backs up the visual survey with verified sensor readings, engine analysis, and electrical system health &mdash; turning a subjective report into an evidence-based assessment.</p>
+    </div>
+  </div>
+</section>
+
+<!-- Also Built For -->
+<section id="also-built-for">
+  <div class="section-header">
+    <h2>Also Built For</h2>
+    <p>Commander adapts to specialized marine operations.</p>
+  </div>
+  <div class="ribbon-grid">
+    <div class="ribbon-card">
+      <div class="ribbon-icon">&#x1F4C4;</div>
+      <h4>Marine Insurance</h4>
+      <div class="ribbon-count">4 USE CASES</div>
+      <p>Verified monitoring data for claims. Continuous engine logs, GPS tracks, and maintenance records reduce risk profiles.</p>
+    </div>
+    <div class="ribbon-card" style="cursor:pointer" onclick="document.querySelector('.tab-btn[data-tab=&quot;marinepros&quot;]').click(); document.getElementById('solutions').scrollIntoView({behavior:'smooth'})">
+      <div class="ribbon-icon">&#x1F527;</div>
+      <h4>Marine Professionals</h4>
+      <div class="ribbon-count">14 USE CASES</div>
+      <p>Portable diagnostic scanning for marine technicians. Plug into any boat, scan 24&ndash;48h, deliver a professional report via the Service Portal.</p>
+    </div>
+  </div>
+</section>
+
+<!-- Hardware Comparison -->
+<section id="hardware">
+  <div class="section-header">
+    <h2>Choose Your Hardware</h2>
+    <p>Four Commander Unit options &mdash; matched to how you use your boat.</p>
+  </div>
+  <div class="config-tabs" id="hw-tabs">
+    <button class="config-tab-btn active" onclick="switchHW('charter')">Charter Fleet</button>
+    <button class="config-tab-btn" onclick="switchHW('private')">Private Yacht</button>
+    <button class="config-tab-btn" onclick="switchHW('delivery')">Delivery Captain</button>
+    <button class="config-tab-btn" onclick="switchHW('diag')">Diagnostic Scanner</button>
+  </div>
+
+  <div class="hw-tab-panel active" id="hw-charter">
+    <div class="hw-card" style="max-width:600px;margin:0 auto">
+      <span class="hw-badge">Charter Fleets</span>
+      <h3>Raspberry Pi</h3>
+      <p class="hw-desc">You source the hardware, we provide the software. Download the Commander OS image, flash to SD card, plug in. Cloud AI processing via internet.</p>
+      <ul>
+        <li>Downloadable OS image &mdash; flash &amp; boot</li>
+        <li>You buy: Pi 5 + Actisense NGX-1 (~$335)</li>
+        <li>Auto-discovers your boat on first boot</li>
+        <li>Low power draw (5W) &mdash; always on</li>
+        <li>Secure VPN tunnel to Master Cloud</li>
+        <li>OTA updates &amp; remote management</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="hw-tab-panel" id="hw-delivery">
+    <div class="hw-card" style="max-width:600px;margin:0 auto">
+      <span class="hw-badge">Delivery &amp; Marinas</span>
+      <h3>The Pulse</h3>
+      <p class="hw-desc">Plug-and-play monitoring. Internet required &mdash; Starlink, marina WiFi, or hotspot. Ideal for deliveries, marinas, and seasonal storage.</p>
+      <ul>
+        <li>Raspberry Pi 5 + Actisense NGX-1</li>
+        <li>Internet required (Starlink, WiFi, hotspot)</li>
+        <li>Pre-provisioned VPN Tunnel</li>
+        <li>60-second setup &mdash; plug in and go</li>
+        <li>Store &amp; forward when offline</li>
+        <li>~$335 hardware</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="hw-tab-panel" id="hw-private">
+    <div class="hw-card" style="max-width:600px;margin:0 auto">
+      <span class="hw-badge">Private Yachts</span>
+      <h3>Mac Mini M4</h3>
+      <p class="hw-desc">You buy the Mac Mini, we provide a pre-configured disk image with Qwen 14B AI model, SignalK, and Commander &mdash; ready to boot.</p>
+      <ul>
+        <li>Pre-built disk image with LLM included</li>
+        <li>You buy: Mac Mini M4 + Actisense (~$800)</li>
+        <li>Qwen 14B runs locally &mdash; fully offline</li>
+        <li>AI Vision for cameras &amp; FLIR</li>
+        <li>Auto-discovers your boat on first boot</li>
+        <li>Optional Master Cloud subscription</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="hw-tab-panel" id="hw-diag">
+    <div class="hw-card" style="max-width:600px;margin:0 auto">
+      <span class="hw-badge" style="background:rgba(245,158,11,0.1);border-color:rgba(245,158,11,0.2);color:var(--orange)">Marine Professionals</span>
+      <h3>Diagnostic Scanner</h3>
+      <p class="hw-desc">Same hardware as the Delivery Captain, configured for portable diagnostic scans. Moves between boats &mdash; plug in, scan, retrieve.</p>
+      <ul>
+        <li>Raspberry Pi 5 + Actisense NGX-1</li>
+        <li>Portable &mdash; moves between boats</li>
+        <li>24&ndash;48 hour deep analysis scans</li>
+        <li>Internet required for report upload</li>
+        <li>Service Portal for diagnostic reports</li>
+        <li>Per-scan or subscription pricing</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Add-On Module -->
+  <div class="addon-card">
+    <div class="addon-header">
+      <span class="hw-badge" style="background:rgba(14,165,233,0.1);border-color:rgba(14,165,233,0.2);color:var(--cyan)">Add-On Module</span>
+      <h3>Marine Camera System</h3>
+      <p class="hw-desc">Marine-grade PoE cameras with two-way communication, night vision, and AI-powered monitoring. Works with Mac Mini M4 &mdash; all video processing happens on board.</p>
+    </div>
+    <div class="addon-grid">
+      <div class="addon-feature">
+        <div class="uc-icon">&#x1F4F7;</div>
+        <h4>PoE Cameras</h4>
+        <p>Marine-grade IP cameras powered over ethernet. One cable for power and data. Mount anywhere on deck, salon, or engine room.</p>
+      </div>
+      <div class="addon-feature">
+        <div class="uc-icon">&#x1F50A;</div>
+        <h4>Two-Way Audio</h4>
+        <p>Built-in speaker and microphone on each camera. Talk to crew, guests, or dock hands remotely from your phone.</p>
+      </div>
+      <div class="addon-feature">
+        <div class="uc-icon">&#x1F319;</div>
+        <h4>Night Vision</h4>
+        <p>IR and color night vision for 24/7 monitoring. AI detects motion, people, and anomalies &mdash; processed locally on the Mac Mini.</p>
+      </div>
+      <div class="addon-feature">
+        <div class="uc-icon">&#x1F4BE;</div>
+        <h4>Local Storage</h4>
+        <p>Video recorded to NVMe SSD connected to the Mac Mini. Weeks of continuous footage stored on board &mdash; no cloud fees, no bandwidth limits.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Pricing -->
+<section id="pricing">
+  <div class="section-header">
+    <h2>Pricing</h2>
+    <p>Simple, transparent pricing. No hidden fees.</p>
+  </div>
+  <div class="config-tabs" id="price-tabs">
+    <button class="config-tab-btn active" onclick="switchPrice('charter')">Charter Fleet</button>
+    <button class="config-tab-btn" onclick="switchPrice('private')">Private Yacht</button>
+    <button class="config-tab-btn" onclick="switchPrice('delivery')">Delivery Captain</button>
+    <button class="config-tab-btn" onclick="switchPrice('diag')">Diagnostic Scanner</button>
+  </div>
+
+  <div class="price-tab-panel active" id="price-charter">
+    <div class="price-card" style="max-width:600px;margin:0 auto">
+      <span class="price-badge">Most Popular</span>
+      <h3>Charter Fleet</h3>
+      <div class="price-amount">Custom <span class="price-period">per fleet</span></div>
+      <p class="price-desc">Software subscription. You source the hardware, we provide the Commander OS image and cloud platform.</p>
+      <ul>
+        <li>Downloadable Commander OS image</li>
+        <li>You buy hardware (~$335/boat)</li>
+        <li>Master Cloud &mdash; fleet dashboard</li>
+        <li>WhatsApp alerts &amp; guest self-service</li>
+        <li>OTA updates &amp; remote management</li>
+        <li>Cross-fleet analytics</li>
+        <li>Maintenance scheduling</li>
+        <li>Compliance reporting</li>
+        <li>BigBlue &mdash; shared intelligence</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="price-tab-panel" id="price-delivery">
+    <div class="price-card" style="max-width:600px;margin:0 auto">
+      <span class="price-badge">Plug &amp; Play</span>
+      <h3>Delivery Captain</h3>
+      <div class="price-amount">$50 <span class="price-period">/ boat</span></div>
+      <p class="price-desc">~$335 one-time hardware + $50 per boat monitored. For deliveries, marina monitoring, or seasonal storage.</p>
+      <ul>
+        <li>You buy hardware (~$335 one-time)</li>
+        <li>$50 per boat monitoring fee</li>
+        <li>Internet required (Starlink, WiFi, hotspot)</li>
+        <li>VPN Tunnel &mdash; phones home automatically</li>
+        <li>Master Cloud dashboard included</li>
+        <li>WhatsApp updates to owner</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="price-tab-panel" id="price-private">
+    <div class="price-card" style="max-width:600px;margin:0 auto">
+      <span class="price-badge">Flexible</span>
+      <h3>Private Yacht</h3>
+      <div class="price-amount">$250 <span class="price-period">/ year</span></div>
+      <p class="price-desc">~$800 one-time hardware + $250/yr software subscription. You buy the Mac Mini, we provide the disk image with AI pre-loaded.</p>
+      <ul>
+        <li>You buy hardware (~$800 one-time)</li>
+        <li>Pre-built disk image with Qwen 14B</li>
+        <li>Local AI &mdash; works fully offline</li>
+        <li>Commander App for on-board access</li>
+        <li>WhatsApp alerts included</li>
+        <li>Optional Master Cloud add-on</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="price-tab-panel" id="price-diag">
+    <div class="price-card" style="max-width:600px;margin:0 auto">
+      <span class="price-badge" style="background:rgba(245,158,11,0.1);border-color:rgba(245,158,11,0.2);color:var(--orange)">Per Scan</span>
+      <h3>Commander Diagnostic</h3>
+      <div class="price-amount">$75 <span class="price-period">/ scan</span></div>
+      <p class="price-desc">Per-scan fee &mdash; pass the cost to the boat owner. Or go unlimited.</p>
+      <ul>
+        <li>Comprehensive diagnostic report</li>
+        <li>Network topology map</li>
+        <li>Anomaly flags &amp; maintenance items</li>
+        <li>Comparison benchmarks vs. boat class</li>
+        <li>Dedicated Service Portal</li>
+        <li>Share reports with boat owners</li>
+        <li>Alt: $149/mo unlimited scans</li>
+      </ul>
+    </div>
+  </div>
+  <div class="pricing-cta-row">
+    <button class="cta-btn" onclick="document.getElementById('chat-toggle').click()">Chat with Overlord Live</button>
+    <a href="https://wa.me/13055601031?text=Hi%2C%20I'm%20interested%20in%20Master%26Commander" class="cta-btn secondary" target="_blank">Contact Us on WhatsApp</a>
+  </div>
+</section>
+
+<!-- Features -->
+<section id="features">
+  <div class="section-header">
+    <h2>Features</h2>
+    <p>Everything you need to monitor your boat from anywhere.</p>
+  </div>
+  <div class="features">
+    <div class="feature">
+      <div class="feature-icon">&#x1F50D;</div>
+      <h3>Auto-Discovery</h3>
+      <p>Commander scans your NMEA 2000 network and learns what sensors YOUR boat has. No configuration files, no device lists. Adapts to any vessel automatically.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">&#x1F4F1;</div>
+      <h3>Commander App</h3>
+      <p>Native app for iOS and Android. On board: connects directly via boat WiFi or Bluetooth &mdash; no internet required. Real-time gauges, alerts, camera feeds, and full command interface.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">&#x1F6A8;</div>
+      <h3>Smart Alerts</h3>
+      <p>Rule-based alert engine &mdash; no AI, no hallucinations. Pure code monitoring thresholds 24/7. Battery, engines, bilge, anchor, depth, tanks.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">&#x26A1;</div>
+      <h3>Quick Commands</h3>
+      <p>Instant responses for status, engines, battery, tanks, wind, anchor, and position. Pre-built templates, no AI latency.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">&#x1F9E0;</div>
+      <h3>AI Brain</h3>
+      <p>Charter fleets use cloud AI via Master. Private yachts run Qwen 14B locally on Mac Mini M4 &mdash; fully offline. Ask about your boat in plain English.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">&#x1F4F6;</div>
+      <h3>Offline-First</h3>
+      <p>Private yacht Commanders work with zero internet. Charter units need connectivity for cloud AI. Core monitoring and alerts always run locally.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">&#x2693;</div>
+      <h3>Anchor Watch</h3>
+      <p>Set your swing radius and Commander monitors GPS drift continuously. If your anchor drags, you know immediately via WhatsApp.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">&#x1F4F7;</div>
+      <h3>Cameras &amp; FLIR</h3>
+      <p>Security cameras, FLIR thermal imaging, and night vision. Monitor your vessel visually &mdash; on board or remotely. AI vision detects intrusions and thermal anomalies.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">&#x1F310;</div>
+      <h3>BigBlue</h3>
+      <p>Every connected boat feeds the network. Crowdsourced wind, depth, anchorage intel, hazard alerts, and real-time passage conditions &mdash; shared across the fleet.</p>
+    </div>
+  </div>
+</section>
+
+<!-- BigBlue -->
+<section id="fleetmind">
+  <div class="section-header">
+    <h2>BigBlue</h2>
+    <p>Every Commander is a sensor. Master connects them into a shared intelligence network.</p>
+  </div>
+
+  <div class="fleetmind-hero">
+    <h3>Your Yacht is one data point in a <span>world of sailors.</span></h3>
+    <p>Every boat pushes real-time telemetry to Master &mdash; position, wind, depth, barometric pressure, sea state. BigBlue aggregates this data and pushes relevant insights back to every vessel in the network. No extra hardware. Pure cloud logic.</p>
+  </div>
+
+  <div class="fleetmind-grid">
+    <div class="fm-card">
+      <div class="fm-icon">&#x1F32C;&#xFE0F;</div>
+      <h4>Live Wind Field</h4>
+      <p>20 boats spread across the cruising ground, all reporting wind. BigBlue builds a real-time wind map &mdash; not forecast, actual measured conditions. "15kt gusts reported by 3 boats in the channel."</p>
+    </div>
+    <div class="fm-card">
+      <div class="fm-icon">&#x1F30A;</div>
+      <h4>Crowdsourced Depth</h4>
+      <p>Every boat with a depth sounder is ground-truthing the chart. BigBlue aggregates depth readings + GPS into a live depth overlay. "Boat ahead of you just measured 4ft in that channel."</p>
+    </div>
+    <div class="fm-card">
+      <div class="fm-icon">&#x2693;</div>
+      <h4>Anchorage Intel</h4>
+      <p>"5 boats currently at The Bight &mdash; average depth 22ft, wind 8kt east, all holding well." Charterers approaching an anchorage get real intel from boats already there.</p>
+    </div>
+    <div class="fm-card">
+      <div class="fm-icon">&#x1F6A2;</div>
+      <h4>Passage Conditions</h4>
+      <p>A boat that just crossed a stretch reports sea state, current, and wind. The next boat heading that way gets a real-time heads-up &mdash; not a 6-hour-old forecast.</p>
+    </div>
+    <div class="fm-card">
+      <div class="fm-icon">&#x26A0;&#xFE0F;</div>
+      <h4>Hazard Broadcasts</h4>
+      <p>One boat finds an uncharted obstruction, lobster pots, or debris. BigBlue broadcasts to all boats in the area automatically.</p>
+    </div>
+    <div class="fm-card">
+      <div class="fm-icon">&#x1F326;&#xFE0F;</div>
+      <h4>Weather Alerts</h4>
+      <p>Master cross-references fleet positions against incoming weather cells. Boats in the path get proactive alerts &mdash; "Squall line approaching your position in 45 minutes."</p>
+    </div>
+  </div>
+
+  <p class="fleetmind-note">BigBlue is included with all Master Cloud plans. Every connected boat makes the network smarter. Data is anonymized and opt-in.</p>
+</section>
+
+<!-- Alerts -->
+<section id="alerts">
+  <div class="section-header">
+    <h2>Automatic Alerts</h2>
+    <p>Alerts fire automatically via WhatsApp. No need to ask. All thresholds are configurable.</p>
+  </div>
+  <div class="table-wrap">
+    <table class="alerts-table">
+      <thead>
+        <tr>
+          <th></th>
+          <th>Alert</th>
+          <th>Trigger</th>
+          <th>Requires</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="alert-icon">&#x1F50B;</td>
+          <td>Battery Low</td>
+          <td>SOC &lt; <code>20%</code></td>
+          <td>Battery monitor</td>
+        </tr>
+        <tr>
+          <td class="alert-icon">&#x1F50B;</td>
+          <td>Battery Critical</td>
+          <td>SOC &lt; <code>10%</code></td>
+          <td>Battery monitor</td>
+        </tr>
+        <tr>
+          <td class="alert-icon">&#x1F321;&#xFE0F;</td>
+          <td>Engine Overheat</td>
+          <td>Coolant &gt; <code>95&#176;C</code></td>
+          <td>Engine sensors</td>
+        </tr>
+        <tr>
+          <td class="alert-icon">&#x1F6E2;&#xFE0F;</td>
+          <td>Low Oil Pressure</td>
+          <td>&lt; <code>25 PSI</code> while running</td>
+          <td>Engine sensors</td>
+        </tr>
+        <tr>
+          <td class="alert-icon">&#x1F6B0;</td>
+          <td>Bilge Pump</td>
+          <td>&gt; <code>6 cycles</code> in 30 min</td>
+          <td>Bilge pump counter</td>
+        </tr>
+        <tr>
+          <td class="alert-icon">&#x2693;</td>
+          <td>Anchor Drag</td>
+          <td>GPS drift &gt; <code>set radius</code></td>
+          <td>GPS + anchor watch</td>
+        </tr>
+        <tr>
+          <td class="alert-icon">&#x1F30A;</td>
+          <td>Shallow Water</td>
+          <td>Depth &lt; <code>configured min</code></td>
+          <td>Depth sounder</td>
+        </tr>
+        <tr>
+          <td class="alert-icon">&#x26FD;</td>
+          <td>Low Fuel</td>
+          <td>&lt; <code>15%</code></td>
+          <td>Tank sensors</td>
+        </tr>
+        <tr>
+          <td class="alert-icon">&#x1F4A7;</td>
+          <td>Low Water</td>
+          <td>&lt; <code>15%</code></td>
+          <td>Tank sensors</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- WhatsApp Demo -->
+<section id="demo">
+  <div class="section-header">
+    <h2>WhatsApp Demo</h2>
+    <p>This is what it looks like. Real commands, real responses.</p>
+  </div>
+  <div class="wa-demo">
+    <div class="wa-header">
+      <div class="wa-avatar">&#x2693;</div>
+      <div>
+        <div class="wa-name">Commander</div>
+        <div class="wa-status">online</div>
+      </div>
+      <button class="wa-scenario-btn" id="demo-scenario-btn" onclick="demoScenario()" title="Watch a live scenario">&#x25B6; Watch Demo</button>
+      <a class="wa-clear" onclick="demoClear()" title="Reset chat">&#x21bb;</a>
+    </div>
+    <div class="wa-chat" id="demo-chat">
+      <div class="wa-msg recv">&#x2693; Welcome aboard! I'm Commander &mdash; your AI boat monitor. Ask me anything about your vessel, or try the buttons below.<span class="time" id="demo-welcome-time"></span></div>
+    </div>
+    <div class="wa-typing" id="demo-typing">Commander is typing<span class="typing-dots"></span></div>
+    <div class="wa-quick-replies" id="demo-pills">
+      <button onclick="demoSend('status')">status</button>
+      <button onclick="demoSend('anchor')">anchor</button>
+      <button onclick="demoSend('engines')">engines</button>
+      <button onclick="demoSend('batteries')">batteries</button>
+      <button onclick="demoSend('weather')">weather</button>
+      <button onclick="demoSend('alerts')">alerts</button>
+    </div>
+    <div class="wa-input-bar">
+      <input type="text" id="demo-input" placeholder="Ask anything... &quot;how's the boat?&quot;" onkeydown="if(event.key==='Enter')demoSendInput()">
+      <button onclick="demoSendInput()">&#x27A4;</button>
+    </div>
+  </div>
+
+  <script>
+  (function(){
+    // ---- DATA RESPONSES (structured command output) ----
+    var data = {
+      status: '<pre>\u2693 VESSEL STATUS\n\n\uD83D\uDCCD Position\n  18\u00B027.3\'N  64\u00B037.1\'W\n  At anchor \u2014 Virgin Gorda\n\n\u2699\uFE0F Engines\n  Port:  OFF  (1,847 hrs)\n  Stbd:  OFF  (1,832 hrs)\n\n\uD83D\uDD0B Battery\n  House:  87%  25.4V  -2.1A\n  Start:  100%  13.2V\n  Solar:  +14.2A  (342W)\n\n\u26FD Tanks\n  Fuel:  72%  |  Water:  45%\n\n\uD83C\uDF2C\uFE0F Wind  8kt NE  |  Depth 28ft</pre>',
+      anchor: '<pre>\u2693 ANCHOR WATCH\n\n  Status:  SET \u2014 holding\n  Radius:  45m set  |  12m current\n  Drift:   0.3m in last hour\n  GPS:     18\u00B027.342\'N  64\u00B037.089\'W\n  Depth:   28ft  (stable)</pre>',
+      engines: '<pre>\u2699\uFE0F ENGINE DIAGNOSTICS\n\n  PORT ENGINE\n  Hours:    1,847\n  RPM:      idle (OFF)\n  Oil:      42 psi  \u2714\n  Coolant:  176\u00B0F  \u2714\n  Alt:      14.1V  \u2714\n\n  STBD ENGINE\n  Hours:    1,832\n  RPM:      idle (OFF)\n  Oil:      44 psi  \u2714\n  Coolant:  174\u00B0F  \u2714\n  Alt:      14.2V  \u2714\n\nAll readings normal.</pre>',
+      batteries: '<pre>\uD83D\uDD0B BATTERY &amp; CHARGING\n\n  HOUSE BANK\n  Capacity: 87%  (520/600 Ah)\n  Voltage:  25.4V\n  Current:  -2.1A (discharging)\n  Temp:     78\u00B0F\n\n  START BATTERY\n  Voltage:  13.2V  \u2714\n  Status:   Full\n\n  SOLAR\n  Output:   342W  (+14.2A)\n  Today:    1.8 kWh harvested\n\n  SHORE POWER\n  Status:   Disconnected</pre>',
+      weather: '<pre>\uD83C\uDF24\uFE0F LOCAL WEATHER\n\n  Now:   82\u00B0F  Partly cloudy\n  Wind:  8kt NE\n  Seas:  1-2ft\n  Baro:  30.12 inHg (steady)\n\n  3-DAY FORECAST\n  Today:  82\u00B0F  Scattered clouds  5-10kt E\n  Tue:    84\u00B0F  Mostly sunny      8-12kt E\n  Wed:    80\u00B0F  Showers likely   15-20kt SE\n          \u26A0\uFE0F Small craft advisory possible</pre>',
+      alerts: '<pre>\uD83D\uDD14 RECENT ALERTS (last 5)\n\n  14:22  \u2714  Anchor watch check \u2014 holding\n  11:05  \u26A0\uFE0F  Water tank below 50%\n  08:30  \u2714  Solar charging resumed\n  06:15  \u2139\uFE0F  Overnight report sent\n  22:41  \u2714  Bilge pump cycled (normal)</pre>'
+    };
+
+    // ---- NATURAL LANGUAGE MATCHING ----
+    var nlp = [
+      { keys: ['status','how.*boat','how.*vessel','overview','everything','what.*going on','check.*boat','how.*she','sitrep','sit rep','how.*things','give me.*rundown','full report','status report','vessel report','boat report'], cmd: 'status' },
+      { keys: ['anchor','drift','holding','dragging','swing','hook','rode','scope'], cmd: 'anchor' },
+      { keys: ['engine','motor','rpm','oil pressure','coolant','alternator','hours','prop','propulsion','mechanical'], cmd: 'engines' },
+      { keys: ['batter','solar','charging','shore power','volt','amp','house bank','lithium','inverter','power','electrical'], cmd: 'batteries' },
+      { keys: ['weather','wind','forecast','rain','storm','wave','sea state','baro','temperature','cloud','gust','seas'], cmd: 'weather' },
+      { keys: ['alert','alarm','emergency','warning','notif','anything wrong','any issues','problem','trouble','bilge','leak'], cmd: 'alerts' }
+    ];
+
+    // ---- CONVERSATIONAL AI RESPONSES ----
+    var chat = {
+      worry: "Looking good overall. Water tanks are at 45% \u2014 if you're staying at anchor a few more days, you might want to top up at the marina. Everything else is in normal range. Solar is keeping up with house loads, engines haven't been run today.",
+      goodnight: "Sleep easy, Captain. Anchor watch is active, all systems nominal. I\u2019ll message you immediately if anything changes. \uD83C\uDF19",
+      goodmorning: "Good morning! Quiet night \u2014 anchor held steady, no alarms. House batteries at 87%, solar panels are already charging. Wind picked up a bit to 8kt NE. Water tanks still at 45%. Ready when you are.",
+      thanks: "Anytime, Captain. That's what I'm here for. \u2693",
+      who: "I'm Commander \u2014 your AI boat monitor. I connect to your marine electronics via SignalK, watch every sensor 24/7, and report to you right here on WhatsApp. No apps to install, no dashboards to check. Just ask me anything.",
+      safe: "Looking at the data: anchor is holding with minimal drift, bilge is dry, batteries charging well, no unusual readings on any sensor. Wednesday's forecast shows possible higher winds \u2014 I'll alert you if conditions change. You're good.",
+      water: "Water tanks are at 45% \u2014 roughly 2-3 days of normal use remaining. The nearest marina with water is at Spanish Town, about 2nm south. Want me to remind you tomorrow morning?",
+      fuel: "Fuel tanks at 72%. At your average consumption of 8 gal/hr per engine, that\u2019s roughly 18 hours of motoring range. Plenty for getting to the next fuel dock.",
+      depth: "Current depth under keel is 28ft, stable. Tide is incoming \u2014 you'll gain about 1.5ft over the next 3 hours. No shallow water alerts.",
+      leave: "For tomorrow\u2019s departure: engines haven't been run today, so I\u2019d suggest a 5-minute warm-up. House bank is at 87%. Weather looks good \u2014 8-12kt E winds. I\u2019ll run a full systems check in the morning and send you a departure briefing.",
+      night: "Overnight summary: anchor watch \u2714, bilge pump cycled once (normal), no voltage drops, barometer steady. Quiet night. \uD83C\uDF19"
+    };
+
+    var chatPatterns = [
+      { keys: ['worried','worry','concern','should i','anything i should','safe to','is everything ok','all good','any risk'], resp: 'worry' },
+      { keys: ['good night','goodnight','going to (sleep|bed)','heading to bed','signing off','turning in'], resp: 'goodnight' },
+      { keys: ['good morning','morning','wake','woke up','just got up'], resp: 'goodmorning' },
+      { keys: ['thanks','thank you','thx','cheers','appreciate','great job'], resp: 'thanks' },
+      { keys: ['who are you','what are you','what can you','what do you do','how do you work','tell me about yourself'], resp: 'who' },
+      { keys: ['safe','can i sleep','night swim','leave.*kids','leave.*boat','unattended'], resp: 'safe' },
+      { keys: ['water tank','water level','fresh water','how much water','running low.*water','top up','fill up.*water'], resp: 'water' },
+      { keys: ['fuel','diesel','gas','range','how far','motoring'], resp: 'fuel' },
+      { keys: ['depth','shallow','tide','keel','draft','run aground'], resp: 'depth' },
+      { keys: ['leaving tomorrow','departure','ready to go','sail tomorrow','heading out','prep.*departure','check before we go'], resp: 'leave' },
+      { keys: ['overnight','last night','while i slept','during the night','night report'], resp: 'night' }
+    ];
+
+    // ---- FOLLOW-UP SUGGESTIONS (shown after each response) ----
+    var followups = {
+      status: ['anything to worry about?','check the anchor','how\u2019s the weather?'],
+      anchor: ['is it safe to sleep?','check the weather','full status'],
+      engines: ['battery status','ready to depart?','full status'],
+      batteries: ['engine check','how much fuel?','full status'],
+      weather: ['is it safe?','anchor holding?','leaving tomorrow'],
+      alerts: ['anything to worry about?','full status','check the anchor'],
+      worry: ['anchor watch','weather forecast','engine check'],
+      goodnight: ['overnight report','anchor watch'],
+      goodmorning: ['full status','weather forecast','departure prep'],
+      safe: ['anchor watch','weather forecast','good night'],
+      water: ['fuel level','full status'],
+      fuel: ['battery check','departure prep'],
+      depth: ['anchor watch','full status'],
+      leave: ['weather forecast','engine check','full status'],
+      night: ['full status','weather forecast']
+    };
+
+    // ---- ENGINE ----
+    var busy = false;
+
+    function getTime() {
+      var d = new Date();
+      return d.getHours() + ':' + String(d.getMinutes()).padStart(2,'0');
+    }
+
+    function scrollChat() {
+      var c = document.getElementById('demo-chat');
+      c.scrollTop = c.scrollHeight;
+    }
+
+    function addMsg(type, html, cls) {
+      var c = document.getElementById('demo-chat');
+      var m = document.createElement('div');
+      m.className = 'wa-msg ' + type + (cls ? ' ' + cls : '');
+      m.innerHTML = html + '<span class="time">' + getTime() + '</span>';
+      c.appendChild(m);
+      scrollChat();
+      return m;
+    }
+
+    function showFollowups(key) {
+      var pills = followups[key];
+      if (!pills) return;
+      var box = document.getElementById('demo-pills');
+      box.innerHTML = '';
+      pills.forEach(function(label) {
+        var b = document.createElement('button');
+        b.textContent = label;
+        b.onclick = function(){ demoSendText(label); };
+        box.appendChild(b);
+      });
+    }
+
+    function resetPills() {
+      var box = document.getElementById('demo-pills');
+      box.innerHTML = '';
+      ['status','anchor','engines','batteries','weather','alerts'].forEach(function(cmd){
+        var b = document.createElement('button');
+        b.textContent = cmd;
+        b.onclick = function(){ window.demoSend(cmd); };
+        box.appendChild(b);
+      });
+    }
+
+    function matchNLP(text) {
+      var t = text.toLowerCase();
+      for (var i = 0; i < nlp.length; i++) {
+        for (var j = 0; j < nlp[i].keys.length; j++) {
+          if (new RegExp(nlp[i].keys[j], 'i').test(t)) return { type: 'data', cmd: nlp[i].cmd };
+        }
+      }
+      for (var i = 0; i < chatPatterns.length; i++) {
+        for (var j = 0; j < chatPatterns[i].keys.length; j++) {
+          if (new RegExp(chatPatterns[i].keys[j], 'i').test(t)) return { type: 'chat', key: chatPatterns[i].resp };
+        }
+      }
+      return null;
+    }
+
+    function respond(input, cb) {
+      var match = matchNLP(input);
+      if (match) {
+        if (match.type === 'data') {
+          cb(data[match.cmd], match.cmd);
+        } else {
+          cb(chat[match.key], match.key);
+        }
+      } else {
+        cb("I\u2019m not sure what you mean. Try asking about your boat \u2014 like <b>\"how\u2019s the boat?\"</b>, <b>\"is the anchor holding?\"</b>, or <b>\"any alerts?\"</b> \u2014 or use the buttons below.", null);
+      }
+    }
+
+    window.demoSend = function(cmd) {
+      if (busy) return;
+      busy = true;
+      addMsg('sent', cmd);
+      var typing = document.getElementById('demo-typing');
+      typing.classList.add('visible');
+      scrollChat();
+      setTimeout(function(){
+        typing.classList.remove('visible');
+        addMsg('recv', data[cmd]);
+        showFollowups(cmd);
+        busy = false;
+      }, 700 + Math.random() * 400);
+    };
+
+    window.demoSendText = function(text) {
+      if (busy) return;
+      busy = true;
+      addMsg('sent', text);
+      var typing = document.getElementById('demo-typing');
+      typing.classList.add('visible');
+      scrollChat();
+      respond(text, function(html, key) {
+        var delay = key ? (700 + Math.random() * 600) : 500;
+        setTimeout(function(){
+          typing.classList.remove('visible');
+          addMsg('recv', html);
+          if (key) showFollowups(key); else resetPills();
+          busy = false;
+        }, delay);
+      });
+    };
+
+    window.demoSendInput = function() {
+      var inp = document.getElementById('demo-input');
+      var val = inp.value.trim();
+      if (!val || busy) return;
+      inp.value = '';
+      var lower = val.toLowerCase();
+      if (data[lower]) { demoSend(lower); }
+      else { demoSendText(val); }
+    };
+
+    window.demoClear = function() {
+      if (scenarioTimer) { clearTimeout(scenarioTimer); scenarioTimer = null; }
+      scenarioRunning = false;
+      var btn = document.getElementById('demo-scenario-btn');
+      btn.innerHTML = '\u25B6 Watch Demo';
+      btn.classList.remove('active');
+      var c = document.getElementById('demo-chat');
+      c.innerHTML = '<div class="wa-msg recv">\u2693 Welcome aboard! I\'m Commander \u2014 your AI boat monitor. Ask me anything about your vessel, or try the buttons below.<span class="time">' + getTime() + '</span></div>';
+      resetPills();
+      busy = false;
+    };
+
+    // ---- AUTO-PLAY SCENARIO ----
+    var scenarioRunning = false;
+    var scenarioTimer = null;
+    var scenario = [
+      { type:'sent', text:'how\u2019s the boat?' },
+      { type:'data', cmd:'status', delay:900 },
+      { type:'sent', text:'anything I should worry about?', delay:2200 },
+      { type:'chat', key:'worry', delay:1100 },
+      { type:'sent', text:'is the anchor holding?', delay:2500 },
+      { type:'data', cmd:'anchor', delay:800 },
+      { type:'sent', text:'what\u2019s the weather looking like?', delay:2000 },
+      { type:'data', cmd:'weather', delay:900 },
+      { type:'sent', text:'we\u2019re leaving tomorrow morning', delay:2800 },
+      { type:'chat', key:'leave', delay:1200 },
+      { type:'sent', text:'thanks Commander', delay:2000 },
+      { type:'chat', key:'thanks', delay:600 }
+    ];
+
+    function playStep(i) {
+      if (!scenarioRunning || i >= scenario.length) {
+        scenarioRunning = false;
+        var btn = document.getElementById('demo-scenario-btn');
+        btn.innerHTML = '\u25B6 Watch Demo';
+        btn.classList.remove('active');
+        resetPills();
+        busy = false;
+        return;
+      }
+      var step = scenario[i];
+      if (step.type === 'sent') {
+        addMsg('sent', step.text);
+        var typing = document.getElementById('demo-typing');
+        typing.classList.add('visible');
+        scrollChat();
+        scenarioTimer = setTimeout(function(){ playStep(i+1); }, scenario[i+1] ? scenario[i+1].delay || 800 : 800);
+      } else {
+        var typing = document.getElementById('demo-typing');
+        typing.classList.remove('visible');
+        var html = step.type === 'data' ? data[step.cmd] : chat[step.key];
+        addMsg('recv', html);
+        var followKey = step.cmd || step.key;
+        showFollowups(followKey);
+        scenarioTimer = setTimeout(function(){ playStep(i+1); }, step.delay ? step.delay + 800 : 1600);
+      }
+    }
+
+    window.demoScenario = function() {
+      if (scenarioRunning) {
+        clearTimeout(scenarioTimer);
+        scenarioRunning = false;
+        document.getElementById('demo-typing').classList.remove('visible');
+        var btn = document.getElementById('demo-scenario-btn');
+        btn.innerHTML = '\u25B6 Watch Demo';
+        btn.classList.remove('active');
+        busy = false;
+        return;
+      }
+      demoClear();
+      scenarioRunning = true;
+      busy = true;
+      var btn = document.getElementById('demo-scenario-btn');
+      btn.innerHTML = '\u25A0 Stop';
+      btn.classList.add('active');
+      setTimeout(function(){ playStep(0); }, 600);
+    };
+
+    // Set welcome time
+    document.getElementById('demo-welcome-time').textContent = getTime();
+  })();
+  </script>
+</section>
+
+<!-- Master Cloud -->
+<section id="master">
+  <div class="section-header">
+    <h2>Master Cloud</h2>
+    <p>Included with every charter fleet plan. Optional subscription for private yacht owners. Commander works standalone &mdash; Master adds cloud power.</p>
+  </div>
+  <div class="fleet-grid">
+    <div class="fleet-card">
+      <span class="fleet-badge">REMOTE MANAGEMENT</span>
+      <h3>Over-the-Air Updates</h3>
+      <p>Master manages your Commander Units remotely. Software updates, alert tuning, sensor calibration &mdash; all handled over the air.</p>
+    </div>
+    <div class="fleet-card">
+      <span class="fleet-badge">ANALYTICS</span>
+      <h3>Historical Data &amp; Insights</h3>
+      <p>Cloud-stored telemetry history. Trend analysis, seasonal comparisons, maintenance predictions. Your boats get smarter over time.</p>
+    </div>
+    <div class="fleet-card">
+      <span class="fleet-badge">DASHBOARD</span>
+      <h3>Web Dashboard &amp; Push Alerts</h3>
+      <p>Full web dashboard from any browser &mdash; live telemetry, historical charts, camera feeds. Push notifications for critical alerts.</p>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta" id="contact">
+  <h2>Ready to sleep easy?</h2>
+  <p>Commander is currently in development. Get in touch to learn more or join the early access program.</p>
+  <div class="cta-buttons">
+    <a href="#" class="cta-btn" onclick="document.getElementById('chat-window').classList.add('open');document.getElementById('chat-input').focus();return false;">Chat Online Now</a>
+    <a href="https://wa.me/13055601031?text=Hi%2C%20I'm%20interested%20in%20Master%26Commander" class="cta-btn secondary" target="_blank">WhatsApp</a>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <p>&copy; 2026 Master&amp;Commander &mdash; AI boat monitoring for charter fleets and private yachts.</p>
+</footer>
+
+<script src="flow.js"></script>
+<script>
+function switchSetup(mode) {
+  document.querySelectorAll('.setup-tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.setup-panel').forEach(p => p.classList.remove('active'));
+  document.querySelector('.setup-tab-btn[onclick*="' + mode + '"]').classList.add('active');
+  document.getElementById('setup-' + mode).classList.add('active');
+}
+
+function switchConfig(mode) {
+  document.querySelectorAll('.config-tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.config-panel').forEach(p => p.classList.remove('active'));
+  document.querySelector('.config-tab-btn[onclick*="' + mode + '"]').classList.add('active');
+  document.getElementById('config-' + mode).classList.add('active');
+}
+
+function switchHW(mode) {
+  var container = document.getElementById('hw-tabs').parentElement;
+  container.querySelectorAll('.config-tab-btn').forEach(b => b.classList.remove('active'));
+  container.querySelectorAll('.hw-tab-panel').forEach(p => p.classList.remove('active'));
+  container.querySelector('.config-tab-btn[onclick*="' + mode + '"]').classList.add('active');
+  document.getElementById('hw-' + mode).classList.add('active');
+}
+
+function switchPrice(mode) {
+  var container = document.getElementById('price-tabs').parentElement;
+  container.querySelectorAll('.config-tab-btn').forEach(b => b.classList.remove('active'));
+  container.querySelectorAll('.price-tab-panel').forEach(p => p.classList.remove('active'));
+  container.querySelector('.config-tab-btn[onclick*="' + mode + '"]').classList.add('active');
+  document.getElementById('price-' + mode).classList.add('active');
+}
+
+// Tab switching
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const tab = btn.dataset.tab;
+    // Deactivate all tabs and panels
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    // Activate selected
+    btn.classList.add('active');
+    document.getElementById('tab-' + tab).classList.add('active');
+    // Auto-click first pill in newly active tab
+    const firstPill = document.querySelector('#tab-' + tab + ' .pill-btn');
+    if (firstPill && !firstPill.classList.contains('active')) firstPill.click();
+  });
+});
+
+// Pill switching (scoped to parent tab)
+document.querySelectorAll('.pill-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const pill = btn.dataset.pill;
+    const tabPanel = btn.closest('.tab-panel');
+    // Deactivate pills and panels within this tab
+    tabPanel.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
+    tabPanel.querySelectorAll('.pill-panel').forEach(p => p.classList.remove('active'));
+    // Activate selected
+    btn.classList.add('active');
+    document.getElementById('pill-' + pill).classList.add('active');
+  });
+});
+
+// Hardware cards → scroll to pricing
+document.querySelectorAll('.hw-card').forEach(card => {
+  card.addEventListener('click', () => {
+    document.getElementById('pricing').scrollIntoView({ behavior: 'smooth' });
+  });
+});
+
+// Pricing cards → trigger email link on card click
+document.querySelectorAll('.price-card').forEach(card => {
+  card.addEventListener('click', (e) => {
+    if (e.target.closest('a')) return; // don't double-trigger if clicking the button
+    const link = card.querySelector('a.cta-btn');
+    if (link) link.click();
+  });
+});
+</script>
+
+<!-- Floating Buttons -->
+<a href="https://wa.me/13055601031?text=Hi%2C%20I'm%20interested%20in%20Master%26Commander" target="_blank" class="wa-bubble" aria-label="WhatsApp">
+  <svg viewBox="0 0 24 24" width="28" height="28" fill="#fff"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51l-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+</a>
+<button class="chat-bubble" id="chat-toggle" aria-label="Open chat">
+  &#x2693;
+  <span class="bubble-badge"></span>
+</button>
+
+<div class="chat-window" id="chat-window">
+  <div class="chat-window-header">
+    <div class="chat-avatar">&#x2693;</div>
+    <div class="chat-info">
+      <h4>Commander</h4>
+      <span>Online</span>
+    </div>
+    <button class="chat-window-close" id="chat-close">&times;</button>
+  </div>
+  <div class="chat-messages" id="chat-messages">
+    <div class="chat-msg bot">Hi! I'm the Master&amp;Commander assistant. Ask me anything about our boat monitoring system, pricing, or hardware options.</div>
+  </div>
+  <div class="chat-input-area">
+    <input type="text" id="chat-input" placeholder="Ask about pricing, hardware, features..." maxlength="1000" autocomplete="off">
+    <button id="chat-send">&#x27A4;</button>
+  </div>
+</div>
+
+<script>
+(function() {
+  const toggle = document.getElementById('chat-toggle');
+  const win = document.getElementById('chat-window');
+  const closeBtn = document.getElementById('chat-close');
+  const input = document.getElementById('chat-input');
+  const sendBtn = document.getElementById('chat-send');
+  const messages = document.getElementById('chat-messages');
+  let sessionId = null;
+  let sending = false;
+
+  toggle.addEventListener('click', () => {
+    win.classList.toggle('open');
+    if (win.classList.contains('open')) input.focus();
+  });
+  closeBtn.addEventListener('click', () => win.classList.remove('open'));
+
+  function addMessage(text, cls) {
+    const div = document.createElement('div');
+    div.className = 'chat-msg ' + cls;
+    div.textContent = text;
+    messages.appendChild(div);
+    messages.scrollTop = messages.scrollHeight;
+    return div;
+  }
+
+  async function send() {
+    const text = input.value.trim();
+    if (!text || sending) return;
+    sending = true;
+    sendBtn.disabled = true;
+    input.value = '';
+
+    addMessage(text, 'user');
+    const typing = addMessage('Thinking...', 'typing');
+
+    try {
+      const res = await fetch('/api/web-chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text, sessionId })
+      });
+      const data = await res.json();
+      typing.remove();
+      if (data.error) {
+        addMessage(data.error, 'bot');
+      } else {
+        sessionId = data.sessionId;
+        addMessage(data.response, 'bot');
+      }
+    } catch (err) {
+      typing.remove();
+      addMessage('Connection error. Please try again.', 'bot');
+    }
+    sending = false;
+    sendBtn.disabled = false;
+    input.focus();
+  }
+
+  sendBtn.addEventListener('click', send);
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+  });
+})();
+</script>
+
+<!-- Dashboard Overlay -->
+<div class="dash-overlay" id="dash-overlay" onclick="if(event.target===this)mcDashboard.close()">
+  <div class="dash-modal">
+    <button class="dash-close" onclick="mcDashboard.close()">&times;</button>
+    <div class="dash-welcome">
+      <h2 id="dash-greeting">Welcome</h2>
+      <span class="verify-badge" id="dash-verify-badge"></span>
+    </div>
+
+    <!-- My Boats -->
+    <div class="dash-section">
+      <h3>My Boats</h3>
+      <div class="boats-grid" id="boats-grid"></div>
+      <div id="boat-form-area"></div>
+      <button class="add-boat-btn" id="add-boat-btn" onclick="mcDashboard.showAddBoat()">+ Add Boat</button>
+      <div class="dash-msg" id="boats-msg"></div>
+    </div>
+
+    <!-- Profile -->
+    <div class="dash-section">
+      <h3>Profile</h3>
+      <div class="dash-form" id="profile-form">
+        <label>Name <input type="text" id="prof-name" placeholder="Full name"></label>
+        <label>Email <input type="email" id="prof-email" readonly></label>
+        <label>Phone <input type="tel" id="prof-phone" placeholder="Phone number"></label>
+        <label>Company <input type="text" id="prof-company" placeholder="Company / Fleet name"></label>
+        <div class="full-width">
+          <button onclick="mcDashboard.saveProfile()">Save Profile</button>
+        </div>
+      </div>
+      <div class="dash-msg" id="profile-msg"></div>
+    </div>
+
+    <!-- Change Password -->
+    <div class="dash-section">
+      <h3>Change Password</h3>
+      <div class="dash-form">
+        <label>Current Password <input type="password" id="pw-current" autocomplete="current-password"></label>
+        <label>New Password <input type="password" id="pw-new" placeholder="8+ characters" autocomplete="new-password"></label>
+        <label>Confirm <input type="password" id="pw-confirm" autocomplete="new-password"></label>
+        <div>
+          <button onclick="mcDashboard.changePassword()">Change Password</button>
+        </div>
+      </div>
+      <div class="dash-msg" id="password-msg"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Password Reset Modal (triggered by ?reset=<token> URL param) -->
+<div class="auth-modal-overlay" id="reset-modal">
+  <div class="auth-modal">
+    <button class="auth-modal-close" onclick="document.getElementById('reset-modal').classList.remove('open')">&times;</button>
+    <h3>Reset Password</h3>
+    <form id="auth-reset" onsubmit="return mcAuth.resetPassword(event)">
+      <input type="password" id="reset-password" placeholder="New password (8+ chars)" autocomplete="new-password" required minlength="8">
+      <input type="password" id="reset-confirm" placeholder="Confirm new password" autocomplete="new-password" required minlength="8">
+      <div class="auth-error" id="reset-error"></div>
+      <div class="auth-success" id="reset-success"></div>
+      <button type="submit" id="reset-submit">Reset Password</button>
+    </form>
+  </div>
+</div>
+
+<!-- MasterCommander Auth + Dashboard -->
+<script>
+(function() {
+  const API = '/api/auth';
+
+  function authHeaders() {
+    var t = localStorage.getItem('mc_token');
+    return t ? { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + t } : { 'Content-Type': 'application/json' };
+  }
+
+  // ---- Dashboard ----
+  window.mcDashboard = {
+    _editingBoatId: null,
+
+    open: function() {
+      document.getElementById('dash-overlay').classList.add('open');
+      mcDashboard.loadProfile();
+      mcDashboard.loadBoats();
+      document.querySelectorAll('.dash-msg').forEach(function(el) { el.textContent = ''; el.className = 'dash-msg'; });
+      document.getElementById('pw-current').value = '';
+      document.getElementById('pw-new').value = '';
+      document.getElementById('pw-confirm').value = '';
+    },
+
+    close: function() {
+      document.getElementById('dash-overlay').classList.remove('open');
+    },
+
+    loadProfile: async function() {
+      try {
+        var res = await fetch('/api/user/profile', { headers: authHeaders() });
+        if (!res.ok) return;
+        var data = await res.json();
+        document.getElementById('dash-greeting').textContent = 'Welcome, ' + data.name.split(' ')[0];
+        var badge = document.getElementById('dash-verify-badge');
+        if (data.email_verified) {
+          badge.textContent = 'Verified';
+          badge.className = 'verify-badge verified';
+        } else {
+          badge.textContent = 'Unverified';
+          badge.className = 'verify-badge unverified';
+        }
+        document.getElementById('prof-name').value = data.name;
+        document.getElementById('prof-email').value = data.email;
+        document.getElementById('prof-phone').value = data.phone || '';
+        document.getElementById('prof-company').value = data.company || '';
+      } catch(e) {}
+    },
+
+    saveProfile: async function() {
+      var msg = document.getElementById('profile-msg');
+      msg.textContent = '';
+      msg.className = 'dash-msg';
+      try {
+        var res = await fetch('/api/user/profile', {
+          method: 'PUT',
+          headers: authHeaders(),
+          body: JSON.stringify({
+            name: document.getElementById('prof-name').value,
+            phone: document.getElementById('prof-phone').value,
+            company: document.getElementById('prof-company').value
+          })
+        });
+        var data = await res.json();
+        if (!res.ok) { msg.textContent = data.error; msg.className = 'dash-msg error'; return; }
+        msg.textContent = 'Profile saved.';
+        msg.className = 'dash-msg success';
+        // Update nav and localStorage
+        var user = JSON.parse(localStorage.getItem('mc_user') || '{}');
+        user.name = document.getElementById('prof-name').value;
+        localStorage.setItem('mc_user', JSON.stringify(user));
+        var toggle = document.getElementById('auth-toggle');
+        toggle.textContent = user.name.split(' ')[0];
+        document.getElementById('auth-user-name').textContent = user.name;
+        document.getElementById('dash-greeting').textContent = 'Welcome, ' + user.name.split(' ')[0];
+      } catch(e) { msg.textContent = 'Connection error.'; msg.className = 'dash-msg error'; }
+    },
+
+    changePassword: async function() {
+      var msg = document.getElementById('password-msg');
+      msg.textContent = '';
+      msg.className = 'dash-msg';
+      var pw = document.getElementById('pw-new').value;
+      var confirmPw = document.getElementById('pw-confirm').value;
+      if (pw !== confirmPw) { msg.textContent = 'Passwords do not match.'; msg.className = 'dash-msg error'; return; }
+      try {
+        var res = await fetch('/api/user/password', {
+          method: 'PUT',
+          headers: authHeaders(),
+          body: JSON.stringify({
+            current_password: document.getElementById('pw-current').value,
+            new_password: pw
+          })
+        });
+        var data = await res.json();
+        if (!res.ok) { msg.textContent = data.error; msg.className = 'dash-msg error'; return; }
+        msg.textContent = 'Password changed.';
+        msg.className = 'dash-msg success';
+        document.getElementById('pw-current').value = '';
+        document.getElementById('pw-new').value = '';
+        document.getElementById('pw-confirm').value = '';
+      } catch(e) { msg.textContent = 'Connection error.'; msg.className = 'dash-msg error'; }
+    },
+
+    loadBoats: async function() {
+      try {
+        var res = await fetch('/api/boats', { headers: authHeaders() });
+        if (!res.ok) return;
+        var data = await res.json();
+        var grid = document.getElementById('boats-grid');
+        grid.innerHTML = '';
+        if (data.boats.length === 0) {
+          grid.innerHTML = '<p style="color:var(--text-dim);font-size:0.85rem">No boats registered yet.</p>';
+          return;
+        }
+        data.boats.forEach(function(b) {
+          var card = document.createElement('div');
+          card.className = 'boat-card';
+          var details = '';
+          if (b.model || b.year) details += '<p>' + (b.model || '') + (b.model && b.year ? ' (' + b.year + ')' : (b.year || '')) + '</p>';
+          if (b.mmsi) details += '<p>MMSI: ' + b.mmsi + '</p>';
+          if (b.home_port) details += '<p>' + b.home_port + '</p>';
+          card.innerHTML = '<h4>' + b.name + '</h4>' + details +
+            '<div class="boat-actions">' +
+            '<button onclick="mcDashboard.editBoat(' + b.id + ')">Edit</button>' +
+            '<button class="delete-btn" onclick="mcDashboard.deleteBoat(' + b.id + ',\'' + b.name.replace(/'/g, "\\'") + '\')">Delete</button>' +
+            '</div>';
+          grid.appendChild(card);
+        });
+      } catch(e) {}
+    },
+
+    showAddBoat: function() {
+      mcDashboard._editingBoatId = null;
+      var area = document.getElementById('boat-form-area');
+      area.innerHTML = '<div class="boat-form">' +
+        '<input type="text" id="bf-name" placeholder="Boat name *">' +
+        '<input type="text" id="bf-model" placeholder="Model">' +
+        '<input type="number" id="bf-year" placeholder="Year" min="1900" max="2099">' +
+        '<input type="text" id="bf-mmsi" placeholder="MMSI">' +
+        '<input type="text" id="bf-port" placeholder="Home port">' +
+        '<div class="boat-form-btns">' +
+        '<button class="save-btn" onclick="mcDashboard.saveBoat()">Add Boat</button>' +
+        '<button class="cancel-btn" onclick="mcDashboard.hideBoatForm()">Cancel</button>' +
+        '</div></div>';
+      document.getElementById('add-boat-btn').style.display = 'none';
+    },
+
+    hideBoatForm: function() {
+      document.getElementById('boat-form-area').innerHTML = '';
+      document.getElementById('add-boat-btn').style.display = '';
+      mcDashboard._editingBoatId = null;
+    },
+
+    saveBoat: async function() {
+      var msg = document.getElementById('boats-msg');
+      msg.textContent = '';
+      msg.className = 'dash-msg';
+      var name = document.getElementById('bf-name').value.trim();
+      if (!name) { msg.textContent = 'Boat name is required.'; msg.className = 'dash-msg error'; return; }
+      var body = {
+        name: name,
+        model: document.getElementById('bf-model').value,
+        year: document.getElementById('bf-year').value || null,
+        mmsi: document.getElementById('bf-mmsi').value,
+        home_port: document.getElementById('bf-port').value
+      };
+      try {
+        var url = mcDashboard._editingBoatId ? '/api/boats/' + mcDashboard._editingBoatId : '/api/boats';
+        var method = mcDashboard._editingBoatId ? 'PUT' : 'POST';
+        var res = await fetch(url, { method: method, headers: authHeaders(), body: JSON.stringify(body) });
+        var data = await res.json();
+        if (!res.ok) { msg.textContent = data.error; msg.className = 'dash-msg error'; return; }
+        mcDashboard.hideBoatForm();
+        mcDashboard.loadBoats();
+      } catch(e) { msg.textContent = 'Connection error.'; msg.className = 'dash-msg error'; }
+    },
+
+    editBoat: async function(id) {
+      try {
+        var res = await fetch('/api/boats', { headers: authHeaders() });
+        if (!res.ok) return;
+        var data = await res.json();
+        var boat = data.boats.find(function(b) { return b.id === id; });
+        if (!boat) return;
+        mcDashboard._editingBoatId = id;
+        var area = document.getElementById('boat-form-area');
+        area.innerHTML = '<div class="boat-form">' +
+          '<input type="text" id="bf-name" placeholder="Boat name *" value="' + (boat.name || '').replace(/"/g, '&quot;') + '">' +
+          '<input type="text" id="bf-model" placeholder="Model" value="' + (boat.model || '').replace(/"/g, '&quot;') + '">' +
+          '<input type="number" id="bf-year" placeholder="Year" min="1900" max="2099" value="' + (boat.year || '') + '">' +
+          '<input type="text" id="bf-mmsi" placeholder="MMSI" value="' + (boat.mmsi || '').replace(/"/g, '&quot;') + '">' +
+          '<input type="text" id="bf-port" placeholder="Home port" value="' + (boat.home_port || '').replace(/"/g, '&quot;') + '">' +
+          '<div class="boat-form-btns">' +
+          '<button class="save-btn" onclick="mcDashboard.saveBoat()">Save Changes</button>' +
+          '<button class="cancel-btn" onclick="mcDashboard.hideBoatForm()">Cancel</button>' +
+          '</div></div>';
+        document.getElementById('add-boat-btn').style.display = 'none';
+      } catch(e) {}
+    },
+
+    deleteBoat: async function(id, name) {
+      if (!confirm('Delete "' + name + '"? This cannot be undone.')) return;
+      var msg = document.getElementById('boats-msg');
+      msg.textContent = '';
+      msg.className = 'dash-msg';
+      try {
+        var res = await fetch('/api/boats/' + id, { method: 'DELETE', headers: authHeaders() });
+        var data = await res.json();
+        if (!res.ok) { msg.textContent = data.error; msg.className = 'dash-msg error'; return; }
+        mcDashboard.loadBoats();
+      } catch(e) { msg.textContent = 'Connection error.'; msg.className = 'dash-msg error'; }
+    },
+
+    resendVerify: async function() {
+      try {
+        var res = await fetch(API + '/resend-verify', { method: 'POST', headers: authHeaders() });
+        var data = await res.json();
+        var link = document.getElementById('resend-verify');
+        link.textContent = data.message || 'Sent!';
+        setTimeout(function() { link.textContent = 'Resend verification email'; }, 3000);
+      } catch(e) {}
+    },
+
+    checkVerifyBanner: function(user) {
+      var banner = document.getElementById('verify-banner');
+      if (user && user.email_verified === false) {
+        banner.classList.add('visible');
+        document.body.classList.add('has-verify-banner');
+      } else {
+        banner.classList.remove('visible');
+        document.body.classList.remove('has-verify-banner');
+      }
+    }
+  };
+
+  // ---- Auth ----
+  window.mcAuth = {
+    showForm: function(name) {
+      document.querySelectorAll('#auth-dropdown .auth-form').forEach(f => f.classList.remove('active'));
+      document.getElementById('auth-' + name).classList.add('active');
+      document.querySelectorAll('.auth-error, .auth-success').forEach(el => el.textContent = '');
+      var login = document.getElementById('nav-login');
+      if (!login.classList.contains('open')) login.classList.add('open');
+    },
+
+    login: async function(e) {
+      e.preventDefault();
+      var btn = document.getElementById('login-submit');
+      var err = document.getElementById('login-error');
+      err.textContent = '';
+      btn.disabled = true;
+      btn.textContent = 'Signing in...';
+      try {
+        var res = await fetch(API + '/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: document.getElementById('login-email').value,
+            password: document.getElementById('login-password').value
+          })
+        });
+        var data = await res.json();
+        if (!res.ok) { err.textContent = data.error; return; }
+        localStorage.setItem('mc_token', data.token);
+        localStorage.setItem('mc_user', JSON.stringify(data.user));
+        mcAuth.setLoggedIn(data.user);
+      } catch(ex) {
+        err.textContent = 'Connection error. Please try again.';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Sign In';
+      }
+      return false;
+    },
+
+    signup: async function(e) {
+      e.preventDefault();
+      var btn = document.getElementById('signup-submit');
+      var err = document.getElementById('signup-error');
+      err.textContent = '';
+      btn.disabled = true;
+      btn.textContent = 'Creating...';
+      try {
+        var res = await fetch(API + '/signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: document.getElementById('signup-name').value,
+            email: document.getElementById('signup-email').value,
+            password: document.getElementById('signup-password').value
+          })
+        });
+        var data = await res.json();
+        if (!res.ok) { err.textContent = data.error; return; }
+        localStorage.setItem('mc_token', data.token);
+        localStorage.setItem('mc_user', JSON.stringify(data.user));
+        mcAuth.setLoggedIn(data.user);
+      } catch(ex) {
+        err.textContent = 'Connection error. Please try again.';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Create Account';
+      }
+      return false;
+    },
+
+    forgot: async function(e) {
+      e.preventDefault();
+      var btn = document.getElementById('forgot-submit');
+      var err = document.getElementById('forgot-error');
+      var suc = document.getElementById('forgot-success');
+      err.textContent = '';
+      suc.textContent = '';
+      btn.disabled = true;
+      btn.textContent = 'Sending...';
+      try {
+        var res = await fetch(API + '/forgot-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: document.getElementById('forgot-email').value })
+        });
+        var data = await res.json();
+        suc.textContent = data.message || 'Check your email for a reset link.';
+      } catch(ex) {
+        err.textContent = 'Connection error. Please try again.';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Send Reset Link';
+      }
+      return false;
+    },
+
+    resetPassword: async function(e) {
+      e.preventDefault();
+      var pw = document.getElementById('reset-password').value;
+      var confirmPw = document.getElementById('reset-confirm').value;
+      var err = document.getElementById('reset-error');
+      var suc = document.getElementById('reset-success');
+      var btn = document.getElementById('reset-submit');
+      err.textContent = '';
+      suc.textContent = '';
+      if (pw !== confirmPw) { err.textContent = 'Passwords do not match.'; return false; }
+      btn.disabled = true;
+      btn.textContent = 'Resetting...';
+      try {
+        var token = new URLSearchParams(window.location.search).get('reset');
+        var res = await fetch(API + '/reset-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: token, password: pw })
+        });
+        var data = await res.json();
+        if (!res.ok) { err.textContent = data.error; return; }
+        suc.textContent = data.message;
+        btn.style.display = 'none';
+        setTimeout(function() {
+          document.getElementById('reset-modal').classList.remove('open');
+          history.replaceState(null, '', window.location.pathname);
+          mcAuth.showForm('login');
+        }, 2000);
+      } catch(ex) {
+        err.textContent = 'Connection error. Please try again.';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Reset Password';
+      }
+      return false;
+    },
+
+    setLoggedIn: function(user) {
+      var toggle = document.getElementById('auth-toggle');
+      var firstName = user.name.split(' ')[0];
+      toggle.textContent = firstName;
+      toggle.classList.add('logged-in');
+      // Click nav button → open dashboard (not dropdown)
+      toggle.onclick = function(e) { e.stopPropagation(); mcDashboard.open(); };
+      document.querySelectorAll('#auth-dropdown .auth-form').forEach(f => f.classList.remove('active'));
+      document.getElementById('auth-user').classList.add('active');
+      document.getElementById('auth-user-name').textContent = user.name;
+      document.getElementById('nav-login').classList.remove('open');
+      mcDashboard.checkVerifyBanner(user);
+    },
+
+    logout: function() {
+      localStorage.removeItem('mc_token');
+      localStorage.removeItem('mc_user');
+      var toggle = document.getElementById('auth-toggle');
+      toggle.textContent = 'Login';
+      toggle.classList.remove('logged-in');
+      // Restore dropdown toggle behavior
+      toggle.onclick = function() { toggle.parentElement.classList.toggle('open'); };
+      document.querySelectorAll('#auth-dropdown .auth-form').forEach(f => f.classList.remove('active'));
+      document.getElementById('auth-login').classList.add('active');
+      document.getElementById('nav-login').classList.remove('open');
+      document.getElementById('login-email').value = '';
+      document.getElementById('login-password').value = '';
+      // Hide verify banner and close dashboard
+      document.getElementById('verify-banner').classList.remove('visible');
+      document.body.classList.remove('has-verify-banner');
+      mcDashboard.close();
+    },
+
+    restoreSession: async function() {
+      var token = localStorage.getItem('mc_token');
+      if (!token) return;
+      try {
+        var res = await fetch(API + '/session', {
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        if (!res.ok) { mcAuth.logout(); return; }
+        var data = await res.json();
+        localStorage.setItem('mc_user', JSON.stringify(data.user));
+        mcAuth.setLoggedIn(data.user);
+      } catch(ex) {
+        // Offline — use cached user data
+        var cached = localStorage.getItem('mc_user');
+        if (cached) {
+          try { mcAuth.setLoggedIn(JSON.parse(cached)); } catch(e) { mcAuth.logout(); }
+        }
+      }
+    }
+  };
+
+  // Restore session on load
+  mcAuth.restoreSession();
+
+  // Check for verify token in URL
+  var verifyToken = new URLSearchParams(window.location.search).get('verify');
+  if (verifyToken) {
+    (async function() {
+      try {
+        var res = await fetch(API + '/verify-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: verifyToken })
+        });
+        var data = await res.json();
+        if (res.ok) {
+          // Update local user state
+          var user = JSON.parse(localStorage.getItem('mc_user') || '{}');
+          user.email_verified = true;
+          localStorage.setItem('mc_user', JSON.stringify(user));
+          document.getElementById('verify-banner').classList.remove('visible');
+          document.body.classList.remove('has-verify-banner');
+          alert('Email verified successfully!');
+        } else {
+          alert(data.error || 'Verification failed.');
+        }
+      } catch(e) {
+        alert('Connection error. Please try again.');
+      }
+      history.replaceState(null, '', window.location.pathname);
+    })();
+  }
+
+  // Check for reset token in URL
+  var resetToken = new URLSearchParams(window.location.search).get('reset');
+  if (resetToken) {
+    document.getElementById('reset-modal').classList.add('open');
+  }
+
+  // Close dropdown on outside click
+  document.addEventListener('click', function(e) {
+    var login = document.getElementById('nav-login');
+    if (!login.contains(e.target)) login.classList.remove('open');
+  });
+})();
+</script>
+<script src="gate.js"></script>
+<script>
+SiteGate.init({
+  site: 'mastercommander',
+  siteName: 'Master&Commander',
+  logo: '⚓',
+  ndaText: '<h4>1. Confidential Information</h4><p>By accessing this site, you acknowledge that all information, data, designs, software, business strategies, pricing, technical specifications, and any other materials ("Confidential Information") presented on Master&Commander are proprietary and confidential.</p><h4>2. Obligations</h4><p>You agree to: (a) maintain the confidentiality of all Confidential Information; (b) not disclose, publish, or disseminate Confidential Information to any third party without prior written consent; (c) not use Confidential Information for any purpose other than evaluating Master&Commander products and services; (d) take reasonable measures to protect the secrecy of the Confidential Information.</p><h4>3. Duration</h4><p>Your obligations under this agreement shall remain in effect for a period of two (2) years from the date of acceptance, or until such time as the Confidential Information becomes publicly available through no fault of your own.</p><h4>4. Remedies</h4><p>You acknowledge that any breach of this agreement may cause irreparable harm, and that the disclosing party shall be entitled to seek equitable relief, including injunction and specific performance, in addition to all other remedies available at law or in equity.</p><h4>5. Governing Law</h4><p>This agreement shall be governed by and construed in accordance with the laws of the State of Florida, United States of America.</p>'
+});
+</script>
+</body>
+</html>
