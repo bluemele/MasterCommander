@@ -150,6 +150,30 @@ main{padding:32px 24px 64px}
 .modal-error{grid-column:1/-1;color:var(--red);font-size:.82rem}
 .modal-error:empty{display:none}
 
+/* ── BILLING PAGE ── */
+.billing-banner{background:var(--sky-pale);border:1.5px solid var(--sky-mid);border-radius:12px;padding:20px 24px;margin-bottom:24px;text-align:center}
+.billing-banner p{font-size:.9rem;color:var(--ocean);font-weight:500}
+.billing-banner.success{background:#D1FAE5;border-color:#6EE7B7}
+.billing-banner.canceled{background:#FEF3C7;border-color:#FCD34D}
+.billing-current{margin-bottom:24px}
+.billing-current .card{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
+.billing-plan-name{font-size:1.1rem;font-weight:800;color:var(--ocean)}
+.billing-plan-detail{font-size:.85rem;color:var(--slate)}
+.billing-status-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.billing-status-badge.active{background:#D1FAE5;color:#059669}
+.billing-status-badge.canceled{background:#FEF3C7;color:#D97706}
+.billing-status-badge.past_due{background:#FEE2E2;color:#DC2626}
+.billing-status-badge.none{background:var(--surface);color:var(--slate)}
+.billing-plans-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}
+.billing-plan-item{background:#fff;border:1.5px solid var(--border);border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:10px;transition:all .2s}
+.billing-plan-item:hover{border-color:var(--sky);box-shadow:var(--shadow)}
+.billing-plan-item h3{font-size:1rem;font-weight:700;color:var(--ocean)}
+.billing-plan-item .plan-price{font-size:1.3rem;font-weight:800;color:var(--text)}
+.billing-plan-item .plan-price span{font-size:.8rem;font-weight:500;color:var(--slate)}
+.billing-plan-item .plan-desc{font-size:.82rem;color:var(--slate);flex:1}
+.billing-plan-item .btn{margin-top:auto}
+.billing-plan-item .btn:disabled{opacity:.4;cursor:not-allowed}
+
 /* ── RESPONSIVE ── */
 @media(max-width:768px){
   .nav-inner{flex-wrap:wrap;height:auto;padding:10px 0}
@@ -164,4 +188,6 @@ main{padding:32px 24px 64px}
   .modal-form .full{grid-column:1}
   .modal-btns{grid-column:1}
   .modal-error{grid-column:1}
+  .billing-plans-grid{grid-template-columns:1fr}
+  .billing-current .card{flex-direction:column;align-items:flex-start}
 }

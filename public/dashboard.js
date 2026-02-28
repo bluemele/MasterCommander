@@ -47,6 +47,7 @@
     document.querySelectorAll('.nav-tab').forEach(function(tab) {
       var route = tab.getAttribute('data-route');
       if (route === 'fleet' && (path === '/' || path.startsWith('/boat/'))) tab.classList.add('active');
+      else if (route === 'billing' && path === '/billing') tab.classList.add('active');
       else if (route === 'settings' && path === '/settings') tab.classList.add('active');
       else tab.classList.remove('active');
     });
@@ -54,6 +55,7 @@
     // Dispatch
     if (path === '/' || path === '') renderFleet();
     else if (path.match(/^\/boat\/(\d+)$/)) renderBoat(parseInt(path.match(/^\/boat\/(\d+)$/)[1]));
+    else if (path === '/billing') renderBilling();
     else if (path === '/settings') renderSettings();
     else renderFleet();
   }
@@ -366,6 +368,112 @@
         loadLogs(boatId, _logFilter);
       } catch (e) { alert(e.message); }
     });
+  }
+
+  // ── Billing Page ──
+  async function renderBilling() {
+    app.innerHTML = '<div class="fleet-header"><h1>Billing</h1></div><p style="color:var(--slate)">Loading...</p>';
+    try {
+      var data = await api('/api/billing/status');
+
+      // Check for checkout result in URL params
+      var params = new URLSearchParams(window.location.search);
+      var checkoutResult = params.get('checkout');
+      var bannerHtml = '';
+      if (checkoutResult === 'success') {
+        bannerHtml = '<div class="billing-banner success"><p>Payment successful! Your subscription is now active.</p></div>';
+        // Clean URL
+        window.history.replaceState(null, '', window.location.pathname + window.location.hash);
+      } else if (checkoutResult === 'canceled') {
+        bannerHtml = '<div class="billing-banner canceled"><p>Checkout was canceled. No charges were made.</p></div>';
+        window.history.replaceState(null, '', window.location.pathname + window.location.hash);
+      }
+
+      if (!data.stripeConfigured) {
+        app.innerHTML =
+          '<div class="fleet-header"><h1>Billing</h1></div>' +
+          '<div class="billing-banner"><p>Billing is coming soon. Contact us to discuss pricing and plans.</p></div>' +
+          '<div class="billing-plans-grid">' + buildPlanCards(data.plans, data.currentPlan, false) + '</div>';
+        return;
+      }
+
+      // Current plan section
+      var currentHtml = '';
+      if (data.currentPlan && data.status !== 'none') {
+        var planInfo = data.plans.find(function(p) { return p.id === data.currentPlan; });
+        var planName = planInfo ? planInfo.name : data.currentPlan;
+        var periodEnd = data.currentPeriodEnd ? new Date(data.currentPeriodEnd).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
+        var cancelNote = data.cancelAtPeriodEnd ? ' (cancels ' + periodEnd + ')' : (periodEnd ? ' &middot; Renews ' + periodEnd : '');
+        currentHtml =
+          '<div class="billing-current"><div class="card">' +
+          '<div><div class="billing-plan-name">' + esc(planName) + '</div>' +
+          '<div class="billing-plan-detail"><span class="billing-status-badge ' + esc(data.status) + '">' + esc(data.status) + '</span>' + cancelNote + '</div></div>' +
+          '<button class="btn btn-outline btn-sm" id="manage-billing-btn">Manage Billing</button>' +
+          '</div></div>';
+      }
+
+      app.innerHTML =
+        '<div class="fleet-header"><h1>Billing</h1></div>' +
+        bannerHtml + currentHtml +
+        '<div class="card"><h2>Available Plans</h2>' +
+        '<div class="billing-plans-grid">' + buildPlanCards(data.plans, data.currentPlan, data.stripeConfigured) + '</div></div>';
+
+      // Manage billing button
+      var manageBtn = document.getElementById('manage-billing-btn');
+      if (manageBtn) {
+        manageBtn.addEventListener('click', async function() {
+          manageBtn.disabled = true;
+          manageBtn.textContent = 'Loading...';
+          try {
+            var portal = await apiPost('/api/billing/portal', {});
+            window.location.href = portal.url;
+          } catch (e) {
+            alert(e.message);
+            manageBtn.disabled = false;
+            manageBtn.textContent = 'Manage Billing';
+          }
+        });
+      }
+
+      // Subscribe buttons
+      document.querySelectorAll('.billing-subscribe-btn').forEach(function(btn) {
+        btn.addEventListener('click', async function() {
+          var planId = btn.getAttribute('data-plan');
+          btn.disabled = true;
+          btn.textContent = 'Loading...';
+          try {
+            var checkout = await apiPost('/api/billing/checkout', { plan: planId });
+            window.location.href = checkout.url;
+          } catch (e) {
+            alert(e.message);
+            btn.disabled = false;
+            btn.textContent = 'Subscribe';
+          }
+        });
+      });
+    } catch (e) {
+      app.innerHTML = '<div class="fleet-header"><h1>Billing</h1></div><p style="color:var(--red)">' + esc(e.message) + '</p>';
+    }
+  }
+
+  function buildPlanCards(plans, currentPlan, stripeReady) {
+    return plans.map(function(p) {
+      var price = '$' + (p.amount / 100).toFixed(0);
+      var isCurrent = currentPlan === p.id;
+      var btnHtml;
+      if (isCurrent) {
+        btnHtml = '<button class="btn btn-outline btn-sm" disabled>Current Plan</button>';
+      } else if (!stripeReady || !p.hasPrice) {
+        btnHtml = '<button class="btn btn-outline btn-sm" disabled>Coming Soon</button>';
+      } else {
+        btnHtml = '<button class="btn btn-sky btn-sm billing-subscribe-btn" data-plan="' + esc(p.id) + '">Subscribe</button>';
+      }
+      return '<div class="billing-plan-item">' +
+        '<h3>' + esc(p.name) + '</h3>' +
+        '<div class="plan-price">' + price + '<span>/' + esc(p.interval) + '</span></div>' +
+        '<div class="plan-desc">' + esc(p.description) + '</div>' +
+        btnHtml + '</div>';
+    }).join('');
   }
 
   // ── Settings Page ──

@@ -1586,14 +1586,34 @@ document.querySelectorAll('.price-card').forEach(card => {
   });
 });
 
-/* Get Started buttons → open contact form with plan pre-filled */
-// TODO: Replace with Stripe Checkout redirect when ready
-// e.g. window.location.href = '/api/stripe/checkout?plan=' + planId
+/* Get Started buttons → Stripe checkout if logged in, contact modal fallback */
 document.querySelectorAll('.get-started-btn').forEach(btn => {
-  btn.addEventListener('click', (e) => {
+  btn.addEventListener('click', async (e) => {
     e.stopPropagation();
     var plan = btn.dataset.plan || '';
-    openContactModal(plan);
+    var token = localStorage.getItem('mc_token');
+    if (!token) { openContactModal(plan); return; }
+    try {
+      btn.disabled = true;
+      btn.textContent = 'Loading...';
+      var res = await fetch('/api/billing/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ plan: plan })
+      });
+      if (res.status === 503 || res.status === 401 || !res.ok) {
+        openContactModal(plan);
+        return;
+      }
+      var data = await res.json();
+      if (data.url) { window.location.href = data.url; return; }
+      openContactModal(plan);
+    } catch {
+      openContactModal(plan);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Get Started';
+    }
   });
 });
 
