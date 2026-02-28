@@ -2049,7 +2049,7 @@ function runAutoPlay() {
       var toggle = document.getElementById('auth-toggle');
       toggle.textContent = user.name.split(' ')[0];
       toggle.classList.add('logged-in');
-      toggle.onclick = function(e) { e.stopPropagation(); mcDashboard.open(); };
+      toggle.onclick = function(e) { e.stopPropagation(); window.location.href = 'dashboard.html'; };
       document.querySelectorAll('#auth-dropdown .auth-form').forEach(f => f.classList.remove('active'));
       document.getElementById('auth-user').classList.add('active');
       document.getElementById('auth-user-name').textContent = user.name;

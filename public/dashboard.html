@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dashboard — Master&Commander</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="dashboard.css">
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="container">
+    <div class="nav-inner">
+      <a href="index.html" class="logo">Master<span>Commander</span><span class="logo-dot">.ai</span></a>
+      <div class="nav-tabs">
+        <a href="#/" class="nav-tab active" data-route="fleet">My Fleet</a>
+        <a href="#/settings" class="nav-tab" data-route="settings">Settings</a>
+      </div>
+      <div class="nav-right">
+        <span class="nav-user" id="nav-user-name"></span>
+        <button class="btn btn-outline btn-sm" onclick="mcAuth.logout()">Sign Out</button>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- APP -->
+<main class="container">
+  <div id="app"></div>
+</main>
+
+<script src="dashboard.js"></script>
+</body>
+</html>
