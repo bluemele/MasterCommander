@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Master&amp;Commander &mdash; AI Boat Monitor for Charter Fleets &amp; Private Yachts</title>
   <meta name="description" content="AI boat monitoring for charter fleets, private yachts, deliveries, and marinas. Commander Unit connects to your marine electronics, monitors every system 24/7, and sends alerts to WhatsApp. From $499/year per boat.">
+  <link rel="stylesheet" href="gate.css">
   <link rel="stylesheet" href="style.css">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#x2693;</text></svg>">
 </head>
@@ -2335,6 +2336,15 @@ document.querySelectorAll('.price-card').forEach(card => {
     if (!login.contains(e.target)) login.classList.remove('open');
   });
 })();
+</script>
+<script src="gate.js"></script>
+<script>
+SiteGate.init({
+  site: 'mastercommander',
+  siteName: 'Master&Commander',
+  logo: '⚓',
+  ndaText: '<h4>1. Confidential Information</h4><p>By accessing this site, you acknowledge that all information, data, designs, software, business strategies, pricing, technical specifications, and any other materials ("Confidential Information") presented on Master&Commander are proprietary and confidential.</p><h4>2. Obligations</h4><p>You agree to: (a) maintain the confidentiality of all Confidential Information; (b) not disclose, publish, or disseminate Confidential Information to any third party without prior written consent; (c) not use Confidential Information for any purpose other than evaluating Master&Commander products and services; (d) take reasonable measures to protect the secrecy of the Confidential Information.</p><h4>3. Duration</h4><p>Your obligations under this agreement shall remain in effect for a period of two (2) years from the date of acceptance, or until such time as the Confidential Information becomes publicly available through no fault of your own.</p><h4>4. Remedies</h4><p>You acknowledge that any breach of this agreement may cause irreparable harm, and that the disclosing party shall be entitled to seek equitable relief, including injunction and specific performance, in addition to all other remedies available at law or in equity.</p><h4>5. Governing Law</h4><p>This agreement shall be governed by and construed in accordance with the laws of the State of Florida, United States of America.</p>'
+});
 </script>
 </body>
 </html>

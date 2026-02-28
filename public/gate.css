@@ -1,0 +1,246 @@
+/* Site Gate — Reusable Passwordless Access Control */
+/* All selectors prefixed with #site-gate to avoid collisions */
+
+:root {
+  --gate-bg: rgba(10, 12, 20, 0.97);
+  --gate-card-bg: #151820;
+  --gate-card-border: #2a2d3a;
+  --gate-accent: #4f8cff;
+  --gate-accent-hover: #6aa0ff;
+  --gate-text: #e8eaf0;
+  --gate-text-muted: #8a8d9a;
+  --gate-input-bg: #1c1f2a;
+  --gate-input-border: #333649;
+  --gate-input-focus: #4f8cff;
+  --gate-error: #ff5c5c;
+  --gate-success: #4ccc6a;
+  --gate-radius: 12px;
+  --gate-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+#site-gate-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--gate-bg);
+  font-family: var(--gate-font);
+  color: var(--gate-text);
+  transition: opacity 0.5s ease;
+}
+
+#site-gate-overlay.gate-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+#site-gate-card {
+  width: 100%;
+  max-width: 420px;
+  background: var(--gate-card-bg);
+  border: 1px solid var(--gate-card-border);
+  border-radius: var(--gate-radius);
+  padding: 40px 36px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+#site-gate-logo {
+  font-size: 48px;
+  text-align: center;
+  margin-bottom: 8px;
+  line-height: 1;
+}
+
+#site-gate-title {
+  text-align: center;
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0 0 4px;
+  color: var(--gate-text);
+}
+
+#site-gate-subtitle {
+  text-align: center;
+  font-size: 14px;
+  color: var(--gate-text-muted);
+  margin: 0 0 28px;
+}
+
+/* Steps */
+.gate-step {
+  display: none;
+}
+
+.gate-step.gate-active {
+  display: block;
+}
+
+/* Form elements */
+.gate-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gate-text-muted);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.gate-input {
+  width: 100%;
+  padding: 12px 14px;
+  background: var(--gate-input-bg);
+  border: 1px solid var(--gate-input-border);
+  border-radius: 8px;
+  color: var(--gate-text);
+  font-size: 15px;
+  font-family: var(--gate-font);
+  outline: none;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+  margin-bottom: 16px;
+}
+
+.gate-input:focus {
+  border-color: var(--gate-input-focus);
+}
+
+.gate-input::placeholder {
+  color: var(--gate-text-muted);
+  opacity: 0.6;
+}
+
+/* Code input */
+#site-gate-code-input {
+  text-align: center;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: 12px;
+  padding: 14px;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+}
+
+/* Buttons */
+.gate-btn {
+  width: 100%;
+  padding: 13px;
+  background: var(--gate-accent);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: var(--gate-font);
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+  margin-top: 8px;
+}
+
+.gate-btn:hover {
+  background: var(--gate-accent-hover);
+}
+
+.gate-btn:active {
+  transform: scale(0.98);
+}
+
+.gate-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Error / status messages */
+.gate-error {
+  color: var(--gate-error);
+  font-size: 13px;
+  margin-top: -8px;
+  margin-bottom: 12px;
+  min-height: 18px;
+}
+
+.gate-info {
+  color: var(--gate-text-muted);
+  font-size: 13px;
+  text-align: center;
+  margin-top: 12px;
+}
+
+.gate-info a {
+  color: var(--gate-accent);
+  text-decoration: none;
+}
+
+.gate-info a:hover {
+  text-decoration: underline;
+}
+
+/* NDA step */
+#site-gate-nda-box {
+  max-height: 280px;
+  overflow-y: auto;
+  background: var(--gate-input-bg);
+  border: 1px solid var(--gate-input-border);
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--gate-text-muted);
+}
+
+#site-gate-nda-box h4 {
+  color: var(--gate-text);
+  font-size: 14px;
+  margin: 16px 0 6px;
+}
+
+#site-gate-nda-box h4:first-child {
+  margin-top: 0;
+}
+
+#site-gate-nda-signature {
+  background: var(--gate-input-bg);
+  border: 1px solid var(--gate-input-border);
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+#site-gate-nda-signature strong {
+  color: var(--gate-text);
+}
+
+/* Spinner */
+.gate-spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: gate-spin 0.6s linear infinite;
+  vertical-align: middle;
+  margin-right: 8px;
+}
+
+@keyframes gate-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Responsive — mobile full-screen card */
+@media (max-width: 520px) {
+  #site-gate-card {
+    max-width: 100%;
+    min-height: 100vh;
+    border-radius: 0;
+    border: none;
+    padding: 40px 24px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+}
