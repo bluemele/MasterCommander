@@ -210,7 +210,7 @@
         '<div class="card">' +
         '<div class="boat-photo-large">' + photo + '</div>' +
         '<div class="detail-grid">' +
-        detailRow('Status', '<span class="status-dot ' + esc(statusLabel) + '" style="display:inline-block;margin-right:4px"></span>' + esc(statusLabel)) +
+        detailRow('Status', '<span class="status-dot ' + esc(statusLabel) + '" style="display:inline-block;margin-right:4px"></span>' + esc(statusLabel), true) +
         detailRow('Model', b.model) +
         detailRow('Year', b.year) +
         detailRow('Boat Type', b.boat_type) +
@@ -282,7 +282,8 @@
     }
   }
 
-  function detailRow(label, value) {
+  function detailRow(label, value, raw) {
+    if (raw) return '<div class="detail-item"><div class="detail-label">' + esc(label) + '</div><div class="detail-value">' + value + '</div></div>';
     var v = value != null && value !== '' ? esc(String(value)) : null;
     if (!v) return '';
     return '<div class="detail-item"><div class="detail-label">' + esc(label) + '</div><div class="detail-value">' + v + '</div></div>';
