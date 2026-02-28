@@ -5,8 +5,32 @@ services:
     restart: unless-stopped
     ports:
       - "127.0.0.1:3010:80"
+    depends_on:
+      mastercommander-db:
+        condition: service_healthy
     networks:
       - coolify
+
+  mastercommander-db:
+    image: postgres:16-alpine
+    container_name: mastercommander-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: mastercommander
+      POSTGRES_USER: mastercommander
+      POSTGRES_PASSWORD: ${MC_DB_PASS}
+    volumes:
+      - mc_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mastercommander -d mastercommander"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - coolify
+
+volumes:
+  mc_pgdata:
 
 networks:
   coolify:
