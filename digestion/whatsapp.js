@@ -11,7 +11,6 @@
 // ============================================================
 
 import makeWASocket, { useMultiFileAuthState, DisconnectReason, fetchLatestBaileysVersion } from '@whiskeysockets/baileys';
-import { Boom } from '@hapi/boom';
 import pino from 'pino';
 import { EventEmitter } from 'events';
 
@@ -49,7 +48,7 @@ export class WhatsAppBot extends EventEmitter {
 
     this.sock.ev.on('connection.update', ({ connection, lastDisconnect }) => {
       if (connection === 'close') {
-        const reason = new Boom(lastDisconnect?.error)?.output?.statusCode;
+        const reason = lastDisconnect?.error?.output?.statusCode;
         if (reason === DisconnectReason.loggedOut) {
           console.log('❌ WhatsApp logged out. Delete auth dir and re-scan QR.');
           this.connected = false;
