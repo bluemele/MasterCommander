@@ -1,0 +1,91 @@
+/* ══════════════════════════════════════════════════════════
+   TELEMETRY — Live gauge panel styles
+   ══════════════════════════════════════════════════════════ */
+
+/* ── Status badge ── */
+.telem-status{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+.telem-status.live{background:#D1FAE5;color:#059669}
+.telem-status.live::before{content:'';width:7px;height:7px;border-radius:50%;background:#10B981;animation:pulse-dot 1.5s infinite}
+.telem-status.disconnected{background:#FEE2E2;color:#DC2626}
+@keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* ── Telemetry grid ── */
+.telem-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+.telem-panel{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;min-height:120px}
+.telem-panel-title{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--slate);margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.telem-panel-title span{font-size:.9rem}
+
+/* ── Gauge row (label + value) ── */
+.telem-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid rgba(226,232,240,.5)}
+.telem-row:last-child{border-bottom:none}
+.telem-label{font-size:.78rem;color:var(--slate);font-weight:500}
+.telem-value{font-size:.88rem;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums}
+.telem-value.warn{color:var(--amber)}
+.telem-value.crit{color:var(--red)}
+.telem-value.good{color:var(--emerald)}
+
+/* ── Unit suffix ── */
+.telem-unit{font-size:.7rem;font-weight:500;color:var(--slate);margin-left:2px}
+
+/* ── Battery arc gauge ── */
+.batt-gauge{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1}
+.batt-gauge svg{width:80px;height:50px}
+.batt-gauge-label{font-size:.7rem;font-weight:700;color:var(--slate);text-transform:uppercase}
+.batt-gauge-pct{font-size:1.1rem;font-weight:800;font-variant-numeric:tabular-nums}
+.batt-row{display:flex;gap:16px;justify-content:center;margin-bottom:8px}
+
+/* ── Tank bars ── */
+.tank-bar-wrap{margin-bottom:10px}
+.tank-bar-wrap:last-child{margin-bottom:0}
+.tank-bar-header{display:flex;justify-content:space-between;margin-bottom:3px}
+.tank-bar-name{font-size:.75rem;font-weight:600;color:var(--slate)}
+.tank-bar-pct{font-size:.75rem;font-weight:700;font-variant-numeric:tabular-nums}
+.tank-bar{height:10px;background:#E2E8F0;border-radius:5px;overflow:hidden}
+.tank-bar-fill{height:100%;border-radius:5px;transition:width .6s ease}
+.tank-bar-fill.fuel{background:var(--amber)}
+.tank-bar-fill.freshWater{background:var(--sky)}
+.tank-bar-fill.wasteWater{background:var(--slate)}
+
+/* ── Engine RPM bars ── */
+.engine-block{margin-bottom:12px}
+.engine-block:last-child{margin-bottom:0}
+.engine-id{font-size:.75rem;font-weight:700;color:var(--ocean);text-transform:capitalize;margin-bottom:6px}
+.rpm-bar-wrap{margin-bottom:4px}
+.rpm-bar{height:8px;background:#E2E8F0;border-radius:4px;overflow:hidden}
+.rpm-bar-fill{height:100%;border-radius:4px;background:var(--emerald);transition:width .6s ease}
+.rpm-bar-fill.high{background:var(--amber)}
+.rpm-bar-fill.redline{background:var(--red)}
+
+/* ── Wind compass ── */
+.wind-compass{width:80px;height:80px;margin:0 auto 8px}
+.wind-compass svg{width:100%;height:100%}
+
+/* ── Position link ── */
+.pos-link{display:inline-flex;align-items:center;gap:4px;font-size:.82rem;font-weight:600;color:var(--sky);text-decoration:none;margin-top:4px}
+.pos-link:hover{text-decoration:underline}
+
+/* ── Scenario controls ── */
+.scenario-bar{display:flex;flex-wrap:wrap;gap:6px;margin-top:16px}
+.scenario-btn{padding:6px 14px;border-radius:8px;border:1.5px solid var(--border);background:#fff;font-size:.75rem;font-weight:600;color:var(--slate);cursor:pointer;font-family:inherit;transition:all .2s}
+.scenario-btn:hover{border-color:var(--sky);color:var(--sky)}
+.scenario-btn.active{background:var(--sky);color:#fff;border-color:var(--sky)}
+
+/* ── Alert ticker ── */
+.alert-ticker{margin-top:16px;max-height:180px;overflow-y:auto;display:flex;flex-direction:column;gap:6px}
+.alert-item{padding:8px 12px;border-radius:8px;font-size:.8rem;line-height:1.4;border-left:3px solid var(--border)}
+.alert-item.critical{background:#FEF2F2;border-left-color:var(--red);color:#991B1B}
+.alert-item.warning{background:#FFFBEB;border-left-color:var(--amber);color:#92400E}
+.alert-item.info{background:#F0F9FF;border-left-color:var(--sky);color:#0C4A6E}
+.alert-time{font-size:.68rem;color:var(--slate);margin-top:2px}
+.alert-empty{text-align:center;padding:16px;color:var(--slate);font-size:.82rem}
+
+/* ── Full-width telemetry section ── */
+.telem-section{grid-column:1/-1}
+.telem-section .card h2{display:flex;align-items:center;gap:10px}
+
+/* ── Responsive ── */
+@media(max-width:768px){
+  .telem-grid{grid-template-columns:1fr}
+  .batt-row{flex-direction:column;align-items:center}
+  .scenario-bar{justify-content:center}
+}

@@ -16,6 +16,7 @@ import { AlertEngine } from './lib/alert-engine.js';
 import { LLMRouter } from './lib/llm-router.js';
 import { StatusBuilder } from './lib/status-builder.js';
 import { WhatsAppBot } from './lib/whatsapp.js';
+import { startTelemetryServer } from './lib/telemetry-server.js';
 
 // ── Parse CLI args ───────────────────────────────────────
 const args = process.argv.slice(2);
@@ -189,6 +190,9 @@ sk.on('discovered', (item) => {
 // ── Start everything ─────────────────────────────────────
 sk.connect();
 alerts.start();
+
+// Start telemetry API for dashboard gauges
+const telemetry = startTelemetryServer({ sk, alerts, config });
 
 if (wa) {
   // Delay WhatsApp start slightly to let SignalK connect first

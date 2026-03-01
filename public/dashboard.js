@@ -41,6 +41,10 @@
   function onRoute() {
     var path = getRoute();
     if (path === currentRoute) return;
+    // Cleanup telemetry when leaving boat page
+    if (currentRoute && currentRoute.match(/^\/boat\//) && !path.match(/^\/boat\//)) {
+      cleanupTelemetry();
+    }
     currentRoute = path;
 
     // Update nav tabs
@@ -230,19 +234,22 @@
         (b.notes ? '<div class="detail-item" style="grid-column:1/-1"><div class="detail-label">Notes</div><div class="detail-value">' + esc(b.notes) + '</div></div>' : '') +
         '</div></div></div>' +
 
-        // Right column — commander unit + monitoring
+        // Right column — live telemetry
         '<div>' +
-        '<div class="card"><h2>Commander Unit</h2>' +
-        '<div class="commander-placeholder"><p style="font-size:2rem;margin-bottom:8px">&#128225;</p>' +
-        '<p>Not connected yet</p>' +
-        '<p style="font-size:.8rem;margin-top:8px">When you install a Commander Unit on <strong>' + esc(b.name) + '</strong>, real-time telemetry will appear here.</p></div></div>' +
-        '<div class="card" style="margin-top:20px"><h2>Monitoring</h2>' +
-        '<div class="monitor-grid">' +
-        monitorCard('&#9881;', 'Engines') +
-        monitorCard('&#128267;', 'Battery') +
-        monitorCard('&#9981;', 'Tanks') +
-        monitorCard('&#128205;', 'Position') +
-        '</div></div></div>' +
+        '<div class="card"><h2>Commander Unit <span class="telem-status disconnected" id="telem-badge">CONNECTING</span></h2>' +
+        '<div class="telem-grid">' +
+        '<div class="telem-panel" id="telem-nav"></div>' +
+        '<div class="telem-panel" id="telem-batt"></div>' +
+        '<div class="telem-panel" id="telem-engines"></div>' +
+        '<div class="telem-panel" id="telem-tanks"></div>' +
+        '<div class="telem-panel" id="telem-wind"></div>' +
+        '<div class="telem-panel" id="telem-pos"></div>' +
+        '</div>' +
+        '<div class="scenario-bar" id="telem-scenarios"></div>' +
+        '</div>' +
+        '<div class="card" style="margin-top:16px"><h2>Alerts</h2>' +
+        '<div class="alert-ticker" id="telem-alerts"><div class="alert-empty">Connecting...</div></div>' +
+        '</div></div>' +
 
         // Full width — logbook
         '<div class="boat-layout-full"><div class="card" id="logbook-card">' +
@@ -279,9 +286,80 @@
       });
 
       loadLogs(b.id, '');
+
+      // ── Start live telemetry ──
+      initTelemetry();
     } catch (e) {
       app.innerHTML = '<p style="color:var(--red);padding:40px 0">' + esc(e.message) + '</p>';
     }
+  }
+
+  // ── Telemetry lifecycle ──
+  var _telemClient = null;
+  var _scenarioLoaded = false;
+
+  function initTelemetry() {
+    cleanupTelemetry();
+    if (!window.MCTelemetry) return;
+
+    _telemClient = new window.MCTelemetry.Client();
+    _scenarioLoaded = false;
+
+    _telemClient.onStatus(function(connected) {
+      var badge = document.getElementById('telem-badge');
+      if (!badge) return;
+      if (connected) {
+        badge.className = 'telem-status live';
+        badge.textContent = 'LIVE';
+      } else {
+        badge.className = 'telem-status disconnected';
+        badge.textContent = 'DISCONNECTED';
+      }
+    });
+
+    _telemClient.onUpdate(function(snap) {
+      var T = window.MCTelemetry;
+      var el;
+      el = document.getElementById('telem-nav');     if (el) T.renderNavPanel(el, snap);
+      el = document.getElementById('telem-batt');    if (el) T.renderBatteryPanel(el, snap);
+      el = document.getElementById('telem-engines'); if (el) T.renderEnginePanel(el, snap);
+      el = document.getElementById('telem-tanks');   if (el) T.renderTanksPanel(el, snap);
+      el = document.getElementById('telem-wind');    if (el) T.renderWindPanel(el, snap);
+      el = document.getElementById('telem-pos');     if (el) T.renderPositionPanel(el, snap);
+
+      // Alerts
+      el = document.getElementById('telem-alerts');
+      if (el && snap._alerts) T.renderAlertTicker(el, snap._alerts);
+
+      // Load scenario buttons once
+      if (!_scenarioLoaded) {
+        _scenarioLoaded = true;
+        loadScenarios();
+      }
+    });
+
+    _telemClient.connect();
+  }
+
+  function loadScenarios() {
+    var el = document.getElementById('telem-scenarios');
+    if (!el) return;
+    fetch('/api/telemetry/scenarios')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (window.MCTelemetry && el) {
+          window.MCTelemetry.renderScenarioControl(el, data.current);
+        }
+      })
+      .catch(function() {});
+  }
+
+  function cleanupTelemetry() {
+    if (_telemClient) {
+      _telemClient.disconnect();
+      _telemClient = null;
+    }
+    _scenarioLoaded = false;
   }
 
   function detailRow(label, value, raw) {

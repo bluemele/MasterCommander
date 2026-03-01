@@ -24,7 +24,7 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY digestion/package.json ./
 COPY digestion/commander.js digestion/test.js digestion/setup-wizard.js digestion/simulator.js ./
 COPY digestion/boat-config.json digestion/boat-config.template.json ./
-COPY digestion/signalk-client.js digestion/alert-engine.js digestion/llm-router.js digestion/status-builder.js digestion/whatsapp.js ./lib/
+COPY digestion/signalk-client.js digestion/alert-engine.js digestion/llm-router.js digestion/status-builder.js digestion/whatsapp.js digestion/telemetry-server.js ./lib/
 
 # Start script: nginx in background, commander in foreground
 COPY start.sh /start.sh
