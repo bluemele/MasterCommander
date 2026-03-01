@@ -35,7 +35,7 @@
 .vrm-state-badge.vrm-charging{color:#34D399}
 .vrm-state-badge.vrm-discharging{color:#FBBF24}
 .vrm-power{font-size:.82rem;font-weight:700;color:#94A3B8;font-variant-numeric:tabular-nums}
-.vrm-soc{font-size:2.4rem;font-weight:900;font-variant-numeric:tabular-nums;color:#F1F5F9;line-height:1;margin-bottom:8px}
+.vrm-soc{font-size:2.4rem;font-weight:900;font-variant-numeric:tabular-nums;color:#F1F5F9;line-height:1;margin-bottom:8px;text-align:center}
 .vrm-soc span{font-size:1.2rem;font-weight:600;color:#94A3B8}
 .vrm-soc-bar{height:4px;background:#334155;border-radius:2px;overflow:hidden;margin-bottom:14px}
 .vrm-soc-fill{height:100%;border-radius:2px;transition:width .6s ease}
