@@ -190,7 +190,25 @@
         '</div>';
     }
 
-    el.innerHTML = '<div class="telem-panel-title"><span>&#9981;</span> Tanks</div>' + bars;
+    // Starter batteries (non-house) shown as compact voltage rows
+    var batts = snap.batteries || {};
+    var bkeys = Object.keys(batts);
+    var starters = '';
+    for (var j = 0; j < bkeys.length; j++) {
+      if (bkeys[j] === 'house') continue;
+      var b = batts[bkeys[j]];
+      var label = bkeys[j].replace(/^starter/, '').replace(/([A-Z])/g, ' $1').trim() || bkeys[j];
+      var vCls = b.voltage != null && b.voltage < 12.2 ? ' warn' : '';
+      starters +=
+        '<div class="telem-row"><span class="telem-label">Starter ' + esc(label) + '</span><span class="telem-value' + vCls + '">' + fmt(b.voltage, 1) + '<span class="telem-unit">V</span></span></div>';
+    }
+    if (starters) {
+      starters = '<div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border)">' +
+        '<div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--slate);margin-bottom:6px">Starter Batteries</div>' +
+        starters + '</div>';
+    }
+
+    el.innerHTML = '<div class="telem-panel-title"><span>&#9981;</span> Tanks</div>' + bars + starters;
   }
 
   // ── Wind panel (speed + direction) ──

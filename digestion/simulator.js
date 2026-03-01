@@ -34,7 +34,11 @@ const PROFILES = {
       port: { hoursBase: 2847 },
       starboard: { hoursBase: 2791 },
     },
-    batteries: { house: { voltage: 26.4, soc: 0.92, capacity: 1700, nominal: 24 } },
+    batteries: {
+      house: { voltage: 26.4, soc: 0.92, capacity: 1700, nominal: 24 },
+      starterPort: { voltage: 12.8, soc: 0.97, capacity: 100, nominal: 12 },
+      starterStbd: { voltage: 12.9, soc: 0.98, capacity: 100, nominal: 12 },
+    },
     tanks: {
       fuel: { port: 0.72, starboard: 0.68 },
       freshWater: { port: 0.85, starboard: 0.79 },
