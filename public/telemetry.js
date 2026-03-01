@@ -72,17 +72,30 @@
   // GAUGE RENDERERS
   // ============================================================
 
-  // ── Navigation panel (SOG, heading, depth, water temp) ──
+  // ── Navigation panel (SOG, heading, depth, water temp, position) ──
   function renderNavPanel(el, snap) {
     var nav = snap.navigation || {};
     var env = snap.environment || {};
+    var pos = nav.position;
+    var posHtml = '';
+    if (pos) {
+      var parts = pos.split(',');
+      var lat = parts[0] ? parts[0].trim() : '--';
+      var lon = parts[1] ? parts[1].trim() : '--';
+      var mapUrl = 'https://www.google.com/maps?q=' + lat + ',' + lon;
+      posHtml =
+        '<div class="telem-row"><span class="telem-label">Lat</span><span class="telem-value">' + esc(lat) + '</span></div>' +
+        '<div class="telem-row"><span class="telem-label">Lon</span><span class="telem-value">' + esc(lon) + '</span></div>' +
+        '<a class="pos-link" href="' + esc(mapUrl) + '" target="_blank" rel="noopener">Google Maps &#8599;</a>';
+    }
     el.innerHTML =
       '<div class="telem-panel-title"><span>&#9881;</span> Navigation</div>' +
       '<div class="telem-row"><span class="telem-label">SOG</span><span class="telem-value">' + fmt(nav.sog, 1) + '<span class="telem-unit">kts</span></span></div>' +
       '<div class="telem-row"><span class="telem-label">Heading</span><span class="telem-value">' + fmt(nav.heading) + '<span class="telem-unit">&deg;</span></span></div>' +
       '<div class="telem-row"><span class="telem-label">COG</span><span class="telem-value">' + fmt(nav.cog) + '<span class="telem-unit">&deg;</span></span></div>' +
       '<div class="telem-row"><span class="telem-label">Depth</span><span class="telem-value' + (env.depth != null && env.depth < 3 ? ' warn' : '') + '">' + fmt(env.depth, 1) + '<span class="telem-unit">m</span></span></div>' +
-      '<div class="telem-row"><span class="telem-label">Water Temp</span><span class="telem-value">' + fmt(env.waterTemp, 1) + '<span class="telem-unit">&deg;C</span></span></div>';
+      '<div class="telem-row"><span class="telem-label">Water Temp</span><span class="telem-value">' + fmt(env.waterTemp, 1) + '<span class="telem-unit">&deg;C</span></span></div>' +
+      posHtml;
   }
 
   // ── House Battery panel (Victron VRM style) ──
@@ -186,8 +199,8 @@
       var t = tanks[keys[i]];
       var level = t.level != null ? t.level : 0;
       var type = t.type || keys[i].split('_')[0];
-      var name = keys[i].replace(/_/g, ' ');
-      var fillClass = type === 'fuel' ? 'fuel' : type === 'freshWater' ? 'freshWater' : 'wasteWater';
+      var name = keys[i].replace(/_/g, ' ').replace('freshWater', 'freshwater').replace('wasteWater', 'wastewater');
+      var fillClass = type === 'fuel' ? 'fuel' : type === 'freshWater' ? 'freshwater' : 'wastewater';
       var pctColor = level < 15 ? ' crit' : level < 30 ? ' warn' : '';
 
       bars +=
@@ -266,10 +279,10 @@
     el.innerHTML =
       '<div class="telem-panel-title"><span>&#127788;</span> Wind</div>' +
       compass +
-      '<div class="telem-row"><span class="telem-label">AWS</span><span class="telem-value">' + fmt(aws, 1) + '<span class="telem-unit">kts</span></span></div>' +
-      '<div class="telem-row"><span class="telem-label">AWA</span><span class="telem-value">' + fmt(awa) + '<span class="telem-unit">&deg;</span></span></div>' +
       (tws != null ? '<div class="telem-row"><span class="telem-label">TWS</span><span class="telem-value">' + fmt(tws, 1) + '<span class="telem-unit">kts</span></span></div>' : '') +
-      (twa != null ? '<div class="telem-row"><span class="telem-label">TWA</span><span class="telem-value">' + fmt(twa) + '<span class="telem-unit">&deg;</span></span></div>' : '');
+      (twa != null ? '<div class="telem-row"><span class="telem-label">TWA</span><span class="telem-value">' + fmt(twa) + '<span class="telem-unit">&deg;</span></span></div>' : '') +
+      '<div class="telem-row"><span class="telem-label">AWS</span><span class="telem-value">' + fmt(aws, 1) + '<span class="telem-unit">kts</span></span></div>' +
+      '<div class="telem-row"><span class="telem-label">AWA</span><span class="telem-value">' + fmt(awa) + '<span class="telem-unit">&deg;</span></span></div>';
   }
 
   // ── Position panel (lat/lon + map link) ──

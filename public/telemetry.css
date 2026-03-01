@@ -11,6 +11,7 @@
 
 /* ── Telemetry grid ── */
 .telem-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+.telem-grid-wide{grid-template-columns:repeat(3,1fr)}
 .telem-panel{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;min-height:120px}
 .telem-panel-title{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--slate);margin-bottom:12px;display:flex;align-items:center;gap:6px}
 .telem-panel-title span{font-size:.9rem}
@@ -27,26 +28,26 @@
 /* ── Unit suffix ── */
 .telem-unit{font-size:.7rem;font-weight:500;color:var(--slate);margin-left:2px}
 
-/* ── Victron VRM house battery ── */
-.vrm-card{background:#1E293B;border-radius:10px;padding:16px;color:#E2E8F0}
+/* ── Victron VRM house battery (light theme — matches dashboard) ── */
+.vrm-card{background:#fff;border-radius:10px;padding:16px;color:var(--text)}
 .vrm-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
 .vrm-state-badge{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
-.vrm-state-badge.vrm-idle{color:#94A3B8}
-.vrm-state-badge.vrm-charging{color:#34D399}
-.vrm-state-badge.vrm-discharging{color:#FBBF24}
-.vrm-power{font-size:.82rem;font-weight:700;color:#94A3B8;font-variant-numeric:tabular-nums}
-.vrm-soc{font-size:2.4rem;font-weight:900;font-variant-numeric:tabular-nums;color:#F1F5F9;line-height:1;margin-bottom:8px;text-align:center}
-.vrm-soc span{font-size:1.2rem;font-weight:600;color:#94A3B8}
-.vrm-soc-bar{height:4px;background:#334155;border-radius:2px;overflow:hidden;margin-bottom:14px}
+.vrm-state-badge.vrm-idle{color:var(--slate)}
+.vrm-state-badge.vrm-charging{color:#059669}
+.vrm-state-badge.vrm-discharging{color:#D97706}
+.vrm-power{font-size:.82rem;font-weight:700;color:var(--slate);font-variant-numeric:tabular-nums}
+.vrm-soc{font-size:2.4rem;font-weight:900;font-variant-numeric:tabular-nums;color:var(--text);line-height:1;margin-bottom:12px;padding-top:4px;text-align:center;width:100%;display:block}
+.vrm-soc span{font-size:1.2rem;font-weight:600;color:var(--slate)}
+.vrm-soc-bar{height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-bottom:14px}
 .vrm-soc-fill{height:100%;border-radius:2px;transition:width .6s ease}
-.vrm-soc-fill.vrm-idle{background:#64748B}
-.vrm-soc-fill.vrm-charging{background:#34D399}
-.vrm-soc-fill.vrm-discharging{background:#FBBF24}
-.vrm-details{border-top:1px solid #334155;padding-top:10px}
-.vrm-row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(51,65,85,.5)}
+.vrm-soc-fill.vrm-idle{background:var(--slate)}
+.vrm-soc-fill.vrm-charging{background:var(--emerald)}
+.vrm-soc-fill.vrm-discharging{background:var(--amber)}
+.vrm-details{border-top:1px solid var(--border);padding-top:10px}
+.vrm-row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(226,232,240,.5)}
 .vrm-row:last-child{border-bottom:none}
-.vrm-label{font-size:.78rem;color:#94A3B8;font-weight:500}
-.vrm-val{font-size:.85rem;font-weight:700;color:#F1F5F9;font-variant-numeric:tabular-nums}
+.vrm-label{font-size:.78rem;color:var(--slate);font-weight:500}
+.vrm-val{font-size:.85rem;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums}
 
 /* ── Tank bars ── */
 .tank-bar-wrap{margin-bottom:10px}
@@ -57,8 +58,8 @@
 .tank-bar{height:10px;background:#E2E8F0;border-radius:5px;overflow:hidden}
 .tank-bar-fill{height:100%;border-radius:5px;transition:width .6s ease}
 .tank-bar-fill.fuel{background:var(--amber)}
-.tank-bar-fill.freshWater{background:var(--sky)}
-.tank-bar-fill.wasteWater{background:var(--slate)}
+.tank-bar-fill.freshwater{background:var(--sky)}
+.tank-bar-fill.wastewater{background:var(--slate)}
 
 /* ── Engine RPM bars ── */
 .engine-block{margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)}

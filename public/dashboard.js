@@ -17,6 +17,13 @@
   async function api(path, opts) {
     var res = await fetch(path, Object.assign({ headers: authHeaders() }, opts || {}));
     if (res.status === 401) { window.mcAuth.logout(); throw new Error('Session expired'); }
+    if (res.status === 403) {
+      var errData = await res.json();
+      if (errData.error && errData.error.indexOf('subscription') !== -1) {
+        navigate('#/billing');
+      }
+      throw new Error(errData.error || 'Access denied');
+    }
     var data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Request failed');
     return data;
@@ -81,10 +88,45 @@
 
   // ── Fleet Overview ──
   async function renderFleet() {
-    app.innerHTML = '<div class="fleet-header"><h1>Welcome, ' + esc(user ? user.name.split(' ')[0] : '') + '</h1><button class="btn btn-sky" onclick="window._addBoat()">+ Add Boat</button></div><div id="fleet-grid" class="fleet-grid"><p style="color:var(--slate)">Loading...</p></div>';
+    app.innerHTML = '<div class="fleet-header"><h1 id="fleet-title">Loading...</h1><div id="fleet-actions"></div></div><div id="fleet-grid" class="fleet-grid"><p style="color:var(--slate)">Loading...</p></div>';
     try {
       var data = await api('/api/boats');
+      var sub = data.subscription || {};
       var grid = document.getElementById('fleet-grid');
+      var title = document.getElementById('fleet-title');
+      var actions = document.getElementById('fleet-actions');
+
+      // Paywall — no active plan
+      if (sub.requiresPlan) {
+        title.textContent = 'Get Started';
+        actions.innerHTML = '';
+        var plans = data.planOptions || [];
+        grid.innerHTML =
+          '<div class="paywall-card"><div class="paywall-icon">&#9875;</div>' +
+          '<h2>Subscribe to start monitoring your boat</h2>' +
+          '<p>Choose a plan to unlock real-time telemetry, alerts, and AI-powered diagnostics.</p>' +
+          '<div class="paywall-plans">' + plans.map(function(p) {
+            return '<div class="paywall-plan"><div class="paywall-plan-name">' + esc(p.name) + '</div>' +
+              '<div class="paywall-plan-price">$' + (p.amount / 100).toFixed(0) + '<span>/' + esc(p.interval) + '</span></div>' +
+              '<div class="paywall-plan-desc">' + esc(p.description) + '</div></div>';
+          }).join('') + '</div>' +
+          '<button class="btn btn-sky" onclick="window.location.hash=\'#/billing\'">View Plans &amp; Subscribe</button>' +
+          '</div>';
+        return;
+      }
+
+      // Active plan — show header + badge
+      var headerText = sub.header || 'My Boat';
+      var planName = sub.plan ? (sub.plan.charAt(0).toUpperCase() + sub.plan.slice(1)) : '';
+      title.innerHTML = esc(headerText) + (planName ? ' <span class="plan-badge">' + esc(planName) + '</span>' : '');
+
+      // Add Boat button (disabled at limit)
+      var atLimit = sub.boatCount >= sub.maxBoats;
+      actions.innerHTML = '<button class="btn btn-sky' + (atLimit ? ' disabled' : '') + '" ' +
+        (atLimit ? 'disabled title="Plan limit reached (' + sub.maxBoats + ' boats)"' : 'onclick="window._addBoat()"') +
+        '>+ Add Boat</button>' +
+        '<span class="fleet-count">' + (sub.boatCount || 0) + '/' + (sub.maxBoats || 0) + ' boats</span>';
+
       if (!data.boats || data.boats.length === 0) {
         grid.innerHTML = '<div class="fleet-empty"><p>No boats registered yet. Add your first boat to get started.</p></div>';
         return;
@@ -206,6 +248,26 @@
         ? '<img src="' + esc(b.photo_url) + '" alt="' + esc(b.name) + '">'
         : '<span class="placeholder-icon">&#9973;</span>';
 
+      // Build compact detail chips (only non-empty values)
+      var chips = '';
+      var chipData = [
+        ['Status', '<span class="status-dot ' + esc(statusLabel) + '" style="display:inline-block;margin-right:3px"></span>' + esc(statusLabel), true],
+        ['Model', b.model], ['Year', b.year], ['Type', b.boat_type],
+        ['Length', b.length_ft ? b.length_ft + ' ft' : null],
+        ['Beam', b.beam_ft ? b.beam_ft + ' ft' : null],
+        ['Draft', b.draft_ft ? b.draft_ft + ' ft' : null],
+        ['MMSI', b.mmsi], ['Home Port', b.home_port],
+        ['Engines', (b.engine_type || '') + (b.engine_count > 1 ? ' x' + b.engine_count : '')],
+        ['Fuel', b.fuel_capacity ? b.fuel_capacity + 'L' : null],
+        ['Water', b.water_capacity ? b.water_capacity + 'L' : null],
+      ];
+      for (var ci = 0; ci < chipData.length; ci++) {
+        var cd = chipData[ci];
+        var cv = cd[2] ? cd[1] : (cd[1] != null && cd[1] !== '' ? esc(String(cd[1])) : null);
+        if (!cv) continue;
+        chips += '<div class="boat-chip"><span class="boat-chip-label">' + esc(cd[0]) + '</span>' + (cd[2] ? cv : '<span class="boat-chip-val">' + cv + '</span>') + '</div>';
+      }
+
       app.innerHTML =
         '<div class="boat-page-header">' +
         '<button class="back-btn" onclick="window.location.hash=\'#/\'">&larr; Fleet</button>' +
@@ -214,50 +276,33 @@
         '<button class="btn btn-outline btn-sm" id="edit-boat-btn">Edit</button>' +
         '<button class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red)" id="delete-boat-btn">Delete</button>' +
         '</div></div>' +
-        '<div class="boat-layout">' +
 
-        // Left column — photo + details
-        '<div>' +
-        '<div class="card">' +
-        '<div class="boat-photo-large">' + photo + '</div>' +
-        '<div class="detail-grid">' +
-        detailRow('Status', '<span class="status-dot ' + esc(statusLabel) + '" style="display:inline-block;margin-right:4px"></span>' + esc(statusLabel), true) +
-        detailRow('Model', b.model) +
-        detailRow('Year', b.year) +
-        detailRow('Boat Type', b.boat_type) +
-        detailRow('Length', b.length_ft ? b.length_ft + ' ft' : null) +
-        detailRow('Beam', b.beam_ft ? b.beam_ft + ' ft' : null) +
-        detailRow('Draft', b.draft_ft ? b.draft_ft + ' ft' : null) +
-        detailRow('MMSI', b.mmsi) +
-        detailRow('Home Port', b.home_port) +
-        detailRow('Registration', b.registration) +
-        detailRow('Flag', b.flag) +
-        detailRow('Engine', b.engine_type) +
-        detailRow('Engines', b.engine_count) +
-        detailRow('Fuel Capacity', b.fuel_capacity ? b.fuel_capacity + ' L' : null) +
-        detailRow('Water Capacity', b.water_capacity ? b.water_capacity + ' L' : null) +
-        (b.notes ? '<div class="detail-item" style="grid-column:1/-1"><div class="detail-label">Notes</div><div class="detail-value">' + esc(b.notes) + '</div></div>' : '') +
-        '</div></div></div>' +
+        // Compact boat info bar
+        '<div class="card boat-info-bar">' +
+        (b.photo_url ? '<div class="boat-thumb"><img src="' + esc(b.photo_url) + '" alt="' + esc(b.name) + '"></div>' : '') +
+        '<div class="boat-chips">' + chips + '</div>' +
+        (b.notes ? '<div class="boat-notes-line">' + esc(b.notes) + '</div>' : '') +
+        '</div>' +
 
-        // Right column — live telemetry
-        '<div>' +
-        '<div class="card"><h2>Commander Unit <span class="telem-status disconnected" id="telem-badge">CONNECTING</span></h2>' +
-        '<div class="telem-grid">' +
-        '<div class="telem-panel" id="telem-nav"></div>' +
+        // Alerts card — above telemetry
+        '<div class="card" style="margin-top:16px"><h2>Alerts</h2>' +
+        '<div class="alert-ticker" id="telem-alerts"><div class="alert-empty">Connecting...</div></div>' +
+        '</div>' +
+
+        // Full-width telemetry (5 panels — position merged into nav)
+        '<div class="card" style="margin-top:16px"><h2>Commander Unit <span class="telem-status disconnected" id="telem-badge">CONNECTING</span></h2>' +
+        '<div class="telem-grid telem-grid-wide">' +
         '<div class="telem-panel" id="telem-batt"></div>' +
+        '<div class="telem-panel" id="telem-nav"></div>' +
         '<div class="telem-panel" id="telem-engines"></div>' +
         '<div class="telem-panel" id="telem-tanks"></div>' +
         '<div class="telem-panel" id="telem-wind"></div>' +
-        '<div class="telem-panel" id="telem-pos"></div>' +
         '</div>' +
         '<div class="scenario-bar" id="telem-scenarios"></div>' +
         '</div>' +
-        '<div class="card" style="margin-top:16px"><h2>Alerts</h2>' +
-        '<div class="alert-ticker" id="telem-alerts"><div class="alert-empty">Connecting...</div></div>' +
-        '</div></div>' +
 
         // Full width — logbook
-        '<div class="boat-layout-full"><div class="card" id="logbook-card">' +
+        '<div class="card" style="margin-top:16px" id="logbook-card">' +
         '<div class="log-header"><h2>Logbook</h2><div style="display:flex;gap:8px;align-items:center">' +
         '<div class="log-filters" id="log-filters">' +
         '<button class="log-filter active" data-type="">All</button>' +
@@ -269,8 +314,6 @@
         '</div></div>' +
         '<div id="log-feed" class="log-feed"><p style="color:var(--slate)">Loading...</p></div>' +
         '<div id="log-form-area"></div>' +
-        '</div></div>' +
-
         '</div>';
 
       // Event listeners
@@ -330,7 +373,6 @@
       el = document.getElementById('telem-engines'); if (el) T.renderEnginePanel(el, snap);
       el = document.getElementById('telem-tanks');   if (el) T.renderTanksPanel(el, snap);
       el = document.getElementById('telem-wind');    if (el) T.renderWindPanel(el, snap);
-      el = document.getElementById('telem-pos');     if (el) T.renderPositionPanel(el, snap);
 
       // Alerts
       el = document.getElementById('telem-alerts');

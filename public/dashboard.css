@@ -66,18 +66,20 @@ main{padding:32px 24px 64px}
 .boat-page-header h1{font-size:1.5rem;font-weight:800;color:var(--ocean);flex:1}
 .boat-page-actions{display:flex;gap:8px}
 
-.boat-layout{display:grid;grid-template-columns:1fr 1fr;gap:24px}
-.boat-layout-full{grid-column:1/-1}
-
 .card{background:#fff;border:1.5px solid var(--border);border-radius:14px;padding:24px}
 .card h2{font-size:1rem;font-weight:700;color:var(--ocean);margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--border)}
 
-/* ── BOAT PHOTO ── */
-.boat-photo-large{width:100%;height:240px;background:var(--surface);border-radius:10px;display:flex;align-items:center;justify-content:center;overflow:hidden;margin-bottom:16px}
-.boat-photo-large img{width:100%;height:100%;object-fit:cover;border-radius:10px}
-.boat-photo-large .placeholder-icon{font-size:4rem;opacity:.15}
+/* ── COMPACT BOAT INFO BAR ── */
+.boat-info-bar{display:flex;align-items:center;gap:16px;padding:14px 20px;flex-wrap:wrap}
+.boat-thumb{width:80px;height:56px;border-radius:8px;overflow:hidden;flex-shrink:0}
+.boat-thumb img{width:100%;height:100%;object-fit:cover}
+.boat-chips{display:flex;flex-wrap:wrap;gap:6px;flex:1}
+.boat-chip{display:inline-flex;align-items:center;gap:4px;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:3px 10px;font-size:.75rem}
+.boat-chip-label{font-weight:700;color:var(--slate);text-transform:uppercase;letter-spacing:.03em;font-size:.65rem}
+.boat-chip-val{font-weight:600;color:var(--text)}
+.boat-notes-line{width:100%;font-size:.78rem;color:var(--slate);font-style:italic;margin-top:2px}
 
-/* ── DETAIL GRID ── */
+/* ── DETAIL GRID (kept for modals) ── */
 .detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .detail-item{display:flex;flex-direction:column;gap:2px}
 .detail-label{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--slate)}
@@ -174,13 +176,33 @@ main{padding:32px 24px 64px}
 .billing-plan-item .btn{margin-top:auto}
 .billing-plan-item .btn:disabled{opacity:.4;cursor:not-allowed}
 
+/* ── PLAN BADGE ── */
+.plan-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;background:rgba(14,165,233,.1);color:var(--sky);vertical-align:middle;margin-left:8px}
+.fleet-count{font-size:.82rem;color:var(--slate);font-weight:600}
+.fleet-header .fleet-count{margin-left:4px}
+.fleet-actions{display:flex;align-items:center;gap:12px}
+
+/* ── PAYWALL CARD ── */
+.paywall-card{background:#fff;border:1.5px solid var(--border);border-radius:14px;padding:40px 24px;text-align:center;grid-column:1/-1;max-width:640px;margin:0 auto}
+.paywall-icon{font-size:3rem;margin-bottom:16px;opacity:.6}
+.paywall-card h2{font-size:1.2rem;font-weight:800;color:var(--ocean);margin-bottom:8px}
+.paywall-card p{font-size:.9rem;color:var(--slate);margin-bottom:24px}
+.paywall-plans{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:24px}
+.paywall-plan{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:left}
+.paywall-plan-name{font-size:.82rem;font-weight:700;color:var(--ocean)}
+.paywall-plan-price{font-size:1.1rem;font-weight:800;color:var(--text);margin:4px 0}
+.paywall-plan-price span{font-size:.75rem;font-weight:500;color:var(--slate)}
+.paywall-plan-desc{font-size:.75rem;color:var(--slate)}
+
 /* ── RESPONSIVE ── */
 @media(max-width:768px){
   .nav-inner{flex-wrap:wrap;height:auto;padding:10px 0}
   .nav-tabs{order:3;width:100%;justify-content:center;padding-top:8px;border-top:1px solid var(--border)}
   .fleet-header{flex-direction:column;gap:12px;align-items:flex-start}
   .fleet-grid{grid-template-columns:1fr}
-  .boat-layout{grid-template-columns:1fr}
+  .boat-info-bar{flex-direction:column;align-items:flex-start}
+  .boat-thumb{width:100%}
+  .boat-thumb img{height:120px}
   .settings-grid{grid-template-columns:1fr}
   .detail-grid{grid-template-columns:1fr}
   .monitor-grid{grid-template-columns:1fr}
