@@ -34,6 +34,7 @@ const CONVERTERS = {
   'environment.wind.speedApparent':   { unit: 'kts', fn: convert.msToKnots },
   'environment.wind.angleApparent':   { unit: '°', fn: convert.radToDeg },
   'environment.wind.speedTrue':       { unit: 'kts', fn: convert.msToKnots },
+  'environment.wind.angleTrueWater':  { unit: '°', fn: convert.radToDeg },
   'environment.water.temperature':    { unit: '°C', fn: convert.kelvinToC },
   'environment.outside.temperature':  { unit: '°C', fn: convert.kelvinToC },
   'environment.outside.pressure':     { unit: 'hPa', fn: v => v != null ? Math.round(v / 100) : null },
@@ -238,6 +239,8 @@ export class SignalKClient extends EventEmitter {
     if (this.discovered.hasWind) {
       s.environment.windSpeed = this.get('environment.wind.speedApparent');
       s.environment.windAngle = this.get('environment.wind.angleApparent');
+      s.environment.windSpeedTrue = this.get('environment.wind.speedTrue');
+      s.environment.windAngleTrue = this.get('environment.wind.angleTrueWater');
     }
     s.engines = {};
     for (const id of this.discovered.engines) s.engines[id] = this.getEngine(id);

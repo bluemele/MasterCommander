@@ -27,12 +27,20 @@
 /* ── Unit suffix ── */
 .telem-unit{font-size:.7rem;font-weight:500;color:var(--slate);margin-left:2px}
 
-/* ── Battery arc gauge ── */
-.batt-gauge{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1}
-.batt-gauge svg{width:80px;height:50px}
-.batt-gauge-label{font-size:.7rem;font-weight:700;color:var(--slate);text-transform:uppercase}
-.batt-gauge-pct{font-size:1.1rem;font-weight:800;font-variant-numeric:tabular-nums}
-.batt-row{display:flex;gap:16px;justify-content:center;margin-bottom:8px}
+/* ── Victron-style house battery ── */
+.victron-donut{position:relative;width:120px;height:120px;margin:0 auto 12px}
+.victron-donut svg{width:100%;height:100%}
+.victron-donut-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.victron-soc{font-size:1.6rem;font-weight:900;font-variant-numeric:tabular-nums;color:var(--text);line-height:1}
+.victron-soc span{font-size:.9rem;font-weight:600}
+.victron-state{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--slate);margin-top:2px}
+.victron-state.good{color:var(--emerald)}
+.victron-state.warn{color:var(--amber)}
+.victron-stats{display:flex;justify-content:space-around;text-align:center;padding-top:8px;border-top:1px solid var(--border)}
+.victron-stat-val{font-size:1rem;font-weight:800;font-variant-numeric:tabular-nums;color:var(--text)}
+.victron-stat-val.good{color:var(--emerald)}
+.victron-stat-val.warn{color:var(--amber)}
+.victron-stat-label{font-size:.65rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--slate);margin-top:1px}
 
 /* ── Tank bars ── */
 .tank-bar-wrap{margin-bottom:10px}
@@ -47,9 +55,19 @@
 .tank-bar-fill.wasteWater{background:var(--slate)}
 
 /* ── Engine RPM bars ── */
-.engine-block{margin-bottom:12px}
-.engine-block:last-child{margin-bottom:0}
-.engine-id{font-size:.75rem;font-weight:700;color:var(--ocean);text-transform:capitalize;margin-bottom:6px}
+.engine-block{margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)}
+.engine-block:last-child{margin-bottom:0;padding-bottom:0;border-bottom:none}
+.engine-id{font-size:.78rem;font-weight:700;color:var(--ocean);text-transform:capitalize;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.engine-running{font-size:.65rem;font-weight:600;color:var(--emerald);background:#D1FAE5;padding:1px 6px;border-radius:4px}
+.engine-off{font-size:.65rem;font-weight:600;color:var(--slate);background:var(--surface);padding:1px 6px;border-radius:4px}
+.engine-temps{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0}
+.engine-temp-gauge{}
+.engine-temp-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:3px}
+.temp-bar{height:6px;background:#E2E8F0;border-radius:3px;overflow:hidden}
+.temp-bar-fill{height:100%;border-radius:3px;transition:width .6s ease;background:var(--border)}
+.temp-bar-fill.temp-green{background:var(--emerald)}
+.temp-bar-fill.temp-amber{background:var(--amber)}
+.temp-bar-fill.temp-red{background:var(--red)}
 .rpm-bar-wrap{margin-bottom:4px}
 .rpm-bar{height:8px;background:#E2E8F0;border-radius:4px;overflow:hidden}
 .rpm-bar-fill{height:100%;border-radius:4px;background:var(--emerald);transition:width .6s ease}
@@ -57,8 +75,11 @@
 .rpm-bar-fill.redline{background:var(--red)}
 
 /* ── Wind compass ── */
-.wind-compass{width:80px;height:80px;margin:0 auto 8px}
+.wind-compass{width:90px;height:90px;margin:0 auto 4px}
 .wind-compass svg{width:100%;height:100%}
+.wind-legend{display:flex;justify-content:center;gap:12px;margin-bottom:8px}
+.wind-legend-item{display:flex;align-items:center;gap:4px;font-size:.65rem;font-weight:600;color:var(--slate)}
+.wind-legend-item span:first-child{width:10px;height:3px;border-radius:2px;display:inline-block}
 
 /* ── Position link ── */
 .pos-link{display:inline-flex;align-items:center;gap:4px;font-size:.82rem;font-weight:600;color:var(--sky);text-decoration:none;margin-top:4px}

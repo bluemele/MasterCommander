@@ -103,6 +103,8 @@ const state = {
   depth: profile.depth,
   windSpeedApparent: 2.1,
   windAngleApparent: 0.52,
+  windSpeedTrue: 2.5,
+  windAngleTrue: 0.60,
   waterTemp: 28.5,
   engines: {},
   batteries: {},
@@ -191,6 +193,8 @@ function updateState() {
       for (const e of Object.values(state.engines)) { e.rpm = 0; e.oilPressure = 0; }
       state.windSpeedApparent = noise(8.5, 1.5);
       state.windAngleApparent = noise(0.87, 0.15);
+      state.windSpeedTrue = noise(10.2, 1.8);
+      state.windAngleTrue = noise(1.05, 0.12);
       for (const b of Object.values(state.batteries)) {
         b.current = noise(-3.5, 1);
         b.soc = Math.max(0.1, b.soc + b.current * 0.00001);
@@ -230,6 +234,8 @@ function updateState() {
   if (profile.hasWind && scenario !== 'sailing') {
     state.windSpeedApparent = noise(3.5, 2);
     state.windAngleApparent = noise(0.78, 0.3);
+    state.windSpeedTrue = noise(4.2, 2.5);
+    state.windAngleTrue = noise(0.92, 0.35);
   }
 }
 
@@ -251,6 +257,8 @@ function buildDelta() {
   if (profile.hasWind) {
     values.push({ path: 'environment.wind.speedApparent', value: state.windSpeedApparent });
     values.push({ path: 'environment.wind.angleApparent', value: state.windAngleApparent });
+    values.push({ path: 'environment.wind.speedTrue', value: state.windSpeedTrue });
+    values.push({ path: 'environment.wind.angleTrueWater', value: state.windAngleTrue });
   }
 
   // Engines

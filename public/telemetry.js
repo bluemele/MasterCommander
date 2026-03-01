@@ -85,53 +85,69 @@
       '<div class="telem-row"><span class="telem-label">Water Temp</span><span class="telem-value">' + fmt(env.waterTemp, 1) + '<span class="telem-unit">&deg;C</span></span></div>';
   }
 
-  // ── Battery panel (SVG arc gauges) ──
+  // ── House Battery panel (Victron-style) ──
   function renderBatteryPanel(el, snap) {
     var batts = snap.batteries || {};
-    var keys = Object.keys(batts);
-    if (keys.length === 0) {
-      el.innerHTML = '<div class="telem-panel-title"><span>&#128267;</span> Batteries</div><div style="color:var(--slate);font-size:.82rem;text-align:center;padding:12px">No batteries detected</div>';
+    var b = batts.house;
+    if (!b) {
+      el.innerHTML = '<div class="telem-panel-title"><span>&#128267;</span> House Battery</div><div style="color:var(--slate);font-size:.82rem;text-align:center;padding:12px">No house battery detected</div>';
       return;
     }
 
-    var gauges = '';
-    for (var i = 0; i < keys.length; i++) {
-      var b = batts[keys[i]];
-      var soc = b.soc != null ? b.soc : 0;
-      var color = soc > 50 ? C.emerald : soc > 20 ? C.amber : C.red;
-      var cls = soc > 50 ? 'good' : soc > 20 ? 'warn' : 'crit';
+    var soc = b.soc != null ? b.soc : 0;
+    var voltage = b.voltage != null ? b.voltage : 0;
+    var current = b.current != null ? b.current : 0;
+    var power = Math.round(Math.abs(voltage * current));
+    var charging = current > 0.5;
+    var discharging = current < -0.5;
+    var stateText = charging ? 'Charging' : discharging ? 'Discharging' : 'Idle';
+    var stateClass = charging ? 'good' : discharging ? 'warn' : '';
+    var socColor = soc > 50 ? C.emerald : soc > 20 ? C.amber : C.red;
 
-      // SVG arc: 180deg arc from -90 to +90
-      var r = 30, cx = 40, cy = 40;
-      var angle = (soc / 100) * Math.PI;
-      var x = cx + r * Math.cos(Math.PI - angle);
-      var y = cy - r * Math.sin(Math.PI - angle);
-      var large = soc > 50 ? 1 : 0;
-      var arcPath = 'M ' + (cx - r) + ' ' + cy + ' A ' + r + ' ' + r + ' 0 ' + large + ' 1 ' + x.toFixed(1) + ' ' + y.toFixed(1);
-      var bgPath = 'M ' + (cx - r) + ' ' + cy + ' A ' + r + ' ' + r + ' 0 1 1 ' + (cx + r) + ' ' + cy;
+    // SVG donut ring — 270deg arc
+    var r = 42, cx = 50, cy = 50, sw = 7;
+    var startAngle = 135; // degrees, bottom-left
+    var sweep = 270;
+    var endAngle = startAngle + sweep;
+    var filledSweep = (soc / 100) * sweep;
+    var filledEnd = startAngle + filledSweep;
 
-      gauges +=
-        '<div class="batt-gauge">' +
-        '<svg viewBox="0 0 80 50">' +
-        '<path d="' + bgPath + '" fill="none" stroke="' + C.border + '" stroke-width="6" stroke-linecap="round"/>' +
-        '<path d="' + arcPath + '" fill="none" stroke="' + color + '" stroke-width="6" stroke-linecap="round"/>' +
-        '</svg>' +
-        '<div class="batt-gauge-pct ' + cls + '">' + fmt(soc) + '%</div>' +
-        '<div class="batt-gauge-label">' + esc(keys[i]) + '</div>' +
-        '</div>';
+    function polarToXY(deg) {
+      var rad = (deg - 90) * Math.PI / 180;
+      return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
     }
+    var bgStart = polarToXY(startAngle);
+    var bgEnd = polarToXY(endAngle);
+    var fStart = polarToXY(startAngle);
+    var fEnd = polarToXY(filledEnd);
 
-    var details = '';
-    for (var j = 0; j < keys.length; j++) {
-      var bt = batts[keys[j]];
-      details +=
-        '<div class="telem-row"><span class="telem-label">' + esc(keys[j]) + ' V</span><span class="telem-value">' + fmt(bt.voltage, 1) + '<span class="telem-unit">V</span></span></div>' +
-        '<div class="telem-row"><span class="telem-label">' + esc(keys[j]) + ' A</span><span class="telem-value' + (bt.current > 0 ? ' good' : '') + '">' + (bt.current > 0 ? '+' : '') + fmt(bt.current, 1) + '<span class="telem-unit">A</span></span></div>';
-    }
+    var bgArc = 'M ' + bgStart.x.toFixed(1) + ' ' + bgStart.y.toFixed(1) +
+      ' A ' + r + ' ' + r + ' 0 1 1 ' + bgEnd.x.toFixed(1) + ' ' + bgEnd.y.toFixed(1);
+    var fLarge = filledSweep > 180 ? 1 : 0;
+    var fArc = filledSweep > 0.5
+      ? 'M ' + fStart.x.toFixed(1) + ' ' + fStart.y.toFixed(1) +
+        ' A ' + r + ' ' + r + ' 0 ' + fLarge + ' 1 ' + fEnd.x.toFixed(1) + ' ' + fEnd.y.toFixed(1)
+      : '';
+
+    var donut =
+      '<div class="victron-donut">' +
+      '<svg viewBox="0 0 100 100">' +
+      '<path d="' + bgArc + '" fill="none" stroke="' + C.border + '" stroke-width="' + sw + '" stroke-linecap="round"/>' +
+      (fArc ? '<path d="' + fArc + '" fill="none" stroke="' + socColor + '" stroke-width="' + sw + '" stroke-linecap="round"/>' : '') +
+      '</svg>' +
+      '<div class="victron-donut-center">' +
+      '<div class="victron-soc">' + fmt(soc) + '<span>%</span></div>' +
+      '<div class="victron-state ' + stateClass + '">' + stateText + '</div>' +
+      '</div></div>';
 
     el.innerHTML =
-      '<div class="telem-panel-title"><span>&#128267;</span> Batteries</div>' +
-      '<div class="batt-row">' + gauges + '</div>' + details;
+      '<div class="telem-panel-title"><span>&#128267;</span> House Battery</div>' +
+      donut +
+      '<div class="victron-stats">' +
+      '<div class="victron-stat"><div class="victron-stat-val">' + fmt(voltage, 1) + '</div><div class="victron-stat-label">Volts</div></div>' +
+      '<div class="victron-stat"><div class="victron-stat-val ' + stateClass + '">' + (current > 0 ? '+' : '') + fmt(current, 1) + '</div><div class="victron-stat-label">Amps</div></div>' +
+      '<div class="victron-stat"><div class="victron-stat-val">' + power + '</div><div class="victron-stat-label">Watts</div></div>' +
+      '</div>';
   }
 
   // ── Engine panel (RPM bars + temps) ──
@@ -150,14 +166,26 @@
       var pct = Math.min(100, (rpm / 3500) * 100);
       var barCls = rpm > 3000 ? 'redline' : rpm > 2500 ? 'high' : '';
 
+      // Temperature bar helpers: coolant 0-120°C, exhaust 0-700°C
+      var coolant = e.coolantTemp || 0;
+      var exhaust = e.exhaustTemp || 0;
+      var coolPct = Math.min(100, (coolant / 120) * 100);
+      var exhPct = Math.min(100, (exhaust / 700) * 100);
+      var coolCls = coolant > 95 ? 'temp-red' : coolant > 85 ? 'temp-amber' : coolant > 40 ? 'temp-green' : '';
+      var exhCls = exhaust > 500 ? 'temp-red' : exhaust > 400 ? 'temp-amber' : exhaust > 100 ? 'temp-green' : '';
+
       blocks +=
         '<div class="engine-block">' +
-        '<div class="engine-id">' + esc(keys[i]) + (e.running ? ' &#x25CF;' : '') + '</div>' +
+        '<div class="engine-id">' + esc(keys[i]) + (e.running ? ' <span class="engine-running">Running</span>' : ' <span class="engine-off">Off</span>') + '</div>' +
         '<div class="rpm-bar-wrap"><div class="rpm-bar"><div class="rpm-bar-fill ' + barCls + '" style="width:' + pct.toFixed(0) + '%"></div></div></div>' +
         '<div class="telem-row"><span class="telem-label">RPM</span><span class="telem-value">' + fmt(rpm) + '</span></div>' +
-        '<div class="telem-row"><span class="telem-label">Oil</span><span class="telem-value' + (e.oilPressure != null && e.running && e.oilPressure < 25 ? ' crit' : '') + '">' + fmt(e.oilPressure) + '<span class="telem-unit">PSI</span></span></div>' +
-        '<div class="telem-row"><span class="telem-label">Coolant</span><span class="telem-value' + (e.coolantTemp != null && e.coolantTemp > 95 ? ' crit' : '') + '">' + fmt(e.coolantTemp) + '<span class="telem-unit">&deg;C</span></span></div>' +
-        '<div class="telem-row"><span class="telem-label">Exhaust</span><span class="telem-value">' + fmt(e.exhaustTemp) + '<span class="telem-unit">&deg;C</span></span></div>' +
+        '<div class="engine-temps">' +
+        '<div class="engine-temp-gauge"><div class="engine-temp-header"><span class="telem-label">Coolant</span><span class="telem-value ' + (coolant > 95 ? 'crit' : '') + '">' + fmt(coolant) + '<span class="telem-unit">&deg;C</span></span></div>' +
+        '<div class="temp-bar"><div class="temp-bar-fill ' + coolCls + '" style="width:' + coolPct.toFixed(0) + '%"></div></div></div>' +
+        '<div class="engine-temp-gauge"><div class="engine-temp-header"><span class="telem-label">Exhaust</span><span class="telem-value ' + (exhaust > 500 ? 'crit' : '') + '">' + fmt(exhaust) + '<span class="telem-unit">&deg;C</span></span></div>' +
+        '<div class="temp-bar"><div class="temp-bar-fill ' + exhCls + '" style="width:' + exhPct.toFixed(0) + '%"></div></div></div>' +
+        '</div>' +
+        '<div class="telem-row"><span class="telem-label">Oil Pressure</span><span class="telem-value' + (e.oilPressure != null && e.running && e.oilPressure < 25 ? ' crit' : '') + '">' + fmt(e.oilPressure) + '<span class="telem-unit">PSI</span></span></div>' +
         '<div class="telem-row"><span class="telem-label">Hours</span><span class="telem-value">' + fmt(e.hours) + '<span class="telem-unit">hrs</span></span></div>' +
         '</div>';
     }
@@ -211,7 +239,7 @@
     el.innerHTML = '<div class="telem-panel-title"><span>&#9981;</span> Tanks</div>' + bars + starters;
   }
 
-  // ── Wind panel (speed + direction) ──
+  // ── Wind panel (apparent + true) ──
   function renderWindPanel(el, snap) {
     var env = snap.environment || {};
     if (env.windSpeed == null) {
@@ -219,29 +247,50 @@
       return;
     }
 
-    var speed = env.windSpeed;
-    var angle = env.windAngle || 0;
+    var aws = env.windSpeed;
+    var awa = env.windAngle || 0;
+    var tws = env.windSpeedTrue;
+    var twa = env.windAngleTrue;
 
-    // Simple compass with arrow
-    var rad = angle * Math.PI / 180;
-    var ax = 40 + 25 * Math.sin(rad);
-    var ay = 40 - 25 * Math.cos(rad);
+    // Compass with both apparent (sky) and true (emerald) arrows
+    function windArrow(angleDeg, color, label) {
+      var rad = angleDeg * Math.PI / 180;
+      var ax = 40 + 25 * Math.sin(rad);
+      var ay = 40 - 25 * Math.cos(rad);
+      // Arrowhead
+      var headLen = 6;
+      var headAng = 0.4;
+      var h1x = ax - headLen * Math.sin(rad - headAng);
+      var h1y = ay + headLen * Math.cos(rad - headAng);
+      var h2x = ax - headLen * Math.sin(rad + headAng);
+      var h2y = ay + headLen * Math.cos(rad + headAng);
+      return '<line x1="40" y1="40" x2="' + ax.toFixed(1) + '" y2="' + ay.toFixed(1) + '" stroke="' + color + '" stroke-width="2.5" stroke-linecap="round"/>' +
+        '<polygon points="' + ax.toFixed(1) + ',' + ay.toFixed(1) + ' ' + h1x.toFixed(1) + ',' + h1y.toFixed(1) + ' ' + h2x.toFixed(1) + ',' + h2y.toFixed(1) + '" fill="' + color + '"/>';
+    }
+
     var compass =
       '<div class="wind-compass"><svg viewBox="0 0 80 80">' +
-      '<circle cx="40" cy="40" r="35" fill="none" stroke="' + C.border + '" stroke-width="2"/>' +
-      '<text x="40" y="12" text-anchor="middle" font-size="8" font-weight="700" fill="' + C.slate + '">N</text>' +
-      '<text x="40" y="76" text-anchor="middle" font-size="8" font-weight="700" fill="' + C.slate + '">S</text>' +
-      '<text x="8" y="43" text-anchor="middle" font-size="8" font-weight="700" fill="' + C.slate + '">W</text>' +
-      '<text x="72" y="43" text-anchor="middle" font-size="8" font-weight="700" fill="' + C.slate + '">E</text>' +
-      '<line x1="40" y1="40" x2="' + ax.toFixed(1) + '" y2="' + ay.toFixed(1) + '" stroke="' + C.sky + '" stroke-width="3" stroke-linecap="round"/>' +
-      '<circle cx="40" cy="40" r="3" fill="' + C.sky + '"/>' +
-      '</svg></div>';
+      '<circle cx="40" cy="40" r="35" fill="none" stroke="' + C.border + '" stroke-width="1.5"/>' +
+      '<text x="40" y="12" text-anchor="middle" font-size="7" font-weight="700" fill="' + C.slate + '">N</text>' +
+      '<text x="40" y="76" text-anchor="middle" font-size="7" font-weight="700" fill="' + C.slate + '">S</text>' +
+      '<text x="8" y="43" text-anchor="middle" font-size="7" font-weight="700" fill="' + C.slate + '">W</text>' +
+      '<text x="72" y="43" text-anchor="middle" font-size="7" font-weight="700" fill="' + C.slate + '">E</text>' +
+      windArrow(awa, C.sky, 'A') +
+      (twa != null ? windArrow(twa, C.emerald, 'T') : '') +
+      '<circle cx="40" cy="40" r="2.5" fill="' + C.text + '"/>' +
+      '</svg></div>' +
+      '<div class="wind-legend">' +
+      '<span class="wind-legend-item"><span style="background:' + C.sky + '"></span>Apparent</span>' +
+      (twa != null ? '<span class="wind-legend-item"><span style="background:' + C.emerald + '"></span>True</span>' : '') +
+      '</div>';
 
     el.innerHTML =
       '<div class="telem-panel-title"><span>&#127788;</span> Wind</div>' +
       compass +
-      '<div class="telem-row"><span class="telem-label">Apparent Speed</span><span class="telem-value">' + fmt(speed, 1) + '<span class="telem-unit">kts</span></span></div>' +
-      '<div class="telem-row"><span class="telem-label">Apparent Angle</span><span class="telem-value">' + fmt(angle) + '<span class="telem-unit">&deg;</span></span></div>';
+      '<div class="telem-row"><span class="telem-label">AWS</span><span class="telem-value">' + fmt(aws, 1) + '<span class="telem-unit">kts</span></span></div>' +
+      '<div class="telem-row"><span class="telem-label">AWA</span><span class="telem-value">' + fmt(awa) + '<span class="telem-unit">&deg;</span></span></div>' +
+      (tws != null ? '<div class="telem-row"><span class="telem-label">TWS</span><span class="telem-value">' + fmt(tws, 1) + '<span class="telem-unit">kts</span></span></div>' : '') +
+      (twa != null ? '<div class="telem-row"><span class="telem-label">TWA</span><span class="telem-value">' + fmt(twa) + '<span class="telem-unit">&deg;</span></span></div>' : '');
   }
 
   // ── Position panel (lat/lon + map link) ──

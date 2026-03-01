@@ -89,6 +89,11 @@
         grid.innerHTML = '<div class="fleet-empty"><p>No boats registered yet. Add your first boat to get started.</p></div>';
         return;
       }
+      // Single boat — go straight to boat page
+      if (data.boats.length === 1) {
+        navigate('#/boat/' + data.boats[0].id);
+        return;
+      }
       grid.innerHTML = '';
       data.boats.forEach(function(b) {
         var card = document.createElement('div');
