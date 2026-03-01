@@ -27,20 +27,26 @@
 /* ── Unit suffix ── */
 .telem-unit{font-size:.7rem;font-weight:500;color:var(--slate);margin-left:2px}
 
-/* ── Victron-style house battery ── */
-.victron-donut{position:relative;width:120px;height:120px;margin:0 auto 12px}
-.victron-donut svg{width:100%;height:100%}
-.victron-donut-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
-.victron-soc{font-size:1.6rem;font-weight:900;font-variant-numeric:tabular-nums;color:var(--text);line-height:1}
-.victron-soc span{font-size:.9rem;font-weight:600}
-.victron-state{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--slate);margin-top:2px}
-.victron-state.good{color:var(--emerald)}
-.victron-state.warn{color:var(--amber)}
-.victron-stats{display:flex;justify-content:space-around;text-align:center;padding-top:8px;border-top:1px solid var(--border)}
-.victron-stat-val{font-size:1rem;font-weight:800;font-variant-numeric:tabular-nums;color:var(--text)}
-.victron-stat-val.good{color:var(--emerald)}
-.victron-stat-val.warn{color:var(--amber)}
-.victron-stat-label{font-size:.65rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--slate);margin-top:1px}
+/* ── Victron VRM house battery ── */
+.vrm-card{background:#1E293B;border-radius:10px;padding:16px;color:#E2E8F0}
+.vrm-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.vrm-state-badge{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.vrm-state-badge.vrm-idle{color:#94A3B8}
+.vrm-state-badge.vrm-charging{color:#34D399}
+.vrm-state-badge.vrm-discharging{color:#FBBF24}
+.vrm-power{font-size:.82rem;font-weight:700;color:#94A3B8;font-variant-numeric:tabular-nums}
+.vrm-soc{font-size:2.4rem;font-weight:900;font-variant-numeric:tabular-nums;color:#F1F5F9;line-height:1;margin-bottom:8px}
+.vrm-soc span{font-size:1.2rem;font-weight:600;color:#94A3B8}
+.vrm-soc-bar{height:4px;background:#334155;border-radius:2px;overflow:hidden;margin-bottom:14px}
+.vrm-soc-fill{height:100%;border-radius:2px;transition:width .6s ease}
+.vrm-soc-fill.vrm-idle{background:#64748B}
+.vrm-soc-fill.vrm-charging{background:#34D399}
+.vrm-soc-fill.vrm-discharging{background:#FBBF24}
+.vrm-details{border-top:1px solid #334155;padding-top:10px}
+.vrm-row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(51,65,85,.5)}
+.vrm-row:last-child{border-bottom:none}
+.vrm-label{font-size:.78rem;color:#94A3B8;font-weight:500}
+.vrm-val{font-size:.85rem;font-weight:700;color:#F1F5F9;font-variant-numeric:tabular-nums}
 
 /* ── Tank bars ── */
 .tank-bar-wrap{margin-bottom:10px}

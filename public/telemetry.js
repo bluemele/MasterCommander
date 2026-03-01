@@ -85,7 +85,7 @@
       '<div class="telem-row"><span class="telem-label">Water Temp</span><span class="telem-value">' + fmt(env.waterTemp, 1) + '<span class="telem-unit">&deg;C</span></span></div>';
   }
 
-  // ── House Battery panel (Victron-style) ──
+  // ── House Battery panel (Victron VRM style) ──
   function renderBatteryPanel(el, snap) {
     var batts = snap.batteries || {};
     var b = batts.house;
@@ -97,57 +97,36 @@
     var soc = b.soc != null ? b.soc : 0;
     var voltage = b.voltage != null ? b.voltage : 0;
     var current = b.current != null ? b.current : 0;
-    var power = Math.round(Math.abs(voltage * current));
+    var power = Math.round(voltage * current);
+    var absPower = Math.abs(power);
     var charging = current > 0.5;
     var discharging = current < -0.5;
     var stateText = charging ? 'Charging' : discharging ? 'Discharging' : 'Idle';
-    var stateClass = charging ? 'good' : discharging ? 'warn' : '';
-    var socColor = soc > 50 ? C.emerald : soc > 20 ? C.amber : C.red;
+    var stateIcon = charging ? '&#9889;' : discharging ? '&#128267;' : '&#128267;';
+    var stateClass = charging ? 'vrm-charging' : discharging ? 'vrm-discharging' : 'vrm-idle';
 
-    // SVG donut ring — 270deg arc
-    var r = 42, cx = 50, cy = 50, sw = 7;
-    var startAngle = 135; // degrees, bottom-left
-    var sweep = 270;
-    var endAngle = startAngle + sweep;
-    var filledSweep = (soc / 100) * sweep;
-    var filledEnd = startAngle + filledSweep;
-
-    function polarToXY(deg) {
-      var rad = (deg - 90) * Math.PI / 180;
-      return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+    // Time to go estimate (rough: capacity_Ah * voltage * soc / load_watts)
+    // Using 1700Ah 24V nominal as default
+    var ttg = '';
+    if (discharging && absPower > 5) {
+      var hoursLeft = Math.round((1700 * 24 * (soc / 100)) / absPower);
+      ttg = hoursLeft > 200 ? '200+ h' : hoursLeft + ' h';
     }
-    var bgStart = polarToXY(startAngle);
-    var bgEnd = polarToXY(endAngle);
-    var fStart = polarToXY(startAngle);
-    var fEnd = polarToXY(filledEnd);
-
-    var bgArc = 'M ' + bgStart.x.toFixed(1) + ' ' + bgStart.y.toFixed(1) +
-      ' A ' + r + ' ' + r + ' 0 1 1 ' + bgEnd.x.toFixed(1) + ' ' + bgEnd.y.toFixed(1);
-    var fLarge = filledSweep > 180 ? 1 : 0;
-    var fArc = filledSweep > 0.5
-      ? 'M ' + fStart.x.toFixed(1) + ' ' + fStart.y.toFixed(1) +
-        ' A ' + r + ' ' + r + ' 0 ' + fLarge + ' 1 ' + fEnd.x.toFixed(1) + ' ' + fEnd.y.toFixed(1)
-      : '';
-
-    var donut =
-      '<div class="victron-donut">' +
-      '<svg viewBox="0 0 100 100">' +
-      '<path d="' + bgArc + '" fill="none" stroke="' + C.border + '" stroke-width="' + sw + '" stroke-linecap="round"/>' +
-      (fArc ? '<path d="' + fArc + '" fill="none" stroke="' + socColor + '" stroke-width="' + sw + '" stroke-linecap="round"/>' : '') +
-      '</svg>' +
-      '<div class="victron-donut-center">' +
-      '<div class="victron-soc">' + fmt(soc) + '<span>%</span></div>' +
-      '<div class="victron-state ' + stateClass + '">' + stateText + '</div>' +
-      '</div></div>';
 
     el.innerHTML =
-      '<div class="telem-panel-title"><span>&#128267;</span> House Battery</div>' +
-      donut +
-      '<div class="victron-stats">' +
-      '<div class="victron-stat"><div class="victron-stat-val">' + fmt(voltage, 1) + '</div><div class="victron-stat-label">Volts</div></div>' +
-      '<div class="victron-stat"><div class="victron-stat-val ' + stateClass + '">' + (current > 0 ? '+' : '') + fmt(current, 1) + '</div><div class="victron-stat-label">Amps</div></div>' +
-      '<div class="victron-stat"><div class="victron-stat-val">' + power + '</div><div class="victron-stat-label">Watts</div></div>' +
-      '</div>';
+      '<div class="vrm-card">' +
+      '<div class="vrm-header">' +
+      '<span class="vrm-state-badge ' + stateClass + '">' + stateIcon + ' ' + stateText + '</span>' +
+      '<span class="vrm-power">' + (power > 0 ? '+' : '') + power + ' W</span>' +
+      '</div>' +
+      '<div class="vrm-soc">' + fmt(soc) + ' <span>%</span></div>' +
+      '<div class="vrm-soc-bar"><div class="vrm-soc-fill ' + stateClass + '" style="width:' + Math.max(1, soc) + '%"></div></div>' +
+      '<div class="vrm-details">' +
+      '<div class="vrm-row"><span class="vrm-label">Voltage</span><span class="vrm-val">' + fmt(voltage, 2) + ' V</span></div>' +
+      '<div class="vrm-row"><span class="vrm-label">Current</span><span class="vrm-val">' + fmt(current, 1) + ' A</span></div>' +
+      '<div class="vrm-row"><span class="vrm-label">Power</span><span class="vrm-val">' + (power > 0 ? '+' : '') + power + ' W</span></div>' +
+      (ttg ? '<div class="vrm-row"><span class="vrm-label">Time to go</span><span class="vrm-val">' + ttg + '</span></div>' : '') +
+      '</div></div>';
   }
 
   // ── Engine panel (RPM bars + temps) ──
