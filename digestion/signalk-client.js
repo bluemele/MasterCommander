@@ -250,6 +250,19 @@ export class SignalKClient extends EventEmitter {
     for (const [type, ids] of Object.entries(this.discovered.tanks)) {
       for (const id of ids) s.tanks[`${type}_${id}`] = this.getTank(type, id);
     }
+    // Electrical system (shore, solar, generator)
+    s.electrical = {};
+    if (this.discovered.hasSolar) {
+      s.electrical.solar = { power: this.get('electrical.solar.power') || 0 };
+    }
+    if (this.discovered.hasGenerator) {
+      const gv = this.get('electrical.ac.generator.voltage') || 0;
+      s.electrical.generator = { running: gv > 50, voltage: gv, hours: Math.round((this.get('electrical.ac.generator.runTime') || 0) / 3600) };
+    }
+    if (this.discovered.hasShore) {
+      const sv = this.get('electrical.ac.shore.voltage') || 0;
+      s.electrical.shore = { connected: sv > 50, voltage: sv };
+    }
     return s;
   }
 }

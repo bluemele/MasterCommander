@@ -244,9 +244,6 @@
       var data = await api('/api/boats/' + id);
       var b = data.boat;
       var statusLabel = b.status || 'inactive';
-      var photo = b.photo_url
-        ? '<img src="' + esc(b.photo_url) + '" alt="' + esc(b.name) + '">'
-        : '<span class="placeholder-icon">&#9973;</span>';
 
       // Build compact detail chips (only non-empty values)
       var chips = '';
@@ -268,6 +265,84 @@
         chips += '<div class="boat-chip"><span class="boat-chip-label">' + esc(cd[0]) + '</span>' + (cd[2] ? cv : '<span class="boat-chip-val">' + cv + '</span>') + '</div>';
       }
 
+      // ── Section content ──
+      var sections = {};
+
+      sections.info =
+        '<div class="boat-info-bar">' +
+        (b.photo_url ? '<div class="boat-thumb"><img src="' + esc(b.photo_url) + '" alt="' + esc(b.name) + '"></div>' : '') +
+        '<div class="boat-chips">' + chips + '</div>' +
+        (b.notes ? '<div class="boat-notes-line">' + esc(b.notes) + '</div>' : '') +
+        '</div>';
+
+      sections.alerts =
+        '<div class="alert-ticker" id="telem-alerts"><div class="alert-empty">Connecting...</div></div>';
+
+      // ── Telem panel order ──
+      var defaultPanelOrder = ['batt', 'nav', 'engines', 'tanks', 'wind'];
+      var panelOrder = defaultPanelOrder;
+      try {
+        var savedPanels = JSON.parse(localStorage.getItem('mc_telem_' + id));
+        if (Array.isArray(savedPanels) && savedPanels.length === defaultPanelOrder.length) {
+          var validP = true;
+          for (var pi = 0; pi < defaultPanelOrder.length; pi++) {
+            if (savedPanels.indexOf(defaultPanelOrder[pi]) === -1) { validP = false; break; }
+          }
+          if (validP) panelOrder = savedPanels;
+        }
+      } catch(e) {}
+      var panelHtml = '';
+      for (var pi = 0; pi < panelOrder.length; pi++) {
+        var pk = panelOrder[pi];
+        panelHtml += '<div class="telem-drag-box" data-panel="' + pk + '"><div class="telem-panel" id="telem-' + pk + '"></div></div>';
+      }
+
+      sections.telemetry =
+        '<div class="telem-grid telem-grid-wide" id="telem-panels">' + panelHtml + '</div>' +
+        '<div class="scenario-bar" id="telem-scenarios"></div>';
+
+      sections.logbook =
+        '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px">' +
+        '<div class="log-filters" id="log-filters">' +
+        '<button class="log-filter active" data-type="">All</button>' +
+        '<button class="log-filter" data-type="note">Notes</button>' +
+        '<button class="log-filter" data-type="maintenance">Maintenance</button>' +
+        '<button class="log-filter" data-type="alert">Alerts</button>' +
+        '</div>' +
+        '<button class="btn btn-sky btn-sm" id="add-log-btn">+ Add Entry</button>' +
+        '</div>' +
+        '<div id="log-feed" class="log-feed"><p style="color:var(--slate)">Loading...</p></div>' +
+        '<div id="log-form-area"></div>';
+
+      var sectionLabels = { info: 'Boat Info', alerts: 'Alerts', telemetry: 'Commander Unit', logbook: 'Logbook' };
+      var sectionHandleExtra = {
+        telemetry: ' <span class="telem-status disconnected" id="telem-badge">CONNECTING</span>'
+      };
+
+      // ── Saved layout order ──
+      var defaultOrder = ['info', 'alerts', 'telemetry', 'logbook'];
+      var order = defaultOrder;
+      try {
+        var saved = JSON.parse(localStorage.getItem('mc_layout_' + id));
+        if (Array.isArray(saved) && saved.length === defaultOrder.length) {
+          var valid = true;
+          for (var oi = 0; oi < defaultOrder.length; oi++) {
+            if (saved.indexOf(defaultOrder[oi]) === -1) { valid = false; break; }
+          }
+          if (valid) order = saved;
+        }
+      } catch(e) {}
+
+      // ── Build drag boxes ──
+      var boxesHtml = '';
+      for (var si = 0; si < order.length; si++) {
+        var key = order[si];
+        boxesHtml +=
+          '<div class="drag-box" data-section="' + key + '">' +
+          '<div class="drag-handle"><span class="drag-grip">\u283F</span> ' + sectionLabels[key] + (sectionHandleExtra[key] || '') + '</div>' +
+          '<div class="drag-content">' + sections[key] + '</div></div>';
+      }
+
       app.innerHTML =
         '<div class="boat-page-header">' +
         '<button class="back-btn" onclick="window.location.hash=\'#/\'">&larr; Fleet</button>' +
@@ -276,45 +351,7 @@
         '<button class="btn btn-outline btn-sm" id="edit-boat-btn">Edit</button>' +
         '<button class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red)" id="delete-boat-btn">Delete</button>' +
         '</div></div>' +
-
-        // Compact boat info bar
-        '<div class="card boat-info-bar">' +
-        (b.photo_url ? '<div class="boat-thumb"><img src="' + esc(b.photo_url) + '" alt="' + esc(b.name) + '"></div>' : '') +
-        '<div class="boat-chips">' + chips + '</div>' +
-        (b.notes ? '<div class="boat-notes-line">' + esc(b.notes) + '</div>' : '') +
-        '</div>' +
-
-        // Alerts card — above telemetry
-        '<div class="card" style="margin-top:16px"><h2>Alerts</h2>' +
-        '<div class="alert-ticker" id="telem-alerts"><div class="alert-empty">Connecting...</div></div>' +
-        '</div>' +
-
-        // Full-width telemetry (5 panels — position merged into nav)
-        '<div class="card" style="margin-top:16px"><h2>Commander Unit <span class="telem-status disconnected" id="telem-badge">CONNECTING</span></h2>' +
-        '<div class="telem-grid telem-grid-wide">' +
-        '<div class="telem-panel" id="telem-batt"></div>' +
-        '<div class="telem-panel" id="telem-nav"></div>' +
-        '<div class="telem-panel" id="telem-engines"></div>' +
-        '<div class="telem-panel" id="telem-tanks"></div>' +
-        '<div class="telem-panel" id="telem-wind"></div>' +
-        '</div>' +
-        '<div class="scenario-bar" id="telem-scenarios"></div>' +
-        '</div>' +
-
-        // Full width — logbook
-        '<div class="card" style="margin-top:16px" id="logbook-card">' +
-        '<div class="log-header"><h2>Logbook</h2><div style="display:flex;gap:8px;align-items:center">' +
-        '<div class="log-filters" id="log-filters">' +
-        '<button class="log-filter active" data-type="">All</button>' +
-        '<button class="log-filter" data-type="note">Notes</button>' +
-        '<button class="log-filter" data-type="maintenance">Maintenance</button>' +
-        '<button class="log-filter" data-type="alert">Alerts</button>' +
-        '</div>' +
-        '<button class="btn btn-sky btn-sm" id="add-log-btn">+ Add Entry</button>' +
-        '</div></div>' +
-        '<div id="log-feed" class="log-feed"><p style="color:var(--slate)">Loading...</p></div>' +
-        '<div id="log-form-area"></div>' +
-        '</div>';
+        '<div id="boat-sections" class="boat-sections">' + boxesHtml + '</div>';
 
       // Event listeners
       document.getElementById('edit-boat-btn').addEventListener('click', function() { showBoatModal(b); });
@@ -334,19 +371,221 @@
       });
 
       loadLogs(b.id, '');
-
-      // ── Start live telemetry ──
-      initTelemetry();
+      setupDragDrop({
+        containerId: 'boat-sections', boxClass: 'drag-box',
+        handleSel: '.drag-handle', dataAttr: 'data-section',
+        storageKey: 'mc_layout_' + id
+      });
+      setupDragDrop({
+        containerId: 'telem-panels', boxClass: 'telem-drag-box',
+        handleSel: '.telem-panel-title', dataAttr: 'data-panel',
+        storageKey: 'mc_telem_' + id, grid: true
+      });
+      initTelemetry(id);
     } catch (e) {
       app.innerHTML = '<p style="color:var(--red);padding:40px 0">' + esc(e.message) + '</p>';
     }
+  }
+
+  // ── Drag & drop (shared for sections + telem panels) ──
+  function setupDragDrop(opts) {
+    var container = document.getElementById(opts.containerId);
+    if (!container) return;
+    var boxSel = '.' + opts.boxClass;
+    var isGrid = opts.grid || false;
+    var dragEl = null;
+
+    function saveOrder() {
+      var order = [];
+      container.querySelectorAll(boxSel).forEach(function(box) {
+        order.push(box.getAttribute(opts.dataAttr));
+      });
+      localStorage.setItem(opts.storageKey, JSON.stringify(order));
+    }
+
+    // Enable dragging only from handle
+    container.addEventListener('mousedown', function(e) {
+      if (!e.target.closest(opts.handleSel)) return;
+      var box = e.target.closest(boxSel);
+      if (box) box.draggable = true;
+    });
+
+    container.addEventListener('dragstart', function(e) {
+      var box = e.target.closest(boxSel);
+      if (!box) return;
+      dragEl = box;
+      box.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', '');
+    });
+
+    container.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      var box = e.target.closest(boxSel);
+      if (!box || box === dragEl) return;
+      if (isGrid) {
+        // Live swap for grid layout
+        var all = Array.from(container.querySelectorAll(boxSel));
+        var di = all.indexOf(dragEl), ti = all.indexOf(box);
+        if (di !== -1 && ti !== -1 && di !== ti) {
+          if (di < ti) container.insertBefore(dragEl, box.nextSibling);
+          else container.insertBefore(dragEl, box);
+        }
+      } else {
+        // Border indicators for list layout
+        container.querySelectorAll('.drag-over-top,.drag-over-bottom').forEach(function(el) {
+          el.classList.remove('drag-over-top', 'drag-over-bottom');
+        });
+        var rect = box.getBoundingClientRect();
+        if (e.clientY < rect.top + rect.height / 2) box.classList.add('drag-over-top');
+        else box.classList.add('drag-over-bottom');
+      }
+    });
+
+    if (!isGrid) {
+      container.addEventListener('dragleave', function(e) {
+        if (!container.contains(e.relatedTarget)) {
+          container.querySelectorAll('.drag-over-top,.drag-over-bottom').forEach(function(el) {
+            el.classList.remove('drag-over-top', 'drag-over-bottom');
+          });
+        }
+      });
+    }
+
+    container.addEventListener('drop', function(e) {
+      e.preventDefault();
+      if (!isGrid) {
+        var box = e.target.closest(boxSel);
+        if (!box || !dragEl || box === dragEl) return;
+        var rect = box.getBoundingClientRect();
+        if (e.clientY < rect.top + rect.height / 2) container.insertBefore(dragEl, box);
+        else container.insertBefore(dragEl, box.nextSibling);
+      }
+      saveOrder();
+    });
+
+    container.addEventListener('dragend', function() {
+      if (isGrid) saveOrder();
+      container.querySelectorAll(boxSel).forEach(function(box) {
+        box.draggable = false;
+        box.classList.remove('dragging');
+      });
+      dragEl = null;
+      container.querySelectorAll('.drag-over-top,.drag-over-bottom').forEach(function(el) {
+        el.classList.remove('drag-over-top', 'drag-over-bottom');
+      });
+    });
+
+    // Touch drag support
+    var touchEl = null, touchClone = null, touchOffsetY = 0;
+
+    container.addEventListener('touchstart', function(e) {
+      var handle = e.target.closest(opts.handleSel);
+      if (!handle) return;
+      var box = handle.closest(boxSel);
+      if (!box) return;
+      touchEl = box;
+      var rect = box.getBoundingClientRect();
+      touchOffsetY = e.touches[0].clientY - rect.top;
+      touchClone = box.cloneNode(true);
+      touchClone.style.cssText = 'position:fixed;left:' + rect.left + 'px;top:' + rect.top + 'px;width:' + rect.width + 'px;opacity:.85;z-index:1000;pointer-events:none;box-shadow:0 8px 32px rgba(0,0,0,.18);';
+      document.body.appendChild(touchClone);
+      box.classList.add('dragging');
+    }, { passive: true });
+
+    container.addEventListener('touchmove', function(e) {
+      if (!touchEl) return;
+      e.preventDefault();
+      var y = e.touches[0].clientY;
+      touchClone.style.top = (y - touchOffsetY) + 'px';
+      var boxes = container.querySelectorAll(boxSel + ':not(.dragging)');
+      if (isGrid) {
+        for (var i = 0; i < boxes.length; i++) {
+          var r = boxes[i].getBoundingClientRect();
+          var x = e.touches[0].clientX;
+          if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) {
+            var all = Array.from(container.querySelectorAll(boxSel));
+            var di = all.indexOf(touchEl), ti = all.indexOf(boxes[i]);
+            if (di !== -1 && ti !== -1 && di !== ti) {
+              if (di < ti) container.insertBefore(touchEl, boxes[i].nextSibling);
+              else container.insertBefore(touchEl, boxes[i]);
+            }
+            break;
+          }
+        }
+      } else {
+        container.querySelectorAll('.drag-over-top,.drag-over-bottom').forEach(function(el) {
+          el.classList.remove('drag-over-top', 'drag-over-bottom');
+        });
+        for (var i = 0; i < boxes.length; i++) {
+          var r = boxes[i].getBoundingClientRect();
+          if (y >= r.top && y <= r.bottom) {
+            if (y < r.top + r.height / 2) boxes[i].classList.add('drag-over-top');
+            else boxes[i].classList.add('drag-over-bottom');
+            break;
+          }
+        }
+      }
+    }, { passive: false });
+
+    container.addEventListener('touchend', function() {
+      if (!touchEl) return;
+      if (!isGrid) {
+        var target = container.querySelector('.drag-over-top,.drag-over-bottom');
+        if (target && target !== touchEl) {
+          if (target.classList.contains('drag-over-top')) container.insertBefore(touchEl, target);
+          else container.insertBefore(touchEl, target.nextSibling);
+        }
+      }
+      saveOrder();
+      touchEl.classList.remove('dragging');
+      if (touchClone) touchClone.remove();
+      touchEl = null; touchClone = null;
+      container.querySelectorAll('.drag-over-top,.drag-over-bottom').forEach(function(el) {
+        el.classList.remove('drag-over-top', 'drag-over-bottom');
+      });
+    });
+  }
+
+  // ── Alert auto-logging ──
+  var _loggedAlerts = null;
+  var _logBoatId = null;
+
+  function autoLogAlerts(boatId, alerts) {
+    if (!alerts || !alerts.length) return;
+    if (!_loggedAlerts || _logBoatId !== boatId) {
+      _logBoatId = boatId;
+      try { _loggedAlerts = JSON.parse(localStorage.getItem('mc_alert_log_' + boatId)) || {}; }
+      catch(e) { _loggedAlerts = {}; }
+      // Prune entries older than 2 hours
+      var now = Date.now();
+      var keys = Object.keys(_loggedAlerts);
+      for (var i = 0; i < keys.length; i++) {
+        if (now - _loggedAlerts[keys[i]] > 7200000) delete _loggedAlerts[keys[i]];
+      }
+    }
+    var changed = false;
+    for (var i = 0; i < alerts.length; i++) {
+      var a = alerts[i];
+      var key = (a.id || a.message) + '|' + a.timestamp;
+      if (_loggedAlerts[key]) continue;
+      _loggedAlerts[key] = Date.now();
+      changed = true;
+      apiPost('/api/boats/' + boatId + '/logs', {
+        log_type: 'alert',
+        title: (a.severity || 'info').toUpperCase() + ': ' + (a.id || 'Alert'),
+        body: a.message
+      }).catch(function() {});
+    }
+    if (changed) localStorage.setItem('mc_alert_log_' + boatId, JSON.stringify(_loggedAlerts));
   }
 
   // ── Telemetry lifecycle ──
   var _telemClient = null;
   var _scenarioLoaded = false;
 
-  function initTelemetry() {
+  function initTelemetry(boatId) {
     cleanupTelemetry();
     if (!window.MCTelemetry) return;
 
@@ -378,6 +617,13 @@
       el = document.getElementById('telem-alerts');
       if (el && snap._alerts) T.renderAlertTicker(el, snap._alerts);
 
+      // Auto-log new alerts
+      if (boatId && snap._alerts) autoLogAlerts(boatId, snap._alerts);
+
+      // Live-update energy flow modal if open
+      var efBody = document.getElementById('ef-body');
+      if (efBody && T.renderEnergyFlow) T.renderEnergyFlow(efBody, snap);
+
       // Load scenario buttons once
       if (!_scenarioLoaded) {
         _scenarioLoaded = true;
@@ -386,6 +632,55 @@
     });
 
     _telemClient.connect();
+
+    // ── Battery panel click → energy flow modal ──
+    setTimeout(function() {
+      var battPanel = document.getElementById('telem-batt');
+      if (battPanel) {
+        battPanel.style.cursor = 'pointer';
+        battPanel.addEventListener('click', function(e) {
+          if (e.target.closest('.drag-handle,.telem-panel-title')) return; // don't trigger on grip drag
+          openEnergyFlow();
+        });
+      }
+    }, 500);
+  }
+
+  function openEnergyFlow() {
+    if (document.getElementById('ef-overlay')) return;
+    var overlay = document.createElement('div');
+    overlay.id = 'ef-overlay';
+    overlay.className = 'ef-overlay';
+    overlay.innerHTML =
+      '<div class="ef-modal">' +
+      '<div class="ef-modal-header">' +
+      '<div class="ef-modal-title"><span>&#9889;</span> Energy Flow</div>' +
+      '<button class="ef-close" id="ef-close">&times;</button>' +
+      '</div>' +
+      '<div id="ef-body"></div>' +
+      '</div>';
+    document.body.appendChild(overlay);
+
+    // Render immediately if we have data
+    var T = window.MCTelemetry;
+    if (_telemClient && _telemClient.lastSnapshot && T && T.renderEnergyFlow) {
+      T.renderEnergyFlow(document.getElementById('ef-body'), _telemClient.lastSnapshot);
+    }
+
+    // Close handlers
+    document.getElementById('ef-close').addEventListener('click', closeEnergyFlow);
+    overlay.addEventListener('click', function(e) {
+      if (e.target === overlay) closeEnergyFlow();
+    });
+    document.addEventListener('keydown', _efEscHandler);
+  }
+
+  function _efEscHandler(e) { if (e.key === 'Escape') closeEnergyFlow(); }
+
+  function closeEnergyFlow() {
+    var overlay = document.getElementById('ef-overlay');
+    if (overlay) overlay.remove();
+    document.removeEventListener('keydown', _efEscHandler);
   }
 
   function loadScenarios() {
@@ -438,27 +733,36 @@
       data.logs.forEach(function(log) {
         var el = document.createElement('div');
         el.className = 'log-entry ' + (log.log_type || 'note');
+        el.id = 'log-entry-' + log.id;
         var typeLabel = log.log_type === 'maintenance' ? 'Maintenance' : log.log_type === 'alert' ? 'Alert' : 'Note';
         var date = new Date(log.created_at);
         var dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' ' + date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
         el.innerHTML =
-          '<button class="log-entry-delete" title="Delete" data-log-id="' + log.id + '" data-boat-id="' + log.boat_id + '">&times;</button>' +
+          '<div class="log-entry-actions">' +
+          '<button class="log-action-btn log-entry-edit" title="Edit" data-log-id="' + log.id + '" data-boat-id="' + log.boat_id + '" data-type="' + esc(log.log_type || 'note') + '" data-title="' + esc(log.title || '') + '" data-body="' + esc(log.body || '') + '">&#9998;</button>' +
+          '<button class="log-action-btn log-entry-delete" title="Delete" data-log-id="' + log.id + '" data-boat-id="' + log.boat_id + '">&times;</button>' +
+          '</div>' +
           '<div class="log-entry-header"><span class="log-entry-title">' + (log.title ? esc(log.title) : esc(typeLabel)) + '</span>' +
           '<span class="log-entry-meta">' + esc(typeLabel) + ' &middot; ' + esc(dateStr) + (log.user_name ? ' &middot; ' + esc(log.user_name) : '') + '</span></div>' +
           (log.body ? '<div class="log-entry-body">' + esc(log.body) + '</div>' : '');
         feed.appendChild(el);
       });
 
-      // Delete handlers
-      feed.querySelectorAll('.log-entry-delete').forEach(function(btn) {
-        btn.addEventListener('click', async function() {
+      // Delete + Edit handlers via delegation
+      feed.onclick = function(e) {
+        var btn = e.target.closest('.log-action-btn');
+        if (!btn) return;
+        var boatIdAttr = btn.getAttribute('data-boat-id');
+        var logId = btn.getAttribute('data-log-id');
+        if (btn.classList.contains('log-entry-delete')) {
           if (!confirm('Delete this log entry?')) return;
-          try {
-            await apiDelete('/api/boats/' + btn.getAttribute('data-boat-id') + '/logs/' + btn.getAttribute('data-log-id'));
-            loadLogs(parseInt(btn.getAttribute('data-boat-id')), _logFilter);
-          } catch (e) { alert(e.message); }
-        });
-      });
+          apiDelete('/api/boats/' + boatIdAttr + '/logs/' + logId)
+            .then(function() { loadLogs(parseInt(boatIdAttr), _logFilter); })
+            .catch(function(err) { alert(err.message); });
+        } else if (btn.classList.contains('log-entry-edit')) {
+          showEditLog(btn);
+        }
+      };
     } catch (e) {
       feed.innerHTML = '<p style="color:var(--red)">' + esc(e.message) + '</p>';
     }
@@ -492,6 +796,50 @@
         document.getElementById('log-form-area').innerHTML = '';
         loadLogs(boatId, _logFilter);
       } catch (e) { alert(e.message); }
+    });
+  }
+
+  function showEditLog(btn) {
+    var logId = btn.getAttribute('data-log-id');
+    var boatId = btn.getAttribute('data-boat-id');
+    var entry = document.getElementById('log-entry-' + logId);
+    if (!entry || entry.querySelector('.log-edit-form')) return;
+    var curType = btn.getAttribute('data-type') || 'note';
+    var curTitle = btn.getAttribute('data-title') || '';
+    var curBody = btn.getAttribute('data-body') || '';
+
+    entry.innerHTML =
+      '<div class="log-edit-form">' +
+      '<div class="log-form-row">' +
+      '<select class="le-type">' +
+      '<option value="note"' + (curType === 'note' ? ' selected' : '') + '>Note</option>' +
+      '<option value="maintenance"' + (curType === 'maintenance' ? ' selected' : '') + '>Maintenance</option>' +
+      '<option value="alert"' + (curType === 'alert' ? ' selected' : '') + '>Alert</option>' +
+      '</select>' +
+      '<input class="le-title" value="' + esc(curTitle) + '" placeholder="Title">' +
+      '</div>' +
+      '<textarea class="le-body" placeholder="Details...">' + esc(curBody) + '</textarea>' +
+      '<div class="log-form-btns">' +
+      '<button class="btn btn-sky btn-sm le-save">Save</button>' +
+      '<button class="btn btn-outline btn-sm le-cancel">Cancel</button>' +
+      '</div></div>';
+
+    entry.querySelector('.le-save').addEventListener('click', async function() {
+      var title = entry.querySelector('.le-title').value.trim();
+      var body = entry.querySelector('.le-body').value.trim();
+      if (!title && !body) { alert('Title or details required.'); return; }
+      try {
+        await apiPut('/api/boats/' + boatId + '/logs/' + logId, {
+          log_type: entry.querySelector('.le-type').value,
+          title: title || null,
+          body: body || null
+        });
+        loadLogs(parseInt(boatId), _logFilter);
+      } catch (e) { alert(e.message); }
+    });
+
+    entry.querySelector('.le-cancel').addEventListener('click', function() {
+      loadLogs(parseInt(boatId), _logFilter);
     });
   }
 

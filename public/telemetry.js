@@ -127,6 +127,7 @@
     }
 
     el.innerHTML =
+      '<div class="telem-panel-title"><span>&#128267;</span> House Battery</div>' +
       '<div class="vrm-card">' +
       '<div class="vrm-header">' +
       '<span class="vrm-state-badge ' + stateClass + '">' + stateIcon + ' ' + stateText + '</span>' +
@@ -279,10 +280,10 @@
     el.innerHTML =
       '<div class="telem-panel-title"><span>&#127788;</span> Wind</div>' +
       compass +
-      (tws != null ? '<div class="telem-row"><span class="telem-label">TWS</span><span class="telem-value">' + fmt(tws, 1) + '<span class="telem-unit">kts</span></span></div>' : '') +
-      (twa != null ? '<div class="telem-row"><span class="telem-label">TWA</span><span class="telem-value">' + fmt(twa) + '<span class="telem-unit">&deg;</span></span></div>' : '') +
-      '<div class="telem-row"><span class="telem-label">AWS</span><span class="telem-value">' + fmt(aws, 1) + '<span class="telem-unit">kts</span></span></div>' +
-      '<div class="telem-row"><span class="telem-label">AWA</span><span class="telem-value">' + fmt(awa) + '<span class="telem-unit">&deg;</span></span></div>';
+      (tws != null ? '<div class="telem-row"><span class="telem-label">True Wind Speed (TWS)</span><span class="telem-value">' + fmt(tws, 1) + '<span class="telem-unit">kts</span></span></div>' : '') +
+      (twa != null ? '<div class="telem-row"><span class="telem-label">True Wind Angle (TWA)</span><span class="telem-value">' + fmt(twa) + '<span class="telem-unit">&deg;</span></span></div>' : '') +
+      '<div class="telem-row"><span class="telem-label">Apparent Wind Speed (AWS)</span><span class="telem-value">' + fmt(aws, 1) + '<span class="telem-unit">kts</span></span></div>' +
+      '<div class="telem-row"><span class="telem-label">Apparent Wind Angle (AWA)</span><span class="telem-value">' + fmt(awa) + '<span class="telem-unit">&deg;</span></span></div>';
   }
 
   // ── Position panel (lat/lon + map link) ──
@@ -335,24 +336,161 @@
   }
 
   // ── Alert ticker ──
+  var _dismissedAlerts = {};
+  var _silencedAlerts = {};
+
+  function alertKey(a) { return (a.message || '') + '|' + (a.severity || ''); }
+
   function renderAlertTicker(el, alerts) {
     if (!alerts || alerts.length === 0) {
       el.innerHTML = '<div class="alert-empty">No recent alerts</div>';
       return;
     }
 
-    var html = '';
+    // Filter out dismissed alerts
+    var visible = [];
     for (var i = 0; i < alerts.length; i++) {
-      var a = alerts[i];
+      if (!_dismissedAlerts[alertKey(alerts[i])]) visible.push(alerts[i]);
+    }
+    if (visible.length === 0) {
+      el.innerHTML = '<div class="alert-empty">All alerts dismissed</div>';
+      return;
+    }
+
+    var html = '';
+    for (var i = 0; i < visible.length; i++) {
+      var a = visible[i];
+      var key = alertKey(a);
       var sev = a.severity || 'info';
+      var silenced = _silencedAlerts[key];
       var time = a.timestamp ? new Date(a.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '';
       html +=
-        '<div class="alert-item ' + esc(sev) + '">' +
+        '<div class="alert-item ' + esc(sev) + (silenced ? ' silenced' : '') + '" data-alert-key="' + esc(key) + '">' +
+        '<div class="alert-actions">' +
+        '<button class="alert-btn alert-silence" title="' + (silenced ? 'Unsilence' : 'Silence') + '">' + (silenced ? '&#128276;' : '&#128263;') + '</button>' +
+        '<button class="alert-btn alert-dismiss" title="Dismiss">&times;</button>' +
+        '</div>' +
         '<div>' + esc(a.message) + '</div>' +
-        '<div class="alert-time">' + esc(time) + '</div>' +
+        '<div class="alert-time">' + esc(time) + (silenced ? ' &middot; Silenced' : '') + '</div>' +
         '</div>';
     }
     el.innerHTML = html;
+
+    // Attach handlers via delegation
+    el.onclick = function(e) {
+      var btn = e.target.closest('.alert-btn');
+      if (!btn) return;
+      var item = btn.closest('.alert-item');
+      var key = item ? item.getAttribute('data-alert-key') : null;
+      if (!key) return;
+      if (btn.classList.contains('alert-dismiss')) {
+        _dismissedAlerts[key] = true;
+        delete _silencedAlerts[key];
+        if (item) item.remove();
+        if (!el.querySelector('.alert-item')) el.innerHTML = '<div class="alert-empty">All alerts dismissed</div>';
+      } else if (btn.classList.contains('alert-silence')) {
+        if (_silencedAlerts[key]) delete _silencedAlerts[key];
+        else _silencedAlerts[key] = true;
+      }
+    };
+  }
+
+  // ============================================================
+  // ENERGY FLOW MODAL (Victron VRM–style)
+  // ============================================================
+
+  function renderEnergyFlow(el, snap) {
+    var batts = snap.batteries || {};
+    var b = batts.house || {};
+    var elec = snap.electrical || {};
+
+    var soc = b.soc != null ? b.soc : 0;
+    var voltage = b.voltage != null ? b.voltage : 0;
+    var current = b.current != null ? b.current : 0;
+    var battPower = Math.round(voltage * current);
+    var charging = current > 0.5;
+    var discharging = current < -0.5;
+
+    var shoreConn = elec.shore ? elec.shore.connected : false;
+    var shoreV = elec.shore ? Math.round(elec.shore.voltage) : 0;
+    var genRunning = elec.generator ? elec.generator.running : false;
+    var genV = elec.generator ? Math.round(elec.generator.voltage) : 0;
+    var genHrs = elec.generator ? elec.generator.hours : 0;
+    var solarW = elec.solar ? Math.round(elec.solar.power) : 0;
+
+    // Estimate loads from available data
+    var acLoad = 0, dcLoad = 0;
+    if (shoreConn) acLoad = Math.round(shoreV * 5);
+    else if (genRunning) acLoad = Math.round(genV * 3);
+    if (discharging) {
+      var drain = Math.abs(battPower);
+      if (!shoreConn && !genRunning) { acLoad = Math.round(drain * 0.3); dcLoad = drain - acLoad; }
+      else dcLoad = drain;
+    }
+    if (charging && solarW > 0) dcLoad = Math.round(solarW * 0.15);
+
+    // Flow direction helpers
+    var shoreAct = shoreConn;
+    var genAct = genRunning;
+    var solarAct = solarW > 5;
+    var invDir = charging ? 'in' : discharging ? 'out' : 'idle';
+
+    function card(id, icon, label, val1, val2, active, color) {
+      return '<div class="ef-card' + (active ? ' active' : '') + '" data-ef="' + id + '" style="--ef-accent:' + color + '">' +
+        '<div class="ef-icon">' + icon + '</div>' +
+        '<div class="ef-label">' + label + '</div>' +
+        '<div class="ef-val">' + val1 + '</div>' +
+        (val2 ? '<div class="ef-val2">' + val2 + '</div>' : '') +
+        '</div>';
+    }
+
+    function flow(from, to, active, dir) {
+      return '<div class="ef-flow ef-flow-' + from + '-' + to + (active ? ' active' : '') + (dir ? ' ' + dir : '') + '"><div class="ef-flow-dot"></div></div>';
+    }
+
+    // Battery state text
+    var battLabel = charging ? 'Charging' : discharging ? 'Discharging' : 'Idle';
+    var battColor = charging ? '#10B981' : discharging ? '#F59E0B' : '#64748B';
+
+    // Time to go
+    var ttg = '';
+    if (discharging && Math.abs(battPower) > 5) {
+      var hrs = Math.round((1700 * 24 * (soc / 100)) / Math.abs(battPower));
+      ttg = (hrs > 200 ? '200+' : hrs) + 'h remaining';
+    }
+
+    el.innerHTML =
+      '<div class="ef-grid">' +
+      // Row 1: Shore/Gen → Inverter → AC Loads
+      card('shore', '&#9879;', 'Shore Power', shoreAct ? shoreV + ' V' : 'Disconnected', shoreAct ? 'Connected' : '', shoreAct, '#3B82F6') +
+      card('inv', '&#9889;', 'Inverter / Charger', (battPower > 0 ? '+' : '') + battPower + ' W', invDir === 'in' ? 'Charging' : invDir === 'out' ? 'Inverting' : 'Standby', invDir !== 'idle', '#0EA5E9') +
+      card('ac', '&#9889;', 'AC Loads', acLoad + ' W', '', acLoad > 0, '#8B5CF6') +
+      // Row 2: Solar → Battery → DC Loads
+      card('solar', '&#9788;', 'Solar', solarAct ? solarW + ' W' : '0 W', solarAct ? 'Harvesting' : 'No output', solarAct, '#EAB308') +
+      card('batt', '&#128267;', 'Battery', soc + '%', fmt(voltage, 1) + ' V &middot; ' + fmt(Math.abs(current), 1) + ' A', true, battColor) +
+      card('dc', '&#9881;', 'DC Loads', dcLoad + ' W', '', dcLoad > 0, '#F43F5E') +
+      '</div>' +
+      // Flow connectors
+      '<div class="ef-flows">' +
+      flow('shore', 'inv', shoreAct, 'right') +
+      flow('inv', 'ac', acLoad > 0, 'right') +
+      flow('solar', 'batt', solarAct, 'right') +
+      flow('batt', 'dc', dcLoad > 0, 'right') +
+      flow('inv', 'batt', invDir !== 'idle', invDir === 'in' ? 'down' : 'up') +
+      flow('gen', 'inv', genAct, 'right') +
+      '</div>' +
+      // Battery bar
+      '<div class="ef-batt-bar">' +
+      '<div class="ef-batt-fill" style="width:' + Math.max(1, soc) + '%;background:' + battColor + '"></div>' +
+      '</div>' +
+      '<div class="ef-batt-meta">' +
+      '<span>' + battLabel + '</span>' +
+      (ttg ? '<span>' + ttg + '</span>' : '') +
+      '</div>' +
+      // Generator row (below main grid)
+      '<div class="ef-gen-row">' +
+      card('gen', '&#9881;', 'Generator', genAct ? genV + ' V' : 'Off', genAct ? 'Running &middot; ' + genHrs + ' hrs' : genHrs + ' hrs total', genAct, '#F59E0B') +
+      '</div>';
   }
 
   // ============================================================
@@ -367,7 +505,8 @@
     renderWindPanel: renderWindPanel,
     renderPositionPanel: renderPositionPanel,
     renderScenarioControl: renderScenarioControl,
-    renderAlertTicker: renderAlertTicker
+    renderAlertTicker: renderAlertTicker,
+    renderEnergyFlow: renderEnergyFlow
   };
 
 })();

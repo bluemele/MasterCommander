@@ -60,24 +60,24 @@ main{padding:32px 24px 64px}
 .boat-card-body .boat-meta{font-size:.82rem;color:var(--slate);display:flex;flex-direction:column;gap:2px}
 
 /* ── BOAT PAGE ── */
-.boat-page-header{display:flex;align-items:center;gap:16px;margin-bottom:28px}
+.boat-page-header{display:flex;align-items:center;gap:12px;margin-bottom:16px}
 .back-btn{background:none;border:1.5px solid var(--border);border-radius:8px;padding:6px 12px;font-size:.82rem;font-weight:600;color:var(--slate);cursor:pointer;font-family:inherit;transition:all .2s;display:inline-flex;align-items:center;gap:4px}
 .back-btn:hover{border-color:var(--sky);color:var(--sky)}
 .boat-page-header h1{font-size:1.5rem;font-weight:800;color:var(--ocean);flex:1}
 .boat-page-actions{display:flex;gap:8px}
 
-.card{background:#fff;border:1.5px solid var(--border);border-radius:14px;padding:24px}
-.card h2{font-size:1rem;font-weight:700;color:var(--ocean);margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.card{background:#fff;border:1.5px solid var(--border);border-radius:12px;padding:16px}
+.card h2{font-size:.92rem;font-weight:700;color:var(--ocean);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border)}
 
 /* ── COMPACT BOAT INFO BAR ── */
-.boat-info-bar{display:flex;align-items:center;gap:16px;padding:14px 20px;flex-wrap:wrap}
-.boat-thumb{width:80px;height:56px;border-radius:8px;overflow:hidden;flex-shrink:0}
+.boat-info-bar{display:flex;align-items:center;gap:10px;padding:10px 16px;flex-wrap:wrap}
+.boat-thumb{width:64px;height:44px;border-radius:6px;overflow:hidden;flex-shrink:0}
 .boat-thumb img{width:100%;height:100%;object-fit:cover}
-.boat-chips{display:flex;flex-wrap:wrap;gap:6px;flex:1}
-.boat-chip{display:inline-flex;align-items:center;gap:4px;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:3px 10px;font-size:.75rem}
-.boat-chip-label{font-weight:700;color:var(--slate);text-transform:uppercase;letter-spacing:.03em;font-size:.65rem}
+.boat-chips{display:flex;flex-wrap:wrap;gap:4px;flex:1}
+.boat-chip{display:inline-flex;align-items:center;gap:3px;background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:2px 8px;font-size:.72rem;white-space:nowrap}
+.boat-chip-label{font-weight:700;color:var(--slate);text-transform:uppercase;letter-spacing:.03em;font-size:.6rem}
 .boat-chip-val{font-weight:600;color:var(--text)}
-.boat-notes-line{width:100%;font-size:.78rem;color:var(--slate);font-style:italic;margin-top:2px}
+.boat-notes-line{width:100%;font-size:.75rem;color:var(--slate);font-style:italic;margin-top:2px}
 
 /* ── DETAIL GRID (kept for modals) ── */
 .detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
@@ -106,8 +106,16 @@ main{padding:32px 24px 64px}
 .log-entry-title{font-size:.88rem;font-weight:700;color:var(--text)}
 .log-entry-meta{font-size:.72rem;color:var(--slate)}
 .log-entry-body{font-size:.84rem;color:var(--slate);line-height:1.5}
-.log-entry-delete{position:absolute;top:8px;right:8px;background:none;border:none;color:var(--border);font-size:1rem;cursor:pointer;line-height:1;padding:2px}
+.log-entry-actions{position:absolute;top:6px;right:6px;display:flex;gap:2px;opacity:0;transition:opacity .15s}
+.log-entry:hover .log-entry-actions{opacity:1}
+.log-action-btn{background:none;border:none;color:var(--slate);font-size:.88rem;cursor:pointer;line-height:1;padding:2px 4px;border-radius:4px}
+.log-action-btn:hover{background:rgba(0,0,0,.06)}
+.log-entry-edit:hover{color:var(--sky)}
 .log-entry-delete:hover{color:var(--red)}
+.log-edit-form{display:flex;flex-direction:column;gap:8px}
+.log-edit-form select,.log-edit-form input,.log-edit-form textarea{background:#fff;border:1px solid var(--border);border-radius:6px;padding:6px 8px;font-size:.82rem;font-family:inherit;color:var(--text);outline:none;width:100%}
+.log-edit-form select:focus,.log-edit-form input:focus,.log-edit-form textarea:focus{border-color:var(--sky)}
+.log-edit-form textarea{min-height:50px;resize:vertical}
 .log-empty{text-align:center;padding:24px;color:var(--slate);font-size:.88rem}
 
 /* ── ADD LOG FORM ── */
@@ -193,6 +201,18 @@ main{padding:32px 24px 64px}
 .paywall-plan-price{font-size:1.1rem;font-weight:800;color:var(--text);margin:4px 0}
 .paywall-plan-price span{font-size:.75rem;font-weight:500;color:var(--slate)}
 .paywall-plan-desc{font-size:.75rem;color:var(--slate)}
+
+/* ── DRAGGABLE SECTIONS ── */
+.boat-sections{display:flex;flex-direction:column;gap:10px}
+.drag-box{background:#fff;border:1.5px solid var(--border);border-radius:12px;position:relative}
+.drag-handle{display:flex;align-items:center;gap:6px;padding:6px 12px;font-size:.75rem;font-weight:700;color:var(--slate);text-transform:uppercase;letter-spacing:.04em;cursor:grab;user-select:none;border-bottom:1px solid var(--border)}
+.drag-handle:active{cursor:grabbing}
+.drag-grip{font-size:.9rem;opacity:.4}
+.drag-content{padding:16px}
+.drag-content .boat-info-bar{padding:0}
+.drag-box.dragging{opacity:.4}
+.drag-over-top{border-top:2px solid var(--sky)}
+.drag-over-bottom{border-bottom:2px solid var(--sky)}
 
 /* ── RESPONSIVE ── */
 @media(max-width:768px){

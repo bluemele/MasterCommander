@@ -10,10 +10,10 @@
 @keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:.3}}
 
 /* ── Telemetry grid ── */
-.telem-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+.telem-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;align-items:stretch}
 .telem-grid-wide{grid-template-columns:repeat(3,1fr)}
-.telem-panel{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;min-height:120px}
-.telem-panel-title{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--slate);margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.telem-panel{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px}
+.telem-panel-title{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--slate);margin-bottom:8px;display:flex;align-items:center;gap:6px}
 .telem-panel-title span{font-size:.9rem}
 
 /* ── Gauge row (label + value) ── */
@@ -29,14 +29,14 @@
 .telem-unit{font-size:.7rem;font-weight:500;color:var(--slate);margin-left:2px}
 
 /* ── Victron VRM house battery (light theme — matches dashboard) ── */
-.vrm-card{background:#fff;border-radius:10px;padding:16px;color:var(--text)}
+.vrm-card{background:#fff;border-radius:8px;padding:10px;color:var(--text)}
 .vrm-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
 .vrm-state-badge{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
 .vrm-state-badge.vrm-idle{color:var(--slate)}
 .vrm-state-badge.vrm-charging{color:#059669}
 .vrm-state-badge.vrm-discharging{color:#D97706}
 .vrm-power{font-size:.82rem;font-weight:700;color:var(--slate);font-variant-numeric:tabular-nums}
-.vrm-soc{font-size:2.4rem;font-weight:900;font-variant-numeric:tabular-nums;color:var(--text);line-height:1;margin-bottom:12px;padding-top:4px;text-align:center;width:100%;display:block}
+.vrm-soc{font-size:2rem;font-weight:900;font-variant-numeric:tabular-nums;color:var(--text);line-height:1;margin-bottom:8px;padding-top:2px;text-align:center;width:100%;display:block}
 .vrm-soc span{font-size:1.2rem;font-weight:600;color:var(--slate)}
 .vrm-soc-bar{height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-bottom:14px}
 .vrm-soc-fill{height:100%;border-radius:2px;transition:width .6s ease}
@@ -99,21 +99,97 @@
 .scenario-btn.active{background:var(--sky);color:#fff;border-color:var(--sky)}
 
 /* ── Alert ticker ── */
-.alert-ticker{margin-top:16px;max-height:180px;overflow-y:auto;display:flex;flex-direction:column;gap:6px}
+.alert-ticker{max-height:160px;overflow-y:auto;display:flex;flex-direction:column;gap:4px}
 .alert-item{padding:8px 12px;border-radius:8px;font-size:.8rem;line-height:1.4;border-left:3px solid var(--border)}
 .alert-item.critical{background:#FEF2F2;border-left-color:var(--red);color:#991B1B}
 .alert-item.warning{background:#FFFBEB;border-left-color:var(--amber);color:#92400E}
 .alert-item.info{background:#F0F9FF;border-left-color:var(--sky);color:#0C4A6E}
 .alert-time{font-size:.68rem;color:var(--slate);margin-top:2px}
 .alert-empty{text-align:center;padding:16px;color:var(--slate);font-size:.82rem}
+.alert-item{position:relative}
+.alert-actions{position:absolute;top:6px;right:6px;display:flex;gap:2px;opacity:0;transition:opacity .15s}
+.alert-item:hover .alert-actions{opacity:1}
+.alert-btn{background:none;border:none;cursor:pointer;font-size:.82rem;line-height:1;padding:2px 4px;border-radius:4px;color:var(--slate)}
+.alert-btn:hover{background:rgba(0,0,0,.08);color:var(--text)}
+.alert-item.silenced{opacity:.45}
 
 /* ── Full-width telemetry section ── */
 .telem-section{grid-column:1/-1}
 .telem-section .card h2{display:flex;align-items:center;gap:10px}
+
+/* ── Telem panel drag ── */
+.telem-drag-box{display:flex;flex-direction:column}
+.telem-drag-box .telem-panel{flex:1}
+.telem-drag-box.dragging{opacity:.4}
+#telem-panels .telem-panel-title{cursor:grab;user-select:none}
+#telem-panels .telem-panel-title:active{cursor:grabbing}
+#telem-panels .telem-panel-title::before{content:'\283F';opacity:.3;font-size:.8rem}
+
+/* ══════════════════════════════════════════════════════════
+   ENERGY FLOW MODAL (VRM-style dark theme)
+   ══════════════════════════════════════════════════════════ */
+
+/* ── Modal overlay ── */
+.ef-overlay{position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;animation:ef-fade-in .25s ease}
+@keyframes ef-fade-in{from{opacity:0}to{opacity:1}}
+.ef-modal{background:#111827;border-radius:16px;width:94vw;max-width:720px;max-height:90vh;overflow-y:auto;padding:24px;position:relative;box-shadow:0 25px 60px rgba(0,0,0,.6);animation:ef-slide-up .3s ease}
+@keyframes ef-slide-up{from{transform:translateY(30px);opacity:0}to{transform:translateY(0);opacity:1}}
+.ef-modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.ef-modal-title{font-size:1rem;font-weight:700;color:#F1F5F9;letter-spacing:.03em;display:flex;align-items:center;gap:8px}
+.ef-modal-title span{font-size:1.2rem}
+.ef-close{background:none;border:none;color:#94A3B8;font-size:1.5rem;cursor:pointer;padding:4px 8px;border-radius:6px;line-height:1}
+.ef-close:hover{background:rgba(255,255,255,.1);color:#F1F5F9}
+
+/* ── Grid: 3 col × 2 row ── */
+.ef-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;position:relative}
+
+/* ── Card ── */
+.ef-card{background:#1E293B;border-radius:10px;padding:14px;border-left:3px solid #334155;transition:border-color .3s,box-shadow .3s;text-align:center}
+.ef-card.active{border-left-color:var(--ef-accent);box-shadow:0 0 20px rgba(var(--ef-accent),.15)}
+.ef-icon{font-size:1.4rem;margin-bottom:4px;opacity:.7}
+.ef-card.active .ef-icon{opacity:1}
+.ef-label{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#94A3B8;margin-bottom:6px}
+.ef-val{font-size:1.1rem;font-weight:800;color:#F1F5F9;font-variant-numeric:tabular-nums;line-height:1.2}
+.ef-card.active .ef-val{color:var(--ef-accent)}
+.ef-val2{font-size:.68rem;color:#64748B;margin-top:3px}
+.ef-card.active .ef-val2{color:#94A3B8}
+
+/* ── Flow connectors ── */
+.ef-flows{position:absolute;inset:0;pointer-events:none;display:none}
+/* Connectors are visual only — using CSS between cards instead */
+
+/* Horizontal flow arrows between cards */
+.ef-grid{gap:0}
+.ef-grid .ef-card{margin:6px}
+.ef-grid::after{content:'';display:none}
+
+/* Simplified: use gap + glow borders to show flow */
+.ef-grid{gap:10px}
+
+/* ── Battery bar (full width below grid) ── */
+.ef-batt-bar{height:6px;background:#1E293B;border-radius:3px;overflow:hidden;margin:16px 0 6px}
+.ef-batt-fill{height:100%;border-radius:3px;transition:width .6s ease}
+.ef-batt-meta{display:flex;justify-content:space-between;font-size:.72rem;color:#94A3B8;margin-bottom:16px}
+
+/* ── Generator row ── */
+.ef-gen-row{display:flex;justify-content:center;margin-top:4px}
+.ef-gen-row .ef-card{flex:0 1 200px}
+
+/* ── Active glow pulse ── */
+.ef-card.active{animation:ef-glow 2s ease-in-out infinite alternate}
+@keyframes ef-glow{from{box-shadow:0 0 8px rgba(255,255,255,.02)}to{box-shadow:0 0 16px rgba(255,255,255,.06)}}
+
+/* ── Flow dot animation on active cards ── */
+.ef-card.active::after{content:'';position:absolute;top:8px;right:8px;width:6px;height:6px;border-radius:50%;background:var(--ef-accent);animation:ef-dot-pulse 1.5s ease-in-out infinite}
+.ef-card{position:relative;overflow:hidden}
+@keyframes ef-dot-pulse{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1.2)}}
 
 /* ── Responsive ── */
 @media(max-width:768px){
   .telem-grid{grid-template-columns:1fr}
   .batt-row{flex-direction:column;align-items:center}
   .scenario-bar{justify-content:center}
+  .ef-modal{padding:16px;width:96vw}
+  .ef-grid{grid-template-columns:1fr 1fr;gap:8px}
+  .ef-grid .ef-card:nth-child(5){grid-column:1/-1}
 }
