@@ -39,6 +39,9 @@ export function startTelemetryServer({ sk, alerts, config }) {
 
   app.use(express.json());
 
+  // Valid scenario names (must match simulator.js allowlist)
+  const VALID_SCENARIOS = ['atAnchor', 'motoring', 'sailing', 'charging', 'shorepower', 'alarm'];
+
   // ── SSE: live telemetry stream ──────────────────────────
   app.get('/api/telemetry/live', (req, res) => {
     res.writeHead(200, {
@@ -90,12 +93,17 @@ export function startTelemetryServer({ sk, alerts, config }) {
 
   // ── REST: switch scenario ───────────────────────────────
   app.post('/api/telemetry/scenario/:name', async (req, res) => {
+    const name = req.params.name;
+    // Validate against allowlist to prevent SSRF path traversal
+    if (!VALID_SCENARIOS.includes(name)) {
+      return res.status(400).json({ error: 'Invalid scenario', available: VALID_SCENARIOS });
+    }
     try {
-      const resp = await fetch(`http://127.0.0.1:${simPort}/scenario/${req.params.name}`, { method: 'POST' });
+      const resp = await fetch(`http://127.0.0.1:${simPort}/scenario/${name}`, { method: 'POST' });
       const data = await resp.json();
       res.json(data);
     } catch (e) {
-      res.status(502).json({ error: 'Simulator not reachable', detail: e.message });
+      res.status(502).json({ error: 'Simulator not reachable' });
     }
   });
 

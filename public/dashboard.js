@@ -123,9 +123,9 @@
       // Add Boat button (disabled at limit)
       var atLimit = sub.boatCount >= sub.maxBoats;
       actions.innerHTML = '<button class="btn btn-sky' + (atLimit ? ' disabled' : '') + '" ' +
-        (atLimit ? 'disabled title="Plan limit reached (' + sub.maxBoats + ' boats)"' : 'onclick="window._addBoat()"') +
+        (atLimit ? 'disabled title="Plan limit reached (' + esc(String(sub.maxBoats)) + ' boats)"' : 'onclick="window._addBoat()"') +
         '>+ Add Boat</button>' +
-        '<span class="fleet-count">' + (sub.boatCount || 0) + '/' + (sub.maxBoats || 0) + ' boats</span>';
+        '<span class="fleet-count">' + esc(String(sub.boatCount || 0)) + '/' + esc(String(sub.maxBoats || 0)) + ' boats</span>';
 
       if (!data.boats || data.boats.length === 0) {
         grid.innerHTML = '<div class="fleet-empty"><p>No boats registered yet. Add your first boat to get started.</p></div>';
@@ -149,7 +149,7 @@
           '<div class="boat-card-photo">' + photo +
           '<div class="boat-card-status"><span class="status-dot ' + esc(statusLabel) + '"></span>' + esc(statusLabel) + '</div></div>' +
           '<div class="boat-card-body"><h3>' + esc(b.name) + '</h3><div class="boat-meta">' +
-          (b.model ? '<span>' + esc(b.model) + (b.year ? ' (' + b.year + ')' : '') + '</span>' : '') +
+          (b.model ? '<span>' + esc(b.model) + (b.year ? ' (' + esc(b.year) + ')' : '') + '</span>' : '') +
           (b.home_port ? '<span>' + esc(b.home_port) + '</span>' : '') +
           '</div></div>';
         grid.appendChild(card);

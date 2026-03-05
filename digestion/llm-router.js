@@ -6,7 +6,7 @@
 // Local mode: always Ollama, works fully offline
 // ============================================================
 
-import { execSync } from 'child_process';
+import { spawnSync } from 'child_process';
 
 export class LLMRouter {
   constructor(config = {}) {
@@ -77,11 +77,15 @@ RULES:
   async _askClaude(question, systemPrompt) {
     try {
       const prompt = `${systemPrompt}\n\nCAPTAIN'S QUESTION: ${question}`;
-      const result = execSync(
-        `echo ${JSON.stringify(prompt)} | ${this.claudePath} -p --max-turns 1`,
-        { encoding: 'utf8', timeout: this.timeout }
-      );
-      return result.trim();
+      // Use spawnSync with args array to prevent shell injection
+      const result = spawnSync(this.claudePath, ['-p', '--max-turns', '1'], {
+        input: prompt,
+        encoding: 'utf8',
+        timeout: this.timeout,
+      });
+      if (result.error) throw result.error;
+      if (result.status !== 0) throw new Error(result.stderr || 'Claude exited with error');
+      return (result.stdout || '').trim();
     } catch (e) {
       throw new Error(`Claude error: ${e.message}`);
     }
