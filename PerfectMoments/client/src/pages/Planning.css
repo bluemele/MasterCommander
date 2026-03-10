@@ -1,0 +1,266 @@
+.planning-container {
+  position: relative;
+  z-index: 1;
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 100px 24px 60px;
+  min-height: 100vh;
+}
+
+/* Tabs */
+.plan-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  margin-bottom: 40px;
+  background: rgba(26, 26, 62, 0.4);
+  border-radius: 12px;
+  padding: 4px;
+}
+
+.plan-tab {
+  flex: 1;
+  padding: 12px 20px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--color-text-dim);
+  background: transparent;
+  border-radius: 8px;
+  transition: all 0.3s;
+}
+.plan-tab.active {
+  background: rgba(123, 104, 238, 0.15);
+  color: var(--color-accent-soft);
+}
+.plan-tab:hover {
+  color: var(--color-text);
+}
+
+/* Section */
+.plan-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.plan-label {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--color-accent-soft);
+}
+
+.plan-title {
+  font-size: 2.4rem;
+  color: var(--color-text-bright);
+}
+
+.plan-desc {
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--color-text-dim);
+  max-width: 560px;
+}
+
+/* Reference cards */
+.plan-reference {
+  margin: 12px 0;
+}
+
+.plan-reference h4 {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-text-dim);
+  margin-bottom: 10px;
+  font-family: var(--font-sans);
+  font-weight: 500;
+}
+
+.plan-ref-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.plan-ref-card {
+  padding: 10px 16px;
+  background: rgba(26, 26, 62, 0.4);
+  border: 1px solid rgba(123, 104, 238, 0.1);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s;
+  max-width: 300px;
+}
+.plan-ref-card:hover {
+  border-color: rgba(123, 104, 238, 0.25);
+}
+.plan-ref-card.selected {
+  border-color: var(--color-gold);
+  background: rgba(212, 168, 83, 0.06);
+}
+.plan-ref-card p {
+  font-size: 0.85rem;
+  color: var(--color-text);
+  line-height: 1.5;
+}
+
+/* Add area */
+.plan-add-area {
+  margin: 8px 0;
+}
+
+.plan-add-label {
+  display: block;
+  font-size: 0.9rem;
+  color: var(--color-gold-light);
+  margin-bottom: 10px;
+  font-weight: 500;
+}
+
+.plan-add-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.plan-add-row .input-field {
+  flex: 1;
+}
+
+.plan-freq-select {
+  width: 140px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+/* List */
+.plan-list {
+  margin-top: 16px;
+}
+
+.plan-list h4 {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-text-dim);
+  margin-bottom: 12px;
+  font-family: var(--font-sans);
+  font-weight: 500;
+}
+
+.plan-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.plan-item-num {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(212, 168, 83, 0.15);
+  color: var(--color-gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  flex-shrink: 0;
+}
+
+.plan-item-freq {
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: rgba(123, 104, 238, 0.12);
+  color: var(--color-accent-soft);
+  font-size: 0.75rem;
+  flex-shrink: 0;
+}
+
+.plan-item-text {
+  flex: 1;
+  font-size: 0.95rem;
+  color: var(--color-text);
+  line-height: 1.5;
+}
+
+.plan-item-remove {
+  font-size: 1.2rem;
+  color: var(--color-text-dim);
+  opacity: 0.4;
+  padding: 4px 8px;
+  flex-shrink: 0;
+}
+.plan-item-remove:hover {
+  opacity: 1;
+  color: var(--color-rose);
+}
+
+/* Nav */
+.plan-nav {
+  display: flex;
+  gap: 16px;
+  margin-top: 24px;
+  justify-content: flex-end;
+}
+
+/* Review */
+.plan-review-section {
+  margin: 16px 0;
+}
+
+.plan-review-heading {
+  font-size: 1.4rem;
+  color: var(--color-gold);
+  margin-bottom: 16px;
+}
+
+.plan-review-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 18px;
+  background: rgba(26, 26, 62, 0.3);
+  border: 1px solid rgba(123, 104, 238, 0.08);
+  border-radius: 10px;
+  margin-bottom: 8px;
+}
+
+.plan-review-item p {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--color-text);
+}
+
+.plan-review-num {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(212, 168, 83, 0.15);
+  color: var(--color-gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  flex-shrink: 0;
+}
+
+.plan-review-freq {
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: rgba(123, 104, 238, 0.12);
+  color: var(--color-accent-soft);
+  font-size: 0.75rem;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+@media (max-width: 600px) {
+  .plan-add-row {
+    flex-wrap: wrap;
+  }
+  .plan-freq-select {
+    width: 100%;
+  }
+}

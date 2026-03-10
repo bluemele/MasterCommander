@@ -1,0 +1,119 @@
+.landing {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.landing-content {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 40px 24px;
+}
+
+.landing-center {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+}
+
+.landing-star {
+  width: 80px;
+  height: 80px;
+  background: radial-gradient(circle, var(--color-gold) 0%, transparent 70%);
+  border-radius: 50%;
+  margin-bottom: 8px;
+}
+
+.landing-title {
+  font-size: clamp(3rem, 8vw, 5.5rem);
+  font-weight: 300;
+  line-height: 1;
+  color: var(--color-text-bright);
+  letter-spacing: -0.02em;
+}
+
+.landing-subtitle {
+  font-size: 1.15rem;
+  line-height: 1.7;
+  color: var(--color-text-dim);
+  max-width: 460px;
+}
+
+.landing-cta {
+  margin-top: 8px;
+}
+
+.landing-stages {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 40px;
+  color: var(--color-text-dim);
+  font-size: 0.9rem;
+}
+
+.landing-stage-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.landing-stage-num {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(123, 104, 238, 0.15);
+  border: 1px solid rgba(123, 104, 238, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  color: var(--color-accent-soft);
+}
+
+.landing-stage-divider {
+  width: 32px;
+  height: 1px;
+  background: rgba(123, 104, 238, 0.2);
+}
+
+.landing-auth-title {
+  font-size: 2.5rem;
+  color: var(--color-text-bright);
+}
+
+.landing-auth-sub {
+  font-size: 1.1rem;
+  line-height: 1.7;
+  color: var(--color-text-dim);
+  max-width: 400px;
+}
+
+.landing-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  max-width: 360px;
+  margin-top: 8px;
+}
+
+.landing-ready-steps {
+  text-align: left;
+  color: var(--color-text-dim);
+  line-height: 1.8;
+  font-size: 0.95rem;
+}
+
+.landing-ready-step {
+  padding: 8px 0;
+}
+
+.landing-ready-step strong {
+  color: var(--color-gold);
+}

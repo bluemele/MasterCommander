@@ -1,0 +1,183 @@
+.reflection-container {
+  position: relative;
+  z-index: 1;
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 100px 24px 60px;
+  min-height: 100vh;
+}
+
+.reflection-dots {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 48px;
+}
+
+.reflection-dot {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(26, 26, 62, 0.6);
+  border: 1px solid rgba(123, 104, 238, 0.2);
+  color: var(--color-text-dim);
+  font-size: 0.85rem;
+  font-family: var(--font-sans);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s var(--ease-out);
+}
+.reflection-dot.active {
+  border-color: var(--color-gold);
+  color: var(--color-gold);
+  background: rgba(212, 168, 83, 0.1);
+  transform: scale(1.1);
+}
+.reflection-dot.done {
+  background: rgba(110, 184, 156, 0.15);
+  border-color: var(--color-sage);
+  color: var(--color-sage);
+}
+.reflection-dot.active.done {
+  border-color: var(--color-gold);
+  color: var(--color-gold);
+  background: rgba(212, 168, 83, 0.1);
+}
+
+/* Prompt view */
+.reflection-prompt {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.reflection-moment-label {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--color-accent-soft);
+}
+
+.reflection-prompt-title {
+  font-size: 2.4rem;
+  color: var(--color-text-bright);
+  line-height: 1.2;
+}
+
+.reflection-prompt-lead {
+  font-size: 1.15rem;
+  line-height: 1.7;
+  color: var(--color-text);
+  max-width: 480px;
+}
+
+.reflection-prompt-guidance {
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: var(--color-text-dim);
+  font-style: italic;
+  max-width: 440px;
+}
+
+/* Form view */
+.reflection-form-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.reflection-form-title {
+  font-size: 2rem;
+  color: var(--color-text-bright);
+  margin-bottom: 8px;
+}
+
+.reflection-fields {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  margin: 16px 0;
+}
+
+.reflection-field label {
+  display: block;
+  font-size: 0.9rem;
+  color: var(--color-gold-light);
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.reflection-form-actions {
+  display: flex;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+/* Saved view */
+.reflection-saved {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.reflection-saved-check {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: rgba(110, 184, 156, 0.15);
+  border: 2px solid var(--color-sage);
+  color: var(--color-sage);
+  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.reflection-saved h3 {
+  font-size: 1.8rem;
+  color: var(--color-text-bright);
+}
+
+.reflection-saved-title {
+  font-size: 1.1rem;
+  color: var(--color-gold);
+  font-style: italic;
+}
+
+.reflection-saved-count {
+  color: var(--color-text-dim);
+  font-size: 0.95rem;
+}
+
+.reflection-saved-complete {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  margin: 16px 0;
+}
+
+.reflection-saved-complete p {
+  color: var(--color-sage);
+  font-size: 1rem;
+}
+
+/* Continue bar */
+.reflection-continue-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 20px;
+  text-align: center;
+  background: linear-gradient(to top, var(--color-deep) 60%, transparent);
+  z-index: 50;
+}
