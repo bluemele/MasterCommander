@@ -12,6 +12,8 @@
   var waypoints = [];
   var lastResult = null;
   var calculating = false;
+  var comparing = false;
+  var healthInterval = null;
 
   var STORAGE_ROUTE = 'mc_weather_route';
   var STORAGE_RESULT = 'mc_weather_last_result';
@@ -64,7 +66,12 @@
 
     // Bind buttons
     $('wx-calculate').addEventListener('click', calculateRoute);
+    $('wx-compare').addEventListener('click', compareModels);
     $('wx-clear').addEventListener('click', clearRoute);
+
+    // Health indicator
+    fetchHealth();
+    healthInterval = setInterval(fetchHealth, 60000);
 
     // Force map resize after layout settles
     setTimeout(function() { map.invalidateSize(); }, 100);
@@ -89,7 +96,7 @@
               '<input type="number" id="wx-speed" value="7.5" min="1" max="50" step="0.5">' +
             '</div>' +
             '<div class="wx-form-group">' +
-              '<label for="wx-model">Weather Model</label>' +
+              '<label for="wx-model"><span id="wx-health-dot" class="wx-health-dot" title="Checking..."></span> Weather Model</label>' +
               '<select id="wx-model">' +
                 '<option value="best">Best Available</option>' +
                 '<option value="gfs">GFS (NOAA)</option>' +
@@ -106,6 +113,7 @@
           '</div>' +
           '<button class="wx-btn wx-btn-primary" id="wx-calculate" disabled>Calculate Route</button>' +
           '<div class="wx-btn-row">' +
+            '<button class="wx-btn wx-btn-secondary" id="wx-compare" disabled>Compare Models</button>' +
             '<button class="wx-btn wx-btn-danger" id="wx-clear">Clear Route</button>' +
           '</div>' +
         '</div>' +
@@ -351,8 +359,10 @@
   // ── UI state ──
   function updateUI() {
     var calcBtn = $('wx-calculate');
+    var cmpBtn = $('wx-compare');
     var hint = $('wx-hint');
     if (calcBtn) calcBtn.disabled = waypoints.length < 2 || calculating;
+    if (cmpBtn) cmpBtn.disabled = waypoints.length < 2 || comparing || calculating;
     if (hint) {
       if (waypoints.length === 0) {
         hint.textContent = 'Click map to add waypoints';
@@ -614,8 +624,166 @@
     } catch (e) {}
   }
 
+  // ── Compare Models ──
+  async function compareModels() {
+    if (waypoints.length < 2 || comparing) return;
+    comparing = true;
+    updateUI();
+
+    try {
+      var depVal = $('wx-departure') ? $('wx-departure').value : '';
+      if (!depVal) throw new Error('Set a departure date/time first');
+
+      var body = {
+        waypoints: waypoints,
+        departure_time: depVal + ':00Z',
+        boat_speed_kts: parseFloat($('wx-speed') ? $('wx-speed').value : '7.5'),
+        models: ['ecmwf', 'gfs']
+      };
+
+      var resp = await fetch('/api/weather/compare', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+
+      if (!resp.ok) {
+        var err = await resp.json();
+        throw new Error(err.error || 'Comparison failed');
+      }
+
+      var result = await resp.json();
+      renderComparison(result);
+    } catch (e) {
+      alert('Comparison error: ' + e.message);
+    } finally {
+      comparing = false;
+      updateUI();
+    }
+  }
+
+  function renderComparison(result) {
+    // Remove existing modal
+    var old = document.querySelector('.wx-compare-modal');
+    if (old) old.remove();
+
+    var modal = document.createElement('div');
+    modal.className = 'wx-compare-modal';
+
+    var modelKeys = Object.keys(result.models || {});
+    var cmp = result.comparison || {};
+
+    // Agreement badge
+    var agreeClass = cmp.agreement === 'high' ? 'agree-high' : cmp.agreement === 'moderate' ? 'agree-moderate' : 'agree-low';
+    var agreeLabel = cmp.agreement === 'high' ? 'High Agreement' : cmp.agreement === 'moderate' ? 'Moderate Agreement' : 'Low Agreement';
+
+    var html = '<div class="wx-compare-content">' +
+      '<div class="wx-compare-header">' +
+        '<div class="wx-compare-title">Model Comparison</div>' +
+        '<span class="wx-agree-badge ' + agreeClass + '">' + esc(agreeLabel) + '</span>' +
+        '<button class="wx-compare-close" id="wx-compare-close">&times;</button>' +
+      '</div>' +
+      '<div class="wx-compare-spread">' +
+        'Wind spread: <strong>' + (cmp.max_wind_spread_kts || 0) + ' kts</strong> &middot; ' +
+        'Wave spread: <strong>' + (cmp.max_wave_spread_m || 0) + ' m</strong>' +
+      '</div>' +
+      '<table class="wx-compare-table"><thead><tr><th>Metric</th>';
+
+    for (var m = 0; m < modelKeys.length; m++) {
+      html += '<th>' + esc(modelKeys[m].toUpperCase()) + '</th>';
+    }
+    html += '</tr></thead><tbody>';
+
+    var metrics = [
+      { key: 'max_wind_kts', label: 'Max Wind', unit: ' kts', fmt: function(v) { return v != null ? v : '--'; } },
+      { key: 'max_gust_kts', label: 'Max Gusts', unit: ' kts', fmt: function(v) { return v != null ? v : '--'; } },
+      { key: 'max_wave_m', label: 'Max Waves', unit: ' m', fmt: function(v) { return v != null ? v : '--'; } },
+      { key: 'avg_comfort', label: 'Comfort', unit: '%', fmt: function(v) { return v != null ? Math.round(v * 100) : '--'; } },
+      { key: 'total_distance_nm', label: 'Distance', unit: ' nm', fmt: function(v) { return v != null ? v : '--'; } }
+    ];
+
+    for (var mi = 0; mi < metrics.length; mi++) {
+      var metric = metrics[mi];
+      html += '<tr><td>' + esc(metric.label) + '</td>';
+      var vals = [];
+      for (var mk = 0; mk < modelKeys.length; mk++) {
+        var s = result.models[modelKeys[mk]]?.summary;
+        vals.push(s ? s[metric.key] : null);
+      }
+      for (var vi = 0; vi < vals.length; vi++) {
+        html += '<td>' + metric.fmt(vals[vi]) + (vals[vi] != null ? metric.unit : '') + '</td>';
+      }
+      html += '</tr>';
+    }
+
+    // Warnings row
+    html += '<tr><td>Warnings</td>';
+    for (var wk = 0; wk < modelKeys.length; wk++) {
+      var warns = result.models[modelKeys[wk]]?.warnings || [];
+      html += '<td>' + warns.length + '</td>';
+    }
+    html += '</tr>';
+
+    html += '</tbody></table>';
+
+    // "Use this model" buttons
+    html += '<div class="wx-compare-actions">';
+    for (var bk = 0; bk < modelKeys.length; bk++) {
+      html += '<button class="wx-btn wx-btn-secondary wx-use-model" data-model="' + esc(modelKeys[bk]) + '">Use ' + esc(modelKeys[bk].toUpperCase()) + '</button>';
+    }
+    html += '</div></div>';
+
+    modal.innerHTML = html;
+    document.body.appendChild(modal);
+
+    // Close handler
+    document.getElementById('wx-compare-close').addEventListener('click', function() {
+      modal.remove();
+    });
+    modal.addEventListener('click', function(e) {
+      if (e.target === modal) modal.remove();
+    });
+
+    // Use model handlers
+    modal.querySelectorAll('.wx-use-model').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var modelId = this.getAttribute('data-model');
+        var modelSelect = $('wx-model');
+        if (modelSelect) modelSelect.value = modelId;
+        modal.remove();
+        calculateRoute();
+      });
+    });
+  }
+
+  // ── Health Indicator ──
+  async function fetchHealth() {
+    try {
+      var resp = await fetch('/api/weather/health');
+      if (!resp.ok) return;
+      var data = await resp.json();
+      var dot = $('wx-health-dot');
+      if (!dot) return;
+
+      // Determine worst status across providers
+      var worst = 'healthy';
+      var tips = [];
+      for (var name in data.providers) {
+        var p = data.providers[name];
+        tips.push(name + ': ' + p.status + ' (' + p.rate_limit_remaining + '% capacity)');
+        if (p.status === 'unhealthy') worst = 'unhealthy';
+        else if (p.status === 'degraded' && worst !== 'unhealthy') worst = 'degraded';
+      }
+      dot.className = 'wx-health-dot wx-health-' + worst;
+      dot.title = tips.join('\n');
+    } catch (e) {
+      // silent fail
+    }
+  }
+
   // ── Cleanup (called when navigating away) ──
   function cleanup() {
+    if (healthInterval) { clearInterval(healthInterval); healthInterval = null; }
     if (map) {
       map.remove();
       map = null;

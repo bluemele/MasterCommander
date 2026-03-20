@@ -12,6 +12,7 @@
 // ============================================================
 
 import { Router } from 'express';
+import { fetchWithFailover, getHealthStatus, getRateLimitStatus, hasComparisonBudget } from './weather-providers.js';
 
 const router = Router();
 
@@ -81,10 +82,10 @@ const MARINE_PARAMS = [
 ].join(',');
 
 const MODEL_MAP = {
-  gfs: { weather: 'gfs_seamless', marine: null },
-  ecmwf: { weather: 'ecmwf_ifs025', marine: null },
-  icon: { weather: 'icon_seamless', marine: null },
-  best: { weather: null, marine: null } // Open-Meteo default (best match)
+  gfs: { weather: 'gfs_seamless', marine: 'ncep_gfswave025' },
+  ecmwf: { weather: 'ecmwf_ifs025', marine: 'ecmwf_wam025' },
+  icon: { weather: 'icon_seamless', marine: null },  // no marine model
+  best: { weather: null, marine: null }
 };
 
 async function fetchWeather(lat, lon, hours, model) {
@@ -107,15 +108,18 @@ async function fetchWeather(lat, lon, hours, model) {
   return data;
 }
 
-async function fetchMarine(lat, lon, hours) {
+async function fetchMarine(lat, lon, hours, model) {
   const gridLat = roundToGrid(lat);
   const gridLon = roundToGrid(lon);
-  const cacheKey = `m:${gridLat}:${gridLon}:${hours || 168}`;
+  const modelKey = model || 'best';
+  const modelCfg = MODEL_MAP[modelKey] || MODEL_MAP.best;
+  const cacheKey = `m:${modelKey}:${gridLat}:${gridLon}:${hours || 168}`;
   const cached = cacheGet(cacheKey);
   if (cached) return cached;
 
   const url = `https://marine-api.open-meteo.com/v1/marine?latitude=${gridLat}&longitude=${gridLon}` +
-    `&hourly=${MARINE_PARAMS}&forecast_hours=${hours || 168}&timezone=UTC`;
+    `&hourly=${MARINE_PARAMS}&forecast_hours=${hours || 168}&timezone=UTC` +
+    (modelCfg.marine ? `&models=${modelCfg.marine}` : '');
 
   const resp = await fetch(url);
   if (!resp.ok) {
@@ -341,6 +345,86 @@ function calculateSummary(waypoints, samplePoints, boatSpeedKts) {
   };
 }
 
+// ── Calculate route weather from pre-fetched data (reused by /route and /compare) ──
+function calculateRouteWeather(waypoints, samples, weatherMap, speed) {
+  // Interpolate weather at each sample point's ETA
+  for (const s of samples) {
+    const key = `${roundToGrid(s.lat)}:${roundToGrid(s.lon)}`;
+    const data = weatherMap.get(key);
+    if (data) {
+      s.weather = interpolateWeatherAtTime(data, s.eta);
+    }
+  }
+
+  // Generate warnings and summary
+  const warnings = generateWarnings(samples);
+  const summary = calculateSummary(waypoints, samples, speed);
+
+  // Build per-leg detail
+  const legs = [];
+  for (let i = 0; i < waypoints.length - 1; i++) {
+    const legSamples = samples.filter(s => s.leg === i);
+    const legDist = haversine(waypoints[i].lat, waypoints[i].lon,
+                              waypoints[i + 1].lat, waypoints[i + 1].lon);
+    legs.push({
+      from: waypoints[i],
+      to: waypoints[i + 1],
+      distance_nm: Math.round(legDist * 10) / 10,
+      hours: Math.round((legDist / speed) * 10) / 10,
+      samples: legSamples
+    });
+  }
+
+  return { summary, legs, samples, warnings };
+}
+
+// ── Fetch weather data for grid cells (shared by /route and /compare) ──
+async function fetchGridWeather(waypoints, speed, departureTime, modelKey) {
+  const samples = generateSamplePoints(waypoints, speed, departureTime);
+
+  let totalDist = 0;
+  for (let i = 1; i < waypoints.length; i++) {
+    totalDist += haversine(waypoints[i - 1].lat, waypoints[i - 1].lon,
+                           waypoints[i].lat, waypoints[i].lon);
+  }
+  const totalHours = Math.ceil(totalDist / speed) + 24;
+  const forecastHours = Math.min(totalHours, 384);
+
+  const gridCells = new Map();
+  for (const s of samples) {
+    const key = `${roundToGrid(s.lat)}:${roundToGrid(s.lon)}`;
+    if (!gridCells.has(key)) {
+      gridCells.set(key, { lat: roundToGrid(s.lat), lon: roundToGrid(s.lon) });
+    }
+  }
+
+  const cellArray = Array.from(gridCells.values());
+  const weatherMap = new Map();
+  const BATCH_SIZE = 6;
+
+  for (let i = 0; i < cellArray.length; i += BATCH_SIZE) {
+    const batch = cellArray.slice(i, i + BATCH_SIZE);
+    const results = await Promise.all(batch.map(async cell => {
+      const key = `${cell.lat}:${cell.lon}`;
+      try {
+        const [weather, marine] = await Promise.all([
+          fetchWeather(cell.lat, cell.lon, forecastHours, modelKey),
+          fetchMarine(cell.lat, cell.lon, forecastHours, modelKey)
+        ]);
+        return { key, data: mergeData(weather, marine) };
+      } catch (err) {
+        console.warn(`Failed to fetch ${key} (${modelKey}):`, err.message);
+        return { key, data: null };
+      }
+    }));
+    for (const r of results) {
+      if (r.data) weatherMap.set(r.key, r.data);
+    }
+  }
+
+  return { samples, weatherMap };
+}
+
 // ============================================================
 // ENDPOINTS
 // ============================================================
@@ -359,7 +443,7 @@ router.get('/forecast', async (req, res) => {
 
     const [weather, marine] = await Promise.all([
       fetchWeather(lat, lon, hours, model),
-      fetchMarine(lat, lon, hours)
+      fetchMarine(lat, lon, hours, model)
     ]);
 
     const merged = mergeData(weather, marine);
@@ -433,7 +517,7 @@ router.post('/route', async (req, res) => {
         try {
           const [weather, marine] = await Promise.all([
             fetchWeather(cell.lat, cell.lon, forecastHours, model || 'best'),
-            fetchMarine(cell.lat, cell.lon, forecastHours)
+            fetchMarine(cell.lat, cell.lon, forecastHours, model || 'best')
           ]);
           return { key, data: mergeData(weather, marine) };
         } catch (err) {
@@ -446,39 +530,11 @@ router.post('/route', async (req, res) => {
       }
     }
 
-    // Interpolate weather at each sample point's ETA
-    for (const s of samples) {
-      const key = `${roundToGrid(s.lat)}:${roundToGrid(s.lon)}`;
-      const data = weatherMap.get(key);
-      if (data) {
-        s.weather = interpolateWeatherAtTime(data, s.eta);
-      }
-    }
-
-    // Generate warnings and summary
-    const warnings = generateWarnings(samples);
-    const summary = calculateSummary(waypoints, samples, speed);
-
-    // Build per-leg detail
-    const legs = [];
-    for (let i = 0; i < waypoints.length - 1; i++) {
-      const legSamples = samples.filter(s => s.leg === i);
-      const legDist = haversine(waypoints[i].lat, waypoints[i].lon,
-                                waypoints[i + 1].lat, waypoints[i + 1].lon);
-      legs.push({
-        from: waypoints[i],
-        to: waypoints[i + 1],
-        distance_nm: Math.round(legDist * 10) / 10,
-        hours: Math.round((legDist / speed) * 10) / 10,
-        samples: legSamples
-      });
-    }
+    // Calculate route weather from fetched data
+    const routeResult = calculateRouteWeather(waypoints, samples, weatherMap, speed);
 
     res.json({
-      summary,
-      legs,
-      samples,
-      warnings,
+      ...routeResult,
       departure_time,
       boat_speed_kts: speed,
       model: model || 'best'
@@ -535,7 +591,7 @@ router.post('/optimal-departure', async (req, res) => {
         try {
           const [weather, marine] = await Promise.all([
             fetchWeather(cell.lat, cell.lon, forecastHours, model || 'best'),
-            fetchMarine(cell.lat, cell.lon, forecastHours)
+            fetchMarine(cell.lat, cell.lon, forecastHours, model || 'best')
           ]);
           return { key, data: mergeData(weather, marine) };
         } catch {
@@ -599,15 +655,104 @@ router.post('/optimal-departure', async (req, res) => {
   }
 });
 
+// ── POST /compare — model comparison ──
+router.post('/compare', async (req, res) => {
+  try {
+    const { waypoints, departure_time, boat_speed_kts, models } = req.body;
+
+    if (!waypoints || waypoints.length < 2) {
+      return res.status(400).json({ error: 'At least 2 waypoints required' });
+    }
+    const depParsed = Date.parse(departure_time);
+    if (!departure_time || isNaN(depParsed)) {
+      return res.status(400).json({ error: 'Valid departure_time required (ISO 8601)' });
+    }
+    const speed = parseFloat(boat_speed_kts) || 7;
+    const modelList = (models || ['ecmwf', 'gfs']).slice(0, 3);
+
+    for (const wp of waypoints) {
+      if (wp.lat == null || wp.lon == null || wp.lat < -90 || wp.lat > 90 || wp.lon < -180 || wp.lon > 180) {
+        return res.status(400).json({ error: `Invalid waypoint: ${JSON.stringify(wp)}` });
+      }
+    }
+
+    // Check rate limit budget
+    if (!hasComparisonBudget(modelList.length)) {
+      return res.status(429).json({ error: 'Insufficient rate limit budget for comparison' });
+    }
+
+    // Run models in parallel
+    const modelResults = await Promise.allSettled(
+      modelList.map(async modelKey => {
+        const { samples, weatherMap } = await fetchGridWeather(waypoints, speed, departure_time, modelKey);
+        const result = calculateRouteWeather(waypoints, samples, weatherMap, speed);
+        // Trim samples (every 2nd point) to reduce payload
+        result.samples = result.samples.filter((_, i) => i % 2 === 0);
+        return { model: modelKey, ...result };
+      })
+    );
+
+    // Build response
+    const modelsOut = {};
+    for (const r of modelResults) {
+      if (r.status === 'fulfilled') {
+        const { model, summary, warnings, legs } = r.value;
+        modelsOut[model] = { summary, warnings, legs: legs.map(l => ({ from: l.from, to: l.to, distance_nm: l.distance_nm, hours: l.hours })) };
+      }
+    }
+
+    // Compute comparison metrics
+    const summaries = Object.values(modelsOut).map(m => m.summary).filter(Boolean);
+    const maxWinds = summaries.map(s => s.max_wind_kts).filter(v => v != null);
+    const maxWaves = summaries.map(s => s.max_wave_m).filter(v => v != null);
+    const comforts = {};
+    for (const [k, v] of Object.entries(modelsOut)) {
+      if (v.summary?.avg_comfort != null) comforts[k] = v.summary.avg_comfort;
+    }
+
+    const maxWindSpread = maxWinds.length >= 2 ? Math.max(...maxWinds) - Math.min(...maxWinds) : 0;
+    const maxWaveSpread = maxWaves.length >= 2 ? Math.max(...maxWaves) - Math.min(...maxWaves) : 0;
+
+    // Agreement: based on relative spread
+    const avgWind = maxWinds.length ? maxWinds.reduce((a, b) => a + b, 0) / maxWinds.length : 0;
+    const windSpreadPct = avgWind > 0 ? maxWindSpread / avgWind : 0;
+    const agreement = windSpreadPct < 0.15 ? 'high' : windSpreadPct < 0.30 ? 'moderate' : 'low';
+
+    res.json({
+      models: modelsOut,
+      comparison: {
+        max_wind_spread_kts: Math.round(maxWindSpread * 10) / 10,
+        max_wave_spread_m: Math.round(maxWaveSpread * 10) / 10,
+        comfort_scores: comforts,
+        agreement
+      }
+    });
+  } catch (err) {
+    console.error('Compare error:', err.message);
+    res.status(502).json({ error: 'Comparison failed', detail: err.message });
+  }
+});
+
+// ── GET /health — provider health + rate limits ──
+router.get('/health', (req, res) => {
+  res.json({
+    providers: getHealthStatus(),
+    rate_limits: getRateLimitStatus(),
+    timestamp: new Date().toISOString()
+  });
+});
+
 // ── GET /models — available forecast models ──
 router.get('/models', (req, res) => {
+  const health = getHealthStatus();
   res.json({
     models: [
-      { id: 'best', name: 'Best Available', description: 'Open-Meteo auto-selects best model for location' },
-      { id: 'gfs', name: 'GFS', description: 'NOAA Global Forecast System — 16-day, 0.25° global' },
-      { id: 'ecmwf', name: 'ECMWF IFS', description: 'European model — generally most accurate, 10-day' },
-      { id: 'icon', name: 'ICON', description: 'DWD German model — good for Atlantic/European waters' }
-    ]
+      { id: 'best', name: 'Best Available', description: 'Open-Meteo auto-selects best model for location', marine: null },
+      { id: 'gfs', name: 'GFS', description: 'NOAA Global Forecast System — 16-day, 0.25° global', marine: 'GFS-Wave (ncep_gfswave025)' },
+      { id: 'ecmwf', name: 'ECMWF IFS', description: 'European model — generally most accurate, 10-day', marine: 'ECMWF WAM (ecmwf_wam025)' },
+      { id: 'icon', name: 'ICON', description: 'DWD German model — good for Atlantic/European waters', marine: null }
+    ],
+    providers: Object.entries(health).map(([name, h]) => ({ name, status: h.status }))
   });
 });
 

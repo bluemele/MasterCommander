@@ -463,6 +463,132 @@
   font-weight: 600;
 }
 
+/* ── Health indicator dot ── */
+.wx-health-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 4px;
+  vertical-align: middle;
+  background: #94a3b8;
+}
+
+.wx-health-healthy { background: #10B981; }
+.wx-health-degraded { background: #F59E0B; }
+.wx-health-unhealthy { background: #EF4444; }
+
+/* ── Comparison Modal ── */
+.wx-compare-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 5000;
+  background: rgba(15, 23, 42, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+}
+
+.wx-compare-content {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  max-width: 560px;
+  width: 90vw;
+  max-height: 85vh;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+.wx-compare-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.wx-compare-title {
+  font-size: 1.1rem;
+  font-weight: 800;
+  flex: 1;
+}
+
+.wx-compare-close {
+  background: none;
+  border: none;
+  font-size: 1.4rem;
+  cursor: pointer;
+  color: var(--slate, #64748B);
+  padding: 0 4px;
+  line-height: 1;
+}
+
+.wx-compare-close:hover {
+  color: #0F172A;
+}
+
+.wx-agree-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 3px 10px;
+  border-radius: 12px;
+}
+
+.agree-high { background: #D1FAE5; color: #065F46; }
+.agree-moderate { background: #FEF3C7; color: #92400E; }
+.agree-low { background: #FEE2E2; color: #991B1B; }
+
+.wx-compare-spread {
+  font-size: 0.8rem;
+  color: var(--slate, #64748B);
+  margin-bottom: 16px;
+}
+
+.wx-compare-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+  margin-bottom: 16px;
+}
+
+.wx-compare-table th {
+  text-align: left;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--slate, #64748B);
+  padding: 8px 10px;
+  border-bottom: 2px solid var(--border, #E2E8F0);
+}
+
+.wx-compare-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid #f1f5f9;
+  font-weight: 600;
+}
+
+.wx-compare-table tr:last-child td {
+  border-bottom: none;
+}
+
+.wx-compare-table td:first-child {
+  color: var(--slate, #64748B);
+  font-weight: 500;
+}
+
+.wx-compare-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.wx-compare-actions .wx-btn {
+  flex: 1;
+}
+
 /* ── Responsive ── */
 @media (max-width: 1024px) {
   .weather-container {
