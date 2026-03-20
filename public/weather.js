@@ -202,7 +202,7 @@
 
   function rebuildMarkers() {
     for (var i = 0; i < waypointMarkers.length; i++) {
-      map.removeLayer(waypointMarkers[i]);
+      if (waypointMarkers[i] && map) map.removeLayer(waypointMarkers[i]);
     }
     waypointMarkers = [];
     for (var j = 0; j < waypoints.length; j++) {
@@ -246,33 +246,11 @@
       var wave = s.weather.wave_height || 0;
       var color = MCWeather.severityColor(wind, wave);
 
-      L.polyline([
+      var seg = L.polyline([
         [prev.lat, prev.lon],
         [s.lat, s.lon]
       ], {
         color: color,
-        weight: 4,
-        opacity: 0.85
-      }).addTo(map);
-      // Store on sampleMarkers for cleanup
-      sampleMarkers.push(arguments[arguments.length]); // won't work, use below
-    }
-
-    // Re-draw as one operation for cleanup tracking
-    clearSampleMarkers();
-    var segments = [];
-    for (var j = 1; j < samples.length; j++) {
-      var s2 = samples[j];
-      var prev2 = samples[j - 1];
-      var wind2 = s2.weather.wind_speed || 0;
-      var wave2 = s2.weather.wave_height || 0;
-      var color2 = MCWeather.severityColor(wind2, wave2);
-
-      var seg = L.polyline([
-        [prev2.lat, prev2.lon],
-        [s2.lat, s2.lon]
-      ], {
-        color: color2,
         weight: 4,
         opacity: 0.85
       }).addTo(map);
@@ -329,7 +307,7 @@
 
   function clearSampleMarkers() {
     for (var i = 0; i < sampleMarkers.length; i++) {
-      map.removeLayer(sampleMarkers[i]);
+      if (sampleMarkers[i] && map) map.removeLayer(sampleMarkers[i]);
     }
     sampleMarkers = [];
   }
@@ -406,9 +384,13 @@
     if (legsSection) legsSection.style.display = 'none';
 
     try {
+      var depVal = $('wx-departure') ? $('wx-departure').value : '';
+      if (!depVal) {
+        throw new Error('Set a departure date/time first');
+      }
       var body = {
         waypoints: waypoints,
-        departure_time: ($('wx-departure') ? $('wx-departure').value : '') + ':00Z',
+        departure_time: depVal + ':00Z',
         boat_speed_kts: parseFloat($('wx-speed') ? $('wx-speed').value : '7.5'),
         model: $('wx-model') ? $('wx-model').value : 'best'
       };

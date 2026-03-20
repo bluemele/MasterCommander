@@ -91,7 +91,7 @@ async function fetchWeather(lat, lon, hours, model) {
   const gridLat = roundToGrid(lat);
   const gridLon = roundToGrid(lon);
   const modelKey = model || 'best';
-  const cacheKey = `w:${modelKey}:${gridLat}:${gridLon}`;
+  const cacheKey = `w:${modelKey}:${gridLat}:${gridLon}:${hours || 168}`;
   const cached = cacheGet(cacheKey);
   if (cached) return cached;
 
@@ -110,7 +110,7 @@ async function fetchWeather(lat, lon, hours, model) {
 async function fetchMarine(lat, lon, hours) {
   const gridLat = roundToGrid(lat);
   const gridLon = roundToGrid(lon);
-  const cacheKey = `m:${gridLat}:${gridLon}`;
+  const cacheKey = `m:${gridLat}:${gridLon}:${hours || 168}`;
   const cached = cacheGet(cacheKey);
   if (cached) return cached;
 
@@ -256,14 +256,7 @@ function generateSamplePoints(waypoints, boatSpeedKts, departureTime) {
     cumulativeHours += legHours;
   }
 
-  // De-duplicate close grid cells
-  const seen = new Set();
-  return samples.filter(s => {
-    const key = `${roundToGrid(s.lat)}:${roundToGrid(s.lon)}`;
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
+  return samples;
 }
 
 // ── Generate warnings ──
@@ -391,8 +384,9 @@ router.post('/route', async (req, res) => {
     if (!waypoints || waypoints.length < 2) {
       return res.status(400).json({ error: 'At least 2 waypoints required' });
     }
-    if (!departure_time) {
-      return res.status(400).json({ error: 'departure_time required' });
+    const depParsed = Date.parse(departure_time);
+    if (!departure_time || isNaN(depParsed) || depParsed < Date.parse('2020-01-01')) {
+      return res.status(400).json({ error: 'Valid departure_time required (ISO 8601)' });
     }
     const speed = parseFloat(boat_speed_kts) || 7;
     if (speed <= 0 || speed > 50) {
