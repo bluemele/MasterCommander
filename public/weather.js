@@ -34,8 +34,8 @@
       zoomControl: true
     });
 
-    // CartoDB Positron tiles (light, clean)
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    // CartoDB Dark Matter tiles (dark, easy on the eyes)
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>',
       subdomains: 'abcd',
       maxZoom: 19
@@ -225,7 +225,7 @@
 
     var latlngs = waypoints.map(function(wp) { return [wp.lat, wp.lon]; });
     routeLine = L.polyline(latlngs, {
-      color: '#0C4A6E',
+      color: '#38BDF8',
       weight: 3,
       opacity: 0.7,
       dashArray: '8 6'
