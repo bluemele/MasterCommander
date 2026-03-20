@@ -92,20 +92,14 @@ async function fetchWeather(lat, lon, hours, model) {
   const gridLat = roundToGrid(lat);
   const gridLon = roundToGrid(lon);
   const modelKey = model || 'best';
+  const modelCfg = MODEL_MAP[modelKey] || MODEL_MAP.best;
   const cacheKey = `w:${modelKey}:${gridLat}:${gridLon}:${hours || 168}`;
   const cached = cacheGet(cacheKey);
   if (cached) return cached;
 
-  const modelCfg = MODEL_MAP[modelKey] || MODEL_MAP.best;
-  let url = `https://api.open-meteo.com/v1/forecast?latitude=${gridLat}&longitude=${gridLon}` +
-    `&hourly=${WEATHER_PARAMS}&wind_speed_unit=kn&forecast_hours=${hours || 168}&timezone=UTC`;
-  if (modelCfg.weather) url += `&models=${modelCfg.weather}`;
-
-  const resp = await fetch(url);
-  if (!resp.ok) throw new Error(`Open-Meteo weather API: ${resp.status}`);
-  const data = await resp.json();
-  cacheSet(cacheKey, data);
-  return data;
+  const result = await fetchWithFailover('weather', gridLat, gridLon, hours || 168, modelCfg.weather);
+  if (result.data) cacheSet(cacheKey, result.data);
+  return result.data;
 }
 
 async function fetchMarine(lat, lon, hours, model) {
@@ -117,19 +111,9 @@ async function fetchMarine(lat, lon, hours, model) {
   const cached = cacheGet(cacheKey);
   if (cached) return cached;
 
-  const url = `https://marine-api.open-meteo.com/v1/marine?latitude=${gridLat}&longitude=${gridLon}` +
-    `&hourly=${MARINE_PARAMS}&forecast_hours=${hours || 168}&timezone=UTC` +
-    (modelCfg.marine ? `&models=${modelCfg.marine}` : '');
-
-  const resp = await fetch(url);
-  if (!resp.ok) {
-    // Marine data not available everywhere — return null gracefully
-    console.warn(`Marine API unavailable for ${gridLat},${gridLon}: ${resp.status}`);
-    return null;
-  }
-  const data = await resp.json();
-  cacheSet(cacheKey, data);
-  return data;
+  const result = await fetchWithFailover('marine', gridLat, gridLon, hours || 168, modelCfg.marine);
+  if (result.data) cacheSet(cacheKey, result.data);
+  return result.data;
 }
 
 // ── Merge weather + marine data for a point ──
@@ -699,6 +683,10 @@ router.post('/compare', async (req, res) => {
         const { model, summary, warnings, legs } = r.value;
         modelsOut[model] = { summary, warnings, legs: legs.map(l => ({ from: l.from, to: l.to, distance_nm: l.distance_nm, hours: l.hours })) };
       }
+    }
+
+    if (Object.keys(modelsOut).length === 0) {
+      return res.status(502).json({ error: 'All model requests failed — no comparison data available' });
     }
 
     // Compute comparison metrics
