@@ -15,6 +15,7 @@
 
 import express from 'express';
 import { createServer } from 'http';
+import weatherRouter from './weather-service.js';
 
 const ALERT_BUFFER_SIZE = 50;
 const SSE_INTERVAL = 2000;
@@ -38,6 +39,7 @@ export function startTelemetryServer({ sk, alerts, config }) {
   }
 
   app.use(express.json());
+  app.use('/api/weather', weatherRouter);
   app.use((err, req, res, next) => {
     if (err.type === 'entity.parse.failed') {
       return res.status(400).json({ error: 'Invalid JSON' });

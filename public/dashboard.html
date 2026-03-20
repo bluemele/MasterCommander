@@ -7,6 +7,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="dashboard.css">
 <link rel="stylesheet" href="telemetry.css">
+<link rel="stylesheet" href="weather.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
 </head>
 <body>
 
@@ -17,6 +19,7 @@
       <a href="index.html" class="logo">Master<span>Commander</span><span class="logo-dot">.ai</span></a>
       <div class="nav-tabs">
         <a href="#/" class="nav-tab active" data-route="fleet">My Fleet</a>
+        <a href="#/weather" class="nav-tab" data-route="weather">Weather</a>
         <a href="#/billing" class="nav-tab" data-route="billing">Billing</a>
         <a href="#/settings" class="nav-tab" data-route="settings">Settings</a>
       </div>
@@ -33,7 +36,10 @@
   <div id="app"></div>
 </main>
 
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 <script src="telemetry.js"></script>
+<script src="weather-engine.js"></script>
+<script src="weather.js"></script>
 <script src="dashboard.js"></script>
 </body>
 </html>

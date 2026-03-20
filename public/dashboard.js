@@ -52,12 +52,17 @@
     if (currentRoute && currentRoute.match(/^\/boat\//) && !path.match(/^\/boat\//)) {
       cleanupTelemetry();
     }
+    // Cleanup weather map when leaving weather page
+    if (currentRoute === '/weather' && path !== '/weather') {
+      if (window.MCWeatherUI) window.MCWeatherUI.cleanup();
+    }
     currentRoute = path;
 
     // Update nav tabs
     document.querySelectorAll('.nav-tab').forEach(function(tab) {
       var route = tab.getAttribute('data-route');
       if (route === 'fleet' && (path === '/' || path.startsWith('/boat/'))) tab.classList.add('active');
+      else if (route === 'weather' && path === '/weather') tab.classList.add('active');
       else if (route === 'billing' && path === '/billing') tab.classList.add('active');
       else if (route === 'settings' && path === '/settings') tab.classList.add('active');
       else tab.classList.remove('active');
@@ -66,6 +71,7 @@
     // Dispatch
     if (path === '/' || path === '') renderFleet();
     else if (path.match(/^\/boat\/(\d+)$/)) renderBoat(parseInt(path.match(/^\/boat\/(\d+)$/)[1]));
+    else if (path === '/weather') { if (window.MCWeatherUI) window.MCWeatherUI.init(); }
     else if (path === '/billing') renderBilling();
     else if (path === '/settings') renderSettings();
     else renderFleet();

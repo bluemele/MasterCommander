@@ -1,0 +1,507 @@
+/* ============================================================
+   WEATHER ROUTING — Styles
+   ============================================================ */
+
+/* ── Layout ── */
+.weather-container {
+  display: flex;
+  gap: 0;
+  height: calc(100vh - 72px);
+  margin: -24px -16px -24px -16px;
+  overflow: hidden;
+}
+
+.weather-sidebar {
+  width: 340px;
+  min-width: 340px;
+  background: #fff;
+  border-right: 1px solid var(--border, #E2E8F0);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  z-index: 10;
+}
+
+.weather-map-wrap {
+  flex: 1;
+  position: relative;
+  min-width: 0;
+}
+
+.weather-map-wrap #weather-map {
+  width: 100%;
+  height: 100%;
+}
+
+/* ── Sidebar sections ── */
+.wx-section {
+  padding: 16px;
+  border-bottom: 1px solid var(--border, #E2E8F0);
+}
+
+.wx-section:last-child {
+  border-bottom: none;
+}
+
+.wx-section-title {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--slate, #64748B);
+  margin-bottom: 10px;
+}
+
+/* ── Route Builder form ── */
+.wx-waypoints {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 12px 0;
+}
+
+.wx-waypoint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  font-size: 0.82rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.wx-waypoint:last-child {
+  border-bottom: none;
+}
+
+.wx-wp-num {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--ocean, #0C4A6E);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.wx-wp-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.wx-wp-name {
+  font-weight: 600;
+  font-size: 0.8rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wx-wp-coords {
+  font-size: 0.72rem;
+  color: var(--slate, #64748B);
+}
+
+.wx-wp-delete {
+  background: none;
+  border: none;
+  color: var(--slate, #64748B);
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 2px 4px;
+  opacity: 0.5;
+  transition: opacity 0.15s;
+}
+
+.wx-wp-delete:hover {
+  opacity: 1;
+  color: #EF4444;
+}
+
+.wx-empty {
+  text-align: center;
+  color: var(--slate, #64748B);
+  font-size: 0.8rem;
+  padding: 20px 0;
+}
+
+/* ── Form inputs ── */
+.wx-form-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.wx-form-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.wx-form-group label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--slate, #64748B);
+}
+
+.wx-form-group input,
+.wx-form-group select {
+  padding: 6px 8px;
+  border: 1px solid var(--border, #E2E8F0);
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-family: inherit;
+  color: var(--text, #0F172A);
+  background: #fff;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.wx-form-group input:focus,
+.wx-form-group select:focus {
+  border-color: var(--sky, #0EA5E9);
+}
+
+/* ── Buttons ── */
+.wx-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+}
+
+.wx-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.wx-btn-primary {
+  background: var(--ocean, #0C4A6E);
+  color: #fff;
+}
+
+.wx-btn-primary:hover:not(:disabled) {
+  background: #0a3d5c;
+}
+
+.wx-btn-secondary {
+  background: #f1f5f9;
+  color: var(--text, #0F172A);
+}
+
+.wx-btn-secondary:hover:not(:disabled) {
+  background: #e2e8f0;
+}
+
+.wx-btn-danger {
+  background: none;
+  color: #EF4444;
+  font-size: 0.75rem;
+  padding: 6px 12px;
+}
+
+.wx-btn-danger:hover {
+  background: #FEF2F2;
+}
+
+.wx-btn-row {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.wx-btn-row .wx-btn {
+  flex: 1;
+}
+
+/* ── Loading spinner ── */
+.wx-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+  color: var(--slate, #64748B);
+  font-size: 0.82rem;
+}
+
+.wx-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #e2e8f0;
+  border-top-color: var(--sky, #0EA5E9);
+  border-radius: 50%;
+  animation: wx-spin 0.6s linear infinite;
+}
+
+@keyframes wx-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Summary panel ── */
+.wx-summary {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.wx-stat {
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.wx-stat-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--slate, #64748B);
+  margin-bottom: 3px;
+}
+
+.wx-stat-value {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--text, #0F172A);
+}
+
+.wx-stat-value .unit {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--slate, #64748B);
+}
+
+.wx-stat.full {
+  grid-column: 1 / -1;
+}
+
+/* ── Warnings ── */
+.wx-warnings {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.wx-warning {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 500;
+}
+
+.wx-warning.warning {
+  background: #FEF3C7;
+  color: #92400E;
+}
+
+.wx-warning.danger {
+  background: #FEE2E2;
+  color: #991B1B;
+}
+
+.wx-warning-icon {
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+/* ── Leg table ── */
+.wx-legs {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.wx-leg {
+  padding: 8px 10px;
+  background: #f8fafc;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s;
+  font-size: 0.78rem;
+}
+
+.wx-leg:hover {
+  background: #e2e8f0;
+}
+
+.wx-leg-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.wx-leg-name {
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
+.wx-leg-dist {
+  color: var(--slate, #64748B);
+  font-size: 0.72rem;
+}
+
+.wx-leg-weather {
+  display: flex;
+  gap: 12px;
+  color: var(--slate, #64748B);
+  font-size: 0.72rem;
+}
+
+.wx-leg-weather span {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+/* ── Comfort meter ── */
+.wx-comfort-bar {
+  height: 6px;
+  background: #e2e8f0;
+  border-radius: 3px;
+  overflow: hidden;
+  margin-top: 6px;
+}
+
+.wx-comfort-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s;
+}
+
+/* ── Map overlays ── */
+.wx-map-hint {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(15, 23, 42, 0.85);
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  z-index: 1000;
+  pointer-events: none;
+  backdrop-filter: blur(4px);
+  white-space: nowrap;
+}
+
+.wx-map-hint.hidden {
+  display: none;
+}
+
+/* Waypoint markers */
+.wx-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--ocean, #0C4A6E);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 800;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+  cursor: grab;
+}
+
+.wx-marker:hover {
+  transform: scale(1.15);
+}
+
+/* Wind barb markers */
+.wx-wind-barb {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Point forecast popup */
+.wx-popup {
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.wx-popup-title {
+  font-weight: 700;
+  margin-bottom: 4px;
+  font-size: 0.85rem;
+}
+
+.wx-popup-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.wx-popup-label {
+  color: #64748B;
+}
+
+.wx-popup-value {
+  font-weight: 600;
+}
+
+/* ── Responsive ── */
+@media (max-width: 1024px) {
+  .weather-container {
+    flex-direction: column;
+  }
+
+  .weather-sidebar {
+    width: 100%;
+    min-width: 100%;
+    max-height: 45vh;
+    border-right: none;
+    border-bottom: 1px solid var(--border, #E2E8F0);
+    order: 2;
+  }
+
+  .weather-map-wrap {
+    order: 1;
+    min-height: 55vh;
+  }
+}
+
+@media (max-width: 768px) {
+  .weather-sidebar {
+    max-height: 50vh;
+  }
+
+  .weather-map-wrap {
+    min-height: 50vh;
+  }
+
+  .wx-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .wx-form-row {
+    flex-direction: column;
+  }
+
+  .wx-stat.full {
+    grid-column: 1;
+  }
+}
