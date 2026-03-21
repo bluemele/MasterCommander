@@ -599,16 +599,14 @@ router.post('/route', async (req, res) => {
       }
     }
 
-    // Generate sea route (avoids land)
-    const seaRouteData = generateSeaRoutePath(waypoints);
-    const seaRouteLegs = seaRouteData.legs;
-
-    // Generate sample points along sea route
-    const samples = generateSamplePoints(waypoints, speed, departure_time, seaRouteLegs);
+    // Generate sample points (straight-line; sea routing disabled pending tuning)
+    const samples = generateSamplePoints(waypoints, speed, departure_time);
 
     // Calculate total hours to determine forecast range needed
     let totalDist = 0;
-    for (const leg of seaRouteLegs) totalDist += leg.distance_nm;
+    for (let i = 1; i < waypoints.length; i++) {
+      totalDist += haversine(waypoints[i - 1].lat, waypoints[i - 1].lon, waypoints[i].lat, waypoints[i].lon);
+    }
     const totalHours = Math.ceil(totalDist / speed) + 24; // +24h buffer
     const forecastHours = Math.min(totalHours, 384); // Max 16 days
 
@@ -647,14 +645,10 @@ router.post('/route', async (req, res) => {
     }
 
     // Calculate route weather from fetched data
-    const routeResult = calculateRouteWeather(waypoints, samples, weatherMap, speed, seaRouteLegs);
-
-    // Include sea route coordinates for frontend rendering
-    const seaRouteCoords = seaRouteData.fullPath.map(p => [p.lat, p.lon]);
+    const routeResult = calculateRouteWeather(waypoints, samples, weatherMap, speed);
 
     res.json({
       ...routeResult,
-      sea_route_coords: seaRouteCoords,
       departure_time,
       boat_speed_kts: speed,
       model: model || 'best'
@@ -684,18 +678,16 @@ router.post('/optimal-departure', async (req, res) => {
       departures.push(new Date(t).toISOString());
     }
 
-    // Generate sea route once (shared across all departure times)
-    const seaRouteData = generateSeaRoutePath(waypoints);
-    const seaRouteLegs = seaRouteData.legs;
-
     // Pre-fetch weather data once (shared across departures)
     let totalDist = 0;
-    for (const leg of seaRouteLegs) totalDist += leg.distance_nm;
+    for (let i = 1; i < waypoints.length; i++) {
+      totalDist += haversine(waypoints[i - 1].lat, waypoints[i - 1].lon, waypoints[i].lat, waypoints[i].lon);
+    }
     const maxHours = Math.ceil(totalDist / speed) + Math.ceil((end - start) / 3600000) + 24;
     const forecastHours = Math.min(maxHours, 384);
 
     // Fetch weather for all grid cells
-    const testSamples = generateSamplePoints(waypoints, speed, start.toISOString(), seaRouteLegs);
+    const testSamples = generateSamplePoints(waypoints, speed, start.toISOString());
     const gridCells = new Map();
     for (const s of testSamples) {
       const key = `${roundToGrid(s.lat)}:${roundToGrid(s.lon)}`;
@@ -725,7 +717,7 @@ router.post('/optimal-departure', async (req, res) => {
 
     // Score each departure
     const scored = departures.map(dep => {
-      const samples = generateSamplePoints(waypoints, speed, dep, seaRouteLegs);
+      const samples = generateSamplePoints(waypoints, speed, dep);
       let totalComfort = 0, count = 0;
       let maxWind = 0, maxWave = 0;
       const warnings = [];
@@ -801,15 +793,11 @@ router.post('/compare', async (req, res) => {
       return res.status(429).json({ error: 'Insufficient rate limit budget for comparison' });
     }
 
-    // Generate sea route once (shared across models)
-    const seaRouteData = generateSeaRoutePath(waypoints);
-    const seaRouteLegs = seaRouteData.legs;
-
     // Run models in parallel
     const modelResults = await Promise.allSettled(
       modelList.map(async modelKey => {
-        const { samples, weatherMap } = await fetchGridWeather(waypoints, speed, departure_time, modelKey, seaRouteLegs);
-        const result = calculateRouteWeather(waypoints, samples, weatherMap, speed, seaRouteLegs);
+        const { samples, weatherMap } = await fetchGridWeather(waypoints, speed, departure_time, modelKey);
+        const result = calculateRouteWeather(waypoints, samples, weatherMap, speed);
         // Trim samples (every 2nd point) to reduce payload
         result.samples = result.samples.filter((_, i) => i % 2 === 0);
         return { model: modelKey, ...result };
