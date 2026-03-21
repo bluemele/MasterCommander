@@ -1151,23 +1151,90 @@
     if (gridLayer) { map.removeLayer(gridLayer); }
     gridLayer = L.layerGroup();
 
-    data.points.forEach(function(pt) {
-      var w = pt.weather;
-      if (!w) return;
+    var step = data.step || 0.25;
+    var pts = data.points;
 
-      // Wind barb at grid point
-      var barbSize = 34;
-      var barbSvg = MCWeather.windBarbSVG(w.wind_speed || 0, w.wind_direction || 0, barbSize);
-      var icon = L.divIcon({
-        className: 'wx-grid-barb',
-        html: barbSvg,
-        iconSize: [barbSize, barbSize],
-        iconAnchor: [barbSize / 2, barbSize / 2]
-      });
-
-      var marker = L.marker([pt.lat, pt.lon], { icon: icon, interactive: false });
-      gridLayer.addLayer(marker);
+    // Build lookup for bilinear interpolation
+    var lookup = {};
+    pts.forEach(function(pt) {
+      if (!pt.weather) return;
+      lookup[pt.lat + ':' + pt.lon] = pt.weather;
     });
+
+    function getWeather(lat, lon) {
+      // Find the 4 surrounding grid points and interpolate
+      var lat0 = Math.floor(lat / step) * step;
+      var lat1 = lat0 + step;
+      var lon0 = Math.floor(lon / step) * step;
+      var lon1 = lon0 + step;
+      // Round to avoid float issues
+      lat0 = Math.round(lat0 * 4) / 4;
+      lat1 = Math.round(lat1 * 4) / 4;
+      lon0 = Math.round(lon0 * 4) / 4;
+      lon1 = Math.round(lon1 * 4) / 4;
+
+      var w00 = lookup[lat0 + ':' + lon0];
+      var w01 = lookup[lat0 + ':' + lon1];
+      var w10 = lookup[lat1 + ':' + lon0];
+      var w11 = lookup[lat1 + ':' + lon1];
+
+      // Need at least 2 corners
+      var corners = [w00, w01, w10, w11].filter(Boolean);
+      if (corners.length === 0) return null;
+      if (corners.length === 1) return corners[0];
+
+      var fLat = step > 0 ? (lat - lat0) / step : 0;
+      var fLon = step > 0 ? (lon - lon0) / step : 0;
+      fLat = Math.max(0, Math.min(1, fLat));
+      fLon = Math.max(0, Math.min(1, fLon));
+
+      function lerp(a, b, t) { return a != null && b != null ? a + (b - a) * t : (a != null ? a : b); }
+      function lerpDir(a, b, t) {
+        if (a == null) return b; if (b == null) return a;
+        var diff = ((b - a + 540) % 360) - 180;
+        return ((a + diff * t) + 360) % 360;
+      }
+
+      // Bilinear interpolation
+      var top = w00 && w01 ? {
+        wind_speed: lerp(w00.wind_speed, w01.wind_speed, fLon),
+        wind_direction: lerpDir(w00.wind_direction, w01.wind_direction, fLon)
+      } : (w00 || w01);
+      var bot = w10 && w11 ? {
+        wind_speed: lerp(w10.wind_speed, w11.wind_speed, fLon),
+        wind_direction: lerpDir(w10.wind_direction, w11.wind_direction, fLon)
+      } : (w10 || w11);
+
+      if (!top) return bot;
+      if (!bot) return top;
+      return {
+        wind_speed: lerp(top.wind_speed, bot.wind_speed, fLat),
+        wind_direction: lerpDir(top.wind_direction, bot.wind_direction, fLat)
+      };
+    }
+
+    // Render at half-step intervals for 4x density
+    var halfStep = step / 2;
+    var bounds = map.getBounds();
+    var south = bounds.getSouth(), north = bounds.getNorth();
+    var west = bounds.getWest(), east = bounds.getEast();
+    var barbSize = 24;
+
+    for (var lat = Math.floor(south / halfStep) * halfStep; lat <= north; lat += halfStep) {
+      for (var lon = Math.floor(west / halfStep) * halfStep; lon <= east; lon += halfStep) {
+        var w = getWeather(lat, lon);
+        if (!w || w.wind_speed == null) continue;
+
+        var barbSvg = MCWeather.windBarbSVG(w.wind_speed, w.wind_direction || 0, barbSize);
+        var icon = L.divIcon({
+          className: 'wx-grid-barb',
+          html: barbSvg,
+          iconSize: [barbSize, barbSize],
+          iconAnchor: [barbSize / 2, barbSize / 2]
+        });
+        gridLayer.addLayer(L.marker([lat, lon], { icon: icon, interactive: false }));
+      }
+    }
 
     gridLayer.addTo(map);
   }
