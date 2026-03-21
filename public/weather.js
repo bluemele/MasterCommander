@@ -13,6 +13,7 @@
   var lastResult = null;
   var calculating = false;
   var comparing = false;
+  var findingWindow = false;
   var healthInterval = null;
   var gpsInterval = null;
   var gpsMarker = null;
@@ -76,6 +77,13 @@
     $('wx-calculate').addEventListener('click', calculateRoute);
     $('wx-compare').addEventListener('click', compareModels);
     $('wx-clear').addEventListener('click', clearRoute);
+    $('wx-find-window').addEventListener('click', findBestWindow);
+
+    // Default departure window: tomorrow → +3 days
+    var wStart = new Date(); wStart.setDate(wStart.getDate() + 1);
+    var wEnd = new Date(); wEnd.setDate(wEnd.getDate() + 4);
+    $('wx-window-start').value = wStart.toISOString().slice(0, 10);
+    $('wx-window-end').value = wEnd.toISOString().slice(0, 10);
 
     // Health indicator
     fetchHealth();
@@ -130,6 +138,22 @@
             '<button class="wx-btn wx-btn-secondary" id="wx-compare" disabled>Compare Models</button>' +
             '<button class="wx-btn wx-btn-danger" id="wx-clear">Clear Route</button>' +
           '</div>' +
+        '</div>' +
+        // Best departure window
+        '<div class="wx-section" id="wx-departure-window" style="display:none">' +
+          '<div class="wx-section-title">Best Departure Window</div>' +
+          '<div class="wx-form-row">' +
+            '<div class="wx-form-group">' +
+              '<label for="wx-window-start">From</label>' +
+              '<input type="date" id="wx-window-start">' +
+            '</div>' +
+            '<div class="wx-form-group">' +
+              '<label for="wx-window-end">To</label>' +
+              '<input type="date" id="wx-window-end">' +
+            '</div>' +
+          '</div>' +
+          '<button class="wx-btn wx-btn-primary" id="wx-find-window" style="background:#0E7490" disabled>Find Best Window</button>' +
+          '<div id="wx-departure-results"></div>' +
         '</div>' +
         // Results (hidden until calculated)
         '<div class="wx-section" id="wx-results" style="display:none">' +
@@ -281,43 +305,38 @@
         [s.lat, s.lon]
       ], {
         color: color,
-        weight: 4,
+        weight: 5,
         opacity: 0.85
       }).addTo(map);
       sampleMarkers.push(seg);
     }
 
-    // Add wind barbs at sample points (every other for readability)
-    for (var k = 0; k < samples.length; k += 2) {
+    // Combined weather markers (wind+wave info) at every 3rd sample
+    for (var k = 0; k < samples.length; k += 3) {
       var sp = samples[k];
       if (!sp.weather || sp.weather.wind_speed == null) continue;
 
-      var barbHtml = MCWeather.windBarbSVG(sp.weather.wind_speed, sp.weather.wind_direction || 0, 28);
-      var barbIcon = L.divIcon({
-        className: 'wx-wind-barb',
-        html: barbHtml,
-        iconSize: [28, 28],
-        iconAnchor: [14, 14]
+      var mHtml = MCWeather.combinedMarkerSVG(sp.weather.wind_speed, sp.weather.wind_direction || 0, sp.weather.wave_height);
+      var mIcon = L.divIcon({
+        className: 'wx-combined-marker',
+        html: mHtml,
+        iconSize: [40, 48],
+        iconAnchor: [20, 24]
       });
 
-      var barbMarker = L.marker([sp.lat, sp.lon], {
-        icon: barbIcon,
-        interactive: true,
-        zIndexOffset: 500
-      }).addTo(map);
+      var m = L.marker([sp.lat, sp.lon], { icon: mIcon, interactive: true, zIndexOffset: 500 }).addTo(map);
 
-      // Popup with weather details
       (function(point) {
-        barbMarker.bindPopup(function() {
+        m.bindPopup(function() {
           var w = point.weather;
           var bf = MCWeather.beaufort(w.wind_speed || 0);
           var html = '<div class="wx-popup">' +
             '<div class="wx-popup-title">ETA: ' + (point.eta ? point.eta.substring(0, 16).replace('T', ' ') + ' UTC' : '--') + '</div>';
           if (w.wind_speed != null) html += '<div class="wx-popup-row"><span class="wx-popup-label">Wind</span><span class="wx-popup-value">' + Math.round(w.wind_speed) + ' kts ' + MCWeather.formatBearing(w.wind_direction || 0) + '</span></div>';
           if (w.wind_gusts != null) html += '<div class="wx-popup-row"><span class="wx-popup-label">Gusts</span><span class="wx-popup-value">' + Math.round(w.wind_gusts) + ' kts</span></div>';
-          html += '<div class="wx-popup-row"><span class="wx-popup-label">Beaufort</span><span class="wx-popup-value">F' + bf.force + ' — ' + bf.description + '</span></div>';
-          if (w.wave_height != null) html += '<div class="wx-popup-row"><span class="wx-popup-label">Waves</span><span class="wx-popup-value">' + w.wave_height.toFixed(1) + 'm @ ' + (w.wave_period ? w.wave_period.toFixed(0) + 's' : '--') + '</span></div>';
-          if (w.swell_height != null) html += '<div class="wx-popup-row"><span class="wx-popup-label">Swell</span><span class="wx-popup-value">' + w.swell_height.toFixed(1) + 'm</span></div>';
+          html += '<div class="wx-popup-row"><span class="wx-popup-label">Beaufort</span><span class="wx-popup-value">F' + bf.force + ' ' + bf.description + '</span></div>';
+          if (w.wave_height != null) html += '<div class="wx-popup-row"><span class="wx-popup-label">Waves</span><span class="wx-popup-value">' + w.wave_height.toFixed(1) + 'm @ ' + (w.wave_period ? w.wave_period.toFixed(0) + 's' : '--') + ' ' + MCWeather.formatBearing(w.wave_direction || 0) + '</span></div>';
+          if (w.swell_height != null) html += '<div class="wx-popup-row"><span class="wx-popup-label">Swell</span><span class="wx-popup-value">' + w.swell_height.toFixed(1) + 'm ' + MCWeather.formatBearing(w.swell_direction || 0) + '</span></div>';
           if (w.pressure != null) html += '<div class="wx-popup-row"><span class="wx-popup-label">Pressure</span><span class="wx-popup-value">' + Math.round(w.pressure) + ' hPa</span></div>';
           if (w.visibility != null) html += '<div class="wx-popup-row"><span class="wx-popup-label">Visibility</span><span class="wx-popup-value">' + (w.visibility / 1000).toFixed(1) + ' km</span></div>';
           html += '</div>';
@@ -325,44 +344,7 @@
         });
       })(sp);
 
-      sampleMarkers.push(barbMarker);
-    }
-
-    // Add wave direction arrows (interleaved with wind barbs — offset indices)
-    for (var w = 1; w < samples.length; w += 2) {
-      var wp = samples[w];
-      if (!wp.weather) continue;
-
-      // Show wave arrow if wave data exists
-      if (wp.weather.wave_height != null && wp.weather.wave_direction != null) {
-        var waveHtml = MCWeather.waveArrowSVG(wp.weather.wave_height, wp.weather.wave_direction, 22, 'wave');
-        var waveIcon = L.divIcon({
-          className: 'wx-wave-arrow',
-          html: waveHtml,
-          iconSize: [22, 22],
-          iconAnchor: [11, 11]
-        });
-        var waveMarker = L.marker([wp.lat, wp.lon], {
-          icon: waveIcon,
-          interactive: true,
-          zIndexOffset: 400
-        }).addTo(map);
-
-        (function(point) {
-          waveMarker.bindPopup(function() {
-            var wx = point.weather;
-            var html = '<div class="wx-popup"><div class="wx-popup-title">Wave Data</div>';
-            if (wx.wave_height != null) html += '<div class="wx-popup-row"><span class="wx-popup-label">Waves</span><span class="wx-popup-value">' + wx.wave_height.toFixed(1) + 'm ' + MCWeather.formatBearing(wx.wave_direction || 0) + '</span></div>';
-            if (wx.wave_period != null) html += '<div class="wx-popup-row"><span class="wx-popup-label">Period</span><span class="wx-popup-value">' + wx.wave_period.toFixed(0) + 's</span></div>';
-            if (wx.swell_height != null) html += '<div class="wx-popup-row"><span class="wx-popup-label">Swell</span><span class="wx-popup-value">' + wx.swell_height.toFixed(1) + 'm ' + MCWeather.formatBearing(wx.swell_direction || 0) + '</span></div>';
-            if (wx.swell_period != null) html += '<div class="wx-popup-row"><span class="wx-popup-label">Swell Period</span><span class="wx-popup-value">' + wx.swell_period.toFixed(0) + 's</span></div>';
-            html += '</div>';
-            return html;
-          });
-        })(wp);
-
-        sampleMarkers.push(waveMarker);
-      }
+      sampleMarkers.push(m);
     }
 
     // Fit map to route
@@ -422,6 +404,10 @@
     var hint = $('wx-hint');
     if (calcBtn) calcBtn.disabled = waypoints.length < 2 || calculating;
     if (cmpBtn) cmpBtn.disabled = waypoints.length < 2 || comparing || calculating;
+    var depWindow = $('wx-departure-window');
+    if (depWindow) depWindow.style.display = waypoints.length >= 2 ? '' : 'none';
+    var findBtn = $('wx-find-window');
+    if (findBtn) findBtn.disabled = waypoints.length < 2 || findingWindow;
     if (hint) {
       if (waypoints.length === 0) {
         hint.textContent = 'Click map to add waypoints';
@@ -813,6 +799,100 @@
         var modelSelect = $('wx-model');
         if (modelSelect) modelSelect.value = modelId;
         modal.remove();
+        calculateRoute();
+      });
+    });
+  }
+
+  // ── Best Departure Window ──
+  async function findBestWindow() {
+    if (waypoints.length < 2 || findingWindow) return;
+    findingWindow = true;
+    updateUI();
+
+    var resultsDiv = $('wx-departure-results');
+    resultsDiv.innerHTML = '<div class="wx-loading"><div class="wx-spinner"></div> Analyzing departure windows...</div>';
+
+    try {
+      var startVal = $('wx-window-start').value;
+      var endVal = $('wx-window-end').value;
+      if (!startVal || !endVal) throw new Error('Set start and end dates');
+
+      var resp = await fetch('/api/weather/optimal-departure', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          waypoints: waypoints,
+          boat_speed_kts: parseFloat($('wx-speed') ? $('wx-speed').value : '7.5'),
+          model: $('wx-model') ? $('wx-model').value : 'best',
+          window_start: startVal + 'T00:00:00Z',
+          window_end: endVal + 'T23:59:00Z'
+        })
+      });
+
+      if (!resp.ok) {
+        var err = await resp.json();
+        throw new Error(err.error || 'Request failed');
+      }
+      renderDepartures(await resp.json());
+    } catch (e) {
+      resultsDiv.innerHTML = '<div style="color:#EF4444;padding:8px;font-size:0.82rem">' + esc(e.message) + '</div>';
+    } finally {
+      findingWindow = false;
+      updateUI();
+    }
+  }
+
+  function renderDepartures(result) {
+    var container = $('wx-departure-results');
+    if (!result || !result.departures || result.departures.length === 0) {
+      container.innerHTML = '<div style="color:#64748B;padding:12px;font-size:0.82rem;text-align:center">No departure windows found</div>';
+      return;
+    }
+
+    var html = '<div style="margin-top:10px">' +
+      '<div style="font-size:0.72rem;color:#64748B;margin-bottom:8px">' +
+      Math.round(result.total_distance_nm) + ' nm &middot; ~' + MCWeather.formatDuration(result.total_hours) +
+      '</div></div><div class="wx-dep-cards">';
+
+    var days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+    for (var i = 0; i < result.departures.length; i++) {
+      var dep = result.departures[i];
+      var pct = Math.round(dep.comfort_score * 100);
+      var colorClass = pct >= 80 ? 'dep-green' : pct >= 60 ? 'dep-yellow' : pct >= 40 ? 'dep-orange' : 'dep-red';
+      var barColor = pct >= 80 ? '#10B981' : pct >= 60 ? '#FBBF24' : pct >= 40 ? '#F97316' : '#EF4444';
+
+      var dt = new Date(dep.departure);
+      var timeStr = days[dt.getUTCDay()] + ' ' + months[dt.getUTCMonth()] + ' ' +
+        dt.getUTCDate() + ', ' + String(dt.getUTCHours()).padStart(2, '0') + ':00 UTC';
+
+      html += '<div class="wx-dep-card ' + colorClass + '" data-departure="' + esc(dep.departure) + '">' +
+        (i === 0 ? '<span class="wx-dep-badge">Recommended</span>' : '') +
+        '<div class="wx-dep-time">' + (i === 0 ? '&#9733; ' : '') + esc(timeStr) + '</div>' +
+        '<div class="wx-dep-bar-wrap"><div class="wx-dep-bar-track"><div class="wx-dep-bar-fill" style="width:' + pct + '%;background:' + barColor + '"></div></div>' +
+        '<span class="wx-dep-pct">' + pct + '%</span></div>' +
+        '<div class="wx-dep-stats">Wind ' + Math.round(dep.max_wind_kts) + ' kts &middot; Waves ' + dep.max_wave_m.toFixed(1) + 'm</div>';
+
+      if (dep.has_warnings && dep.warning_types.length > 0) {
+        html += '<div class="wx-dep-warns">';
+        for (var w = 0; w < dep.warning_types.length; w++) {
+          html += '<span class="wx-dep-warn-tag">' + esc(dep.warning_types[w]) + '</span>';
+        }
+        html += '</div>';
+      }
+      html += '</div>';
+    }
+    html += '</div>';
+    container.innerHTML = html;
+
+    // Click → set departure and calculate
+    container.querySelectorAll('.wx-dep-card').forEach(function(card) {
+      card.addEventListener('click', function() {
+        var depISO = this.getAttribute('data-departure');
+        var depInput = $('wx-departure');
+        if (depInput && depISO) depInput.value = depISO.slice(0, 16);
         calculateRoute();
       });
     });

@@ -623,6 +623,110 @@ main:has(.weather-container) {
   flex: 1;
 }
 
+/* ── Combined weather marker ── */
+.wx-combined-marker {
+  background: none !important;
+  border: none !important;
+}
+
+/* ── Best Departure Cards ── */
+.wx-dep-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.wx-dep-card {
+  padding: 10px 12px;
+  background: #F8FAFC;
+  border: 1px solid #D5DCE6;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  position: relative;
+}
+
+.wx-dep-card:hover {
+  background: #F1F5F9;
+  border-color: #0EA5E9;
+}
+
+.wx-dep-card.dep-green { border-left: 3px solid #10B981; }
+.wx-dep-card.dep-yellow { border-left: 3px solid #FBBF24; }
+.wx-dep-card.dep-orange { border-left: 3px solid #F97316; }
+.wx-dep-card.dep-red { border-left: 3px solid #EF4444; }
+
+.wx-dep-badge {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: #D1FAE5;
+  color: #065F46;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.wx-dep-time {
+  font-weight: 600;
+  font-size: 0.82rem;
+  color: #1E293B;
+  margin-bottom: 6px;
+}
+
+.wx-dep-bar-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.wx-dep-bar-track {
+  flex: 1;
+  height: 6px;
+  background: #D5DCE6;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.wx-dep-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s;
+}
+
+.wx-dep-pct {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #1E293B;
+  min-width: 32px;
+  text-align: right;
+}
+
+.wx-dep-stats {
+  font-size: 0.72rem;
+  color: #64748B;
+}
+
+.wx-dep-warns {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.wx-dep-warn-tag {
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: #FEF3C7;
+  color: #92400E;
+}
+
 /* ── Responsive ── */
 @media (max-width: 1024px) {
   .weather-container {

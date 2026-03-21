@@ -193,6 +193,26 @@
     return windScore * 0.30 + waveScore * 0.30 + gustScore * 0.15 + visScore * 0.15 + precipScore * 0.10;
   }
 
+  // ── Combined wind+wave marker SVG ──
+  function combinedMarkerSVG(windSpeedKts, windDirDeg, waveHeightM) {
+    var w = 40, h = 48;
+    var wc = windColor(windSpeedKts);
+    var angle = ((windDirDeg || 0) + 180) % 360;
+
+    var svg = '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '" xmlns="http://www.w3.org/2000/svg">' +
+      '<rect x="2" y="2" width="36" height="44" rx="6" fill="rgba(255,255,255,0.88)" stroke="' + wc + '" stroke-width="1"/>' +
+      '<g transform="translate(20,13) rotate(' + angle + ' 0 0)">' +
+      '<path d="M0,-8 L4,4 L0,1 L-4,4 Z" fill="' + wc + '"/></g>' +
+      '<text x="20" y="32" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="700" fill="' + wc + '">' + Math.round(windSpeedKts) + '</text>';
+
+    if (waveHeightM != null) {
+      var vc = waveColor(waveHeightM);
+      svg += '<text x="20" y="43" text-anchor="middle" font-family="sans-serif" font-size="8" fill="' + vc + '">~' + waveHeightM.toFixed(1) + 'm</text>';
+    }
+    svg += '</svg>';
+    return svg;
+  }
+
   // ── Format duration (hours → "Xd Yh Zm") ──
   function formatDuration(hours) {
     if (hours < 1) return Math.round(hours * 60) + 'm';
@@ -225,6 +245,7 @@
     windBarbSVG: windBarbSVG,
     waveArrowSVG: waveArrowSVG,
     swellColor: swellColor,
+    combinedMarkerSVG: combinedMarkerSVG,
     comfortScore: comfortScore,
     formatDuration: formatDuration,
     formatDistance: formatDistance
