@@ -12,7 +12,19 @@
 // ============================================================
 
 import { Router } from 'express';
+import { createRequire } from 'module';
 import { fetchWithFailover, getHealthStatus, getRateLimitStatus, hasComparisonBudget } from './weather-providers.js';
+
+// searoute-js is CJS — load via createRequire
+const _require = createRequire(import.meta.url);
+let searoute;
+try {
+  searoute = _require('searoute-js');
+  console.log('[weather-service] searoute-js loaded — sea routing enabled');
+} catch (e) {
+  console.warn('[weather-service] searoute-js not available, using straight-line routing');
+  searoute = null;
+}
 
 const router = Router();
 
@@ -66,6 +78,102 @@ function interpolatePoint(lat1, lon1, lat2, lon2, fraction) {
 
 function roundToGrid(val) {
   return Math.round(val * 4) / 4; // 0.25 degree grid
+}
+
+// ── Sea routing (land avoidance) ──
+function getSeaRoute(wp1, wp2) {
+  if (!searoute) return null;
+  try {
+    const origin = { type: 'Feature', properties: {}, geometry: { type: 'Point', coordinates: [wp1.lon, wp1.lat] } };
+    const dest = { type: 'Feature', properties: {}, geometry: { type: 'Point', coordinates: [wp2.lon, wp2.lat] } };
+    const route = searoute(origin, dest);
+    if (!route || !route.geometry || !route.geometry.coordinates || route.geometry.coordinates.length < 2) return null;
+
+    const path = route.geometry.coordinates.map(c => ({ lat: c[1], lon: c[0] }));
+    const distNm = route.properties?.length || haversine(wp1.lat, wp1.lon, wp2.lat, wp2.lon);
+
+    // Sanity check: if sea route is >3x straight line, network is probably wrong — fall back
+    const straightDist = haversine(wp1.lat, wp1.lon, wp2.lat, wp2.lon);
+    if (distNm > straightDist * 3 && straightDist > 10) {
+      console.warn(`[weather-service] searoute ${wp1.lat},${wp1.lon}→${wp2.lat},${wp2.lon}: ${Math.round(distNm)}nm vs ${Math.round(straightDist)}nm straight — using straight line`);
+      return null;
+    }
+    return { path, distance_nm: distNm };
+  } catch (e) {
+    console.warn('[weather-service] searoute error:', e.message);
+    return null;
+  }
+}
+
+function generateSeaRoutePath(waypoints) {
+  const legs = [];
+  const fullPath = [];
+
+  for (let i = 0; i < waypoints.length - 1; i++) {
+    const sr = getSeaRoute(waypoints[i], waypoints[i + 1]);
+    if (sr) {
+      legs.push(sr);
+      // Avoid duplicate junction points
+      if (fullPath.length > 0) fullPath.pop();
+      fullPath.push(...sr.path);
+    } else {
+      const straightDist = haversine(waypoints[i].lat, waypoints[i].lon, waypoints[i + 1].lat, waypoints[i + 1].lon);
+      const path = [{ lat: waypoints[i].lat, lon: waypoints[i].lon }, { lat: waypoints[i + 1].lat, lon: waypoints[i + 1].lon }];
+      legs.push({ path, distance_nm: straightDist });
+      if (fullPath.length > 0) fullPath.pop();
+      fullPath.push(...path);
+    }
+  }
+  return { legs, fullPath };
+}
+
+// Walk along a multi-segment path and place sample points every SAMPLE_INTERVAL_NM
+function generateSamplesAlongPath(legPath, legDist, legIndex, boatSpeedKts, cumulativeHours, depMs) {
+  const samples = [];
+  const legHours = legDist / boatSpeedKts;
+  const numSamples = Math.max(2, Math.ceil(legDist / SAMPLE_INTERVAL_NM) + 1);
+
+  // Build cumulative distance array along path segments
+  const segDists = [];
+  let totalPathDist = 0;
+  for (let i = 1; i < legPath.length; i++) {
+    const d = haversine(legPath[i - 1].lat, legPath[i - 1].lon, legPath[i].lat, legPath[i].lon);
+    segDists.push(d);
+    totalPathDist += d;
+  }
+  // Use measured path distance (more accurate than searoute's reported distance)
+  const actualDist = totalPathDist > 0 ? totalPathDist : legDist;
+
+  for (let j = 0; j < numSamples; j++) {
+    const frac = j / (numSamples - 1);
+    const targetDist = frac * actualDist;
+
+    // Walk along path segments to find the right position
+    let accumulated = 0;
+    let pt = { lat: legPath[0].lat, lon: legPath[0].lon };
+    for (let s = 0; s < segDists.length; s++) {
+      if (accumulated + segDists[s] >= targetDist || s === segDists.length - 1) {
+        const segFrac = segDists[s] > 0 ? (targetDist - accumulated) / segDists[s] : 0;
+        const clampedFrac = Math.max(0, Math.min(1, segFrac));
+        pt = interpolatePoint(legPath[s].lat, legPath[s].lon, legPath[s + 1].lat, legPath[s + 1].lon, clampedFrac);
+        break;
+      }
+      accumulated += segDists[s];
+    }
+
+    const hoursAtPoint = cumulativeHours + legHours * frac;
+    const etaMs = depMs + hoursAtPoint * 3600000;
+    samples.push({
+      lat: pt.lat,
+      lon: pt.lon,
+      leg: legIndex,
+      fraction: frac,
+      distance_nm: frac * actualDist,
+      hours_from_departure: hoursAtPoint,
+      eta: new Date(etaMs).toISOString()
+    });
+  }
+  return { samples, legDist: actualDist, legHours };
 }
 
 // ── Open-Meteo fetchers ──
@@ -212,11 +320,31 @@ function interpolateAngle(a1, a2, frac) {
 }
 
 // ── Generate sample points along a route ──
-function generateSamplePoints(waypoints, boatSpeedKts, departureTime) {
-  const samples = [];
-  let cumulativeHours = 0;
+function generateSamplePoints(waypoints, boatSpeedKts, departureTime, seaRouteLegs) {
   const depMs = new Date(departureTime).getTime();
 
+  // If sea route legs provided, use path-based sampling
+  if (seaRouteLegs && seaRouteLegs.length === waypoints.length - 1) {
+    const allSamples = [];
+    let cumulativeHours = 0;
+    let cumulativeDist = 0;
+    for (let i = 0; i < seaRouteLegs.length; i++) {
+      const leg = seaRouteLegs[i];
+      const result = generateSamplesAlongPath(leg.path, leg.distance_nm, i, boatSpeedKts, cumulativeHours, depMs);
+      // Adjust distance_nm to be cumulative
+      for (const s of result.samples) {
+        s.distance_nm += cumulativeDist;
+      }
+      allSamples.push(...result.samples);
+      cumulativeHours += result.legHours;
+      cumulativeDist += result.legDist;
+    }
+    return allSamples;
+  }
+
+  // Fallback: straight-line interpolation
+  const samples = [];
+  let cumulativeHours = 0;
   for (let i = 0; i < waypoints.length - 1; i++) {
     const wp1 = waypoints[i];
     const wp2 = waypoints[i + 1];
@@ -231,19 +359,14 @@ function generateSamplePoints(waypoints, boatSpeedKts, departureTime) {
       const etaMs = depMs + hoursAtPoint * 3600000;
 
       samples.push({
-        lat: pt.lat,
-        lon: pt.lon,
-        leg: i,
-        fraction: frac,
-        distance_nm: (i > 0 ? samples.filter(s => s.leg < i).reduce((sum, s, idx, arr) =>
-          idx === arr.length - 1 ? sum + haversine(waypoints[i - 1].lat, waypoints[i - 1].lon, wp1.lat, wp1.lon) : sum, 0) : 0) + legDist * frac,
+        lat: pt.lat, lon: pt.lon, leg: i, fraction: frac,
+        distance_nm: legDist * frac,
         hours_from_departure: hoursAtPoint,
         eta: new Date(etaMs).toISOString()
       });
     }
     cumulativeHours += legHours;
   }
-
   return samples;
 }
 
@@ -286,11 +409,13 @@ function generateWarnings(samplePoints) {
 }
 
 // ── Calculate summary stats ──
-function calculateSummary(waypoints, samplePoints, boatSpeedKts) {
-  let totalDist = 0;
-  for (let i = 1; i < waypoints.length; i++) {
-    totalDist += haversine(waypoints[i - 1].lat, waypoints[i - 1].lon,
-                           waypoints[i].lat, waypoints[i].lon);
+function calculateSummary(waypoints, samplePoints, boatSpeedKts, totalDistOverride) {
+  let totalDist = totalDistOverride || 0;
+  if (!totalDist) {
+    for (let i = 1; i < waypoints.length; i++) {
+      totalDist += haversine(waypoints[i - 1].lat, waypoints[i - 1].lon,
+                             waypoints[i].lat, waypoints[i].lon);
+    }
   }
 
   const withWeather = samplePoints.filter(s => s.weather);
@@ -330,7 +455,7 @@ function calculateSummary(waypoints, samplePoints, boatSpeedKts) {
 }
 
 // ── Calculate route weather from pre-fetched data (reused by /route and /compare) ──
-function calculateRouteWeather(waypoints, samples, weatherMap, speed) {
+function calculateRouteWeather(waypoints, samples, weatherMap, speed, seaRouteLegs) {
   // Interpolate weather at each sample point's ETA
   for (const s of samples) {
     const key = `${roundToGrid(s.lat)}:${roundToGrid(s.lon)}`;
@@ -340,16 +465,22 @@ function calculateRouteWeather(waypoints, samples, weatherMap, speed) {
     }
   }
 
+  // Calculate total sea route distance
+  let totalSeaDist = 0;
+  if (seaRouteLegs) {
+    for (const leg of seaRouteLegs) totalSeaDist += leg.distance_nm;
+  }
+
   // Generate warnings and summary
   const warnings = generateWarnings(samples);
-  const summary = calculateSummary(waypoints, samples, speed);
+  const summary = calculateSummary(waypoints, samples, speed, totalSeaDist || null);
 
   // Build per-leg detail
   const legs = [];
   for (let i = 0; i < waypoints.length - 1; i++) {
     const legSamples = samples.filter(s => s.leg === i);
-    const legDist = haversine(waypoints[i].lat, waypoints[i].lon,
-                              waypoints[i + 1].lat, waypoints[i + 1].lon);
+    const legDist = seaRouteLegs ? seaRouteLegs[i].distance_nm
+      : haversine(waypoints[i].lat, waypoints[i].lon, waypoints[i + 1].lat, waypoints[i + 1].lon);
     legs.push({
       from: waypoints[i],
       to: waypoints[i + 1],
@@ -363,8 +494,8 @@ function calculateRouteWeather(waypoints, samples, weatherMap, speed) {
 }
 
 // ── Fetch weather data for grid cells (shared by /route and /compare) ──
-async function fetchGridWeather(waypoints, speed, departureTime, modelKey) {
-  const samples = generateSamplePoints(waypoints, speed, departureTime);
+async function fetchGridWeather(waypoints, speed, departureTime, modelKey, seaRouteLegs) {
+  const samples = generateSamplePoints(waypoints, speed, departureTime, seaRouteLegs);
 
   let totalDist = 0;
   for (let i = 1; i < waypoints.length; i++) {
@@ -468,15 +599,16 @@ router.post('/route', async (req, res) => {
       }
     }
 
-    // Generate sample points
-    const samples = generateSamplePoints(waypoints, speed, departure_time);
+    // Generate sea route (avoids land)
+    const seaRouteData = generateSeaRoutePath(waypoints);
+    const seaRouteLegs = seaRouteData.legs;
+
+    // Generate sample points along sea route
+    const samples = generateSamplePoints(waypoints, speed, departure_time, seaRouteLegs);
 
     // Calculate total hours to determine forecast range needed
     let totalDist = 0;
-    for (let i = 1; i < waypoints.length; i++) {
-      totalDist += haversine(waypoints[i - 1].lat, waypoints[i - 1].lon,
-                             waypoints[i].lat, waypoints[i].lon);
-    }
+    for (const leg of seaRouteLegs) totalDist += leg.distance_nm;
     const totalHours = Math.ceil(totalDist / speed) + 24; // +24h buffer
     const forecastHours = Math.min(totalHours, 384); // Max 16 days
 
@@ -515,10 +647,14 @@ router.post('/route', async (req, res) => {
     }
 
     // Calculate route weather from fetched data
-    const routeResult = calculateRouteWeather(waypoints, samples, weatherMap, speed);
+    const routeResult = calculateRouteWeather(waypoints, samples, weatherMap, speed, seaRouteLegs);
+
+    // Include sea route coordinates for frontend rendering
+    const seaRouteCoords = seaRouteData.fullPath.map(p => [p.lat, p.lon]);
 
     res.json({
       ...routeResult,
+      sea_route_coords: seaRouteCoords,
       departure_time,
       boat_speed_kts: speed,
       model: model || 'best'
@@ -548,18 +684,18 @@ router.post('/optimal-departure', async (req, res) => {
       departures.push(new Date(t).toISOString());
     }
 
-    // For each departure, calculate a lightweight route
+    // Generate sea route once (shared across all departure times)
+    const seaRouteData = generateSeaRoutePath(waypoints);
+    const seaRouteLegs = seaRouteData.legs;
+
     // Pre-fetch weather data once (shared across departures)
     let totalDist = 0;
-    for (let i = 1; i < waypoints.length; i++) {
-      totalDist += haversine(waypoints[i - 1].lat, waypoints[i - 1].lon,
-                             waypoints[i].lat, waypoints[i].lon);
-    }
+    for (const leg of seaRouteLegs) totalDist += leg.distance_nm;
     const maxHours = Math.ceil(totalDist / speed) + Math.ceil((end - start) / 3600000) + 24;
     const forecastHours = Math.min(maxHours, 384);
 
     // Fetch weather for all grid cells
-    const testSamples = generateSamplePoints(waypoints, speed, start.toISOString());
+    const testSamples = generateSamplePoints(waypoints, speed, start.toISOString(), seaRouteLegs);
     const gridCells = new Map();
     for (const s of testSamples) {
       const key = `${roundToGrid(s.lat)}:${roundToGrid(s.lon)}`;
@@ -589,7 +725,7 @@ router.post('/optimal-departure', async (req, res) => {
 
     // Score each departure
     const scored = departures.map(dep => {
-      const samples = generateSamplePoints(waypoints, speed, dep);
+      const samples = generateSamplePoints(waypoints, speed, dep, seaRouteLegs);
       let totalComfort = 0, count = 0;
       let maxWind = 0, maxWave = 0;
       const warnings = [];
@@ -665,11 +801,15 @@ router.post('/compare', async (req, res) => {
       return res.status(429).json({ error: 'Insufficient rate limit budget for comparison' });
     }
 
+    // Generate sea route once (shared across models)
+    const seaRouteData = generateSeaRoutePath(waypoints);
+    const seaRouteLegs = seaRouteData.legs;
+
     // Run models in parallel
     const modelResults = await Promise.allSettled(
       modelList.map(async modelKey => {
-        const { samples, weatherMap } = await fetchGridWeather(waypoints, speed, departure_time, modelKey);
-        const result = calculateRouteWeather(waypoints, samples, weatherMap, speed);
+        const { samples, weatherMap } = await fetchGridWeather(waypoints, speed, departure_time, modelKey, seaRouteLegs);
+        const result = calculateRouteWeather(waypoints, samples, weatherMap, speed, seaRouteLegs);
         // Trim samples (every 2nd point) to reduce payload
         result.samples = result.samples.filter((_, i) => i % 2 === 0);
         return { model: modelKey, ...result };

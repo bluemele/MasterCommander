@@ -157,6 +157,30 @@
     return svg;
   }
 
+  // ── Swell color (indigo → purple, distinct from wave blue-green) ──
+  function swellColor(heightM) {
+    if (heightM < 0.5) return '#818CF8';
+    if (heightM < 1)   return '#6366F1';
+    if (heightM < 1.5) return '#4F46E5';
+    if (heightM < 2)   return '#A855F7';
+    if (heightM < 3)   return '#9333EA';
+    return '#7C3AED';
+  }
+
+  // ── Wave arrow SVG (simple directional arrow, colored by height) ──
+  function waveArrowSVG(heightM, directionDeg, size, type) {
+    size = size || 22;
+    var half = size / 2;
+    var color = (type === 'swell') ? swellColor(heightM) : waveColor(heightM);
+    // Arrow points in wave travel direction (direction + 180 since data is FROM)
+    var angle = ((directionDeg || 0) + 180) % 360;
+
+    return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 ' + size + ' ' + size + '" xmlns="http://www.w3.org/2000/svg">' +
+      '<g transform="rotate(' + angle + ' ' + half + ' ' + half + ')">' +
+      '<path d="M' + half + ' 3 L' + (half + 4) + ' ' + (size - 5) + ' L' + half + ' ' + (size - 8) + ' L' + (half - 4) + ' ' + (size - 5) + ' Z" fill="' + color + '" opacity="0.85"/>' +
+      '</g></svg>';
+  }
+
   // ── Comfort score (0-1, higher = more comfortable) ──
   function comfortScore(weather) {
     var w = weather || {};
@@ -199,6 +223,8 @@
     severityColor: severityColor,
     formatBearing: formatBearing,
     windBarbSVG: windBarbSVG,
+    waveArrowSVG: waveArrowSVG,
+    swellColor: swellColor,
     comfortScore: comfortScore,
     formatDuration: formatDuration,
     formatDistance: formatDistance

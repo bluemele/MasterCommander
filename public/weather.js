@@ -17,8 +17,13 @@
   var gpsInterval = null;
   var gpsMarker = null;
   var gpsData = null;
+  var gpsTrack = [];
+  var gpsTrackLine = null;
+  var GPS_TRACK_MAX = 1000;
+  var GPS_TRACK_MIN_MOVE = 0.001; // ~110m
 
   var STORAGE_ROUTE = 'mc_weather_route';
+  var STORAGE_GPS_TRACK = 'mc_weather_gps_track';
   var STORAGE_RESULT = 'mc_weather_last_result';
 
   // ── Helpers ──
@@ -76,7 +81,8 @@
     fetchHealth();
     healthInterval = setInterval(fetchHealth, 60000);
 
-    // GPS boat position
+    // GPS boat position + track
+    loadGPSTrack();
     fetchGPS();
     gpsInterval = setInterval(fetchGPS, 30000);
 
@@ -254,6 +260,14 @@
     var samples = result.samples.filter(function(s) { return s.weather; });
     if (samples.length < 2) return;
 
+    // Draw sea route base line (if available)
+    if (result.sea_route_coords && result.sea_route_coords.length > 1) {
+      var baseLine = L.polyline(result.sea_route_coords, {
+        color: '#0C4A6E', weight: 2, opacity: 0.25, dashArray: '6 4'
+      }).addTo(map);
+      sampleMarkers.push(baseLine);
+    }
+
     // Draw colored segments
     for (var i = 1; i < samples.length; i++) {
       var s = samples[i];
@@ -312,6 +326,43 @@
       })(sp);
 
       sampleMarkers.push(barbMarker);
+    }
+
+    // Add wave direction arrows (interleaved with wind barbs — offset indices)
+    for (var w = 1; w < samples.length; w += 2) {
+      var wp = samples[w];
+      if (!wp.weather) continue;
+
+      // Show wave arrow if wave data exists
+      if (wp.weather.wave_height != null && wp.weather.wave_direction != null) {
+        var waveHtml = MCWeather.waveArrowSVG(wp.weather.wave_height, wp.weather.wave_direction, 22, 'wave');
+        var waveIcon = L.divIcon({
+          className: 'wx-wave-arrow',
+          html: waveHtml,
+          iconSize: [22, 22],
+          iconAnchor: [11, 11]
+        });
+        var waveMarker = L.marker([wp.lat, wp.lon], {
+          icon: waveIcon,
+          interactive: true,
+          zIndexOffset: 400
+        }).addTo(map);
+
+        (function(point) {
+          waveMarker.bindPopup(function() {
+            var wx = point.weather;
+            var html = '<div class="wx-popup"><div class="wx-popup-title">Wave Data</div>';
+            if (wx.wave_height != null) html += '<div class="wx-popup-row"><span class="wx-popup-label">Waves</span><span class="wx-popup-value">' + wx.wave_height.toFixed(1) + 'm ' + MCWeather.formatBearing(wx.wave_direction || 0) + '</span></div>';
+            if (wx.wave_period != null) html += '<div class="wx-popup-row"><span class="wx-popup-label">Period</span><span class="wx-popup-value">' + wx.wave_period.toFixed(0) + 's</span></div>';
+            if (wx.swell_height != null) html += '<div class="wx-popup-row"><span class="wx-popup-label">Swell</span><span class="wx-popup-value">' + wx.swell_height.toFixed(1) + 'm ' + MCWeather.formatBearing(wx.swell_direction || 0) + '</span></div>';
+            if (wx.swell_period != null) html += '<div class="wx-popup-row"><span class="wx-popup-label">Swell Period</span><span class="wx-popup-value">' + wx.swell_period.toFixed(0) + 's</span></div>';
+            html += '</div>';
+            return html;
+          });
+        })(wp);
+
+        sampleMarkers.push(waveMarker);
+      }
     }
 
     // Fit map to route
@@ -576,6 +627,9 @@
     if (waypoints.length > 0) {
       item('Clear all waypoints', clearRoute);
     }
+    if (gpsTrack.length > 0) {
+      item('Clear GPS track', clearGPSTrack);
+    }
 
     document.body.appendChild(menu);
     setTimeout(function() {
@@ -786,6 +840,7 @@
       };
 
       updateGPSMarker();
+      extendGPSTrack(gpsData.lat, gpsData.lon);
     } catch (e) {
       // silent
     }
@@ -849,6 +904,43 @@
     updateUI();
   }
 
+  // ── GPS Track ──
+  function extendGPSTrack(lat, lon) {
+    if (gpsTrack.length > 0) {
+      var last = gpsTrack[gpsTrack.length - 1];
+      if (Math.abs(lat - last[0]) < GPS_TRACK_MIN_MOVE && Math.abs(lon - last[1]) < GPS_TRACK_MIN_MOVE) return;
+    }
+    gpsTrack.push([lat, lon]);
+    if (gpsTrack.length > GPS_TRACK_MAX) gpsTrack.shift();
+    renderGPSTrack();
+    try { localStorage.setItem(STORAGE_GPS_TRACK, JSON.stringify(gpsTrack)); } catch (e) {}
+  }
+
+  function renderGPSTrack() {
+    if (gpsTrackLine && map) map.removeLayer(gpsTrackLine);
+    gpsTrackLine = null;
+    if (!map || gpsTrack.length < 2) return;
+    gpsTrackLine = L.polyline(gpsTrack, { color: '#60A5FA', weight: 2, opacity: 0.6, dashArray: '4 4' }).addTo(map);
+  }
+
+  function loadGPSTrack() {
+    try {
+      var saved = localStorage.getItem(STORAGE_GPS_TRACK);
+      if (saved) {
+        gpsTrack = JSON.parse(saved);
+        if (!Array.isArray(gpsTrack)) gpsTrack = [];
+        renderGPSTrack();
+      }
+    } catch (e) { gpsTrack = []; }
+  }
+
+  function clearGPSTrack() {
+    gpsTrack = [];
+    if (gpsTrackLine && map) map.removeLayer(gpsTrackLine);
+    gpsTrackLine = null;
+    try { localStorage.removeItem(STORAGE_GPS_TRACK); } catch (e) {}
+  }
+
   // ── Health Indicator ──
   async function fetchHealth() {
     try {
@@ -879,7 +971,9 @@
     if (healthInterval) { clearInterval(healthInterval); healthInterval = null; }
     if (gpsInterval) { clearInterval(gpsInterval); gpsInterval = null; }
     if (gpsMarker && map) { map.removeLayer(gpsMarker); gpsMarker = null; }
+    if (gpsTrackLine && map) { map.removeLayer(gpsTrackLine); gpsTrackLine = null; }
     gpsData = null;
+    gpsTrack = [];
     if (map) {
       map.remove();
       map = null;

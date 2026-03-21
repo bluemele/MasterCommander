@@ -454,6 +454,12 @@ main:has(.weather-container) {
   border: none;
 }
 
+/* Wave arrow markers */
+.wx-wave-arrow {
+  background: none !important;
+  border: none !important;
+}
+
 /* Wind barb markers */
 .wx-wind-barb {
   display: flex;
