@@ -23,6 +23,15 @@
   var GPS_TRACK_MAX = 1000;
   var GPS_TRACK_MIN_MOVE = 0.001; // ~110m
 
+  // Timeline player state
+  var tlPlaying = false;
+  var tlAnimFrame = null;
+  var tlBoatMarker = null;
+  var tlSpeed = 60; // seconds of passage per real second
+  var tlStartTime = null;
+  var tlEndTime = null;
+  var tlLastTick = null;
+
   var STORAGE_ROUTE = 'mc_weather_route';
   var STORAGE_GPS_TRACK = 'mc_weather_gps_track';
   var STORAGE_RESULT = 'mc_weather_last_result';
@@ -185,6 +194,35 @@
       '<div class="weather-map-wrap">' +
         '<div id="weather-map"></div>' +
         '<div class="wx-map-hint" id="wx-hint">Click map to add waypoints</div>' +
+        // Weather HUD
+        '<div class="wx-hud hidden" id="wx-hud">' +
+          '<div class="wx-hud-item"><div class="wx-hud-value" id="wx-hud-wind">--</div><div class="wx-hud-label">Wind kts</div></div>' +
+          '<div class="wx-hud-divider"></div>' +
+          '<div class="wx-hud-item"><div class="wx-hud-value" id="wx-hud-gust">--</div><div class="wx-hud-label">Gusts</div></div>' +
+          '<div class="wx-hud-divider"></div>' +
+          '<div class="wx-hud-item"><div class="wx-hud-value" id="wx-hud-wave">--</div><div class="wx-hud-label">Waves m</div></div>' +
+          '<div class="wx-hud-divider"></div>' +
+          '<div class="wx-hud-item"><div class="wx-hud-value" id="wx-hud-dir">--</div><div class="wx-hud-label">Wind Dir</div></div>' +
+          '<div class="wx-hud-divider"></div>' +
+          '<div class="wx-hud-item"><div class="wx-hud-value" id="wx-hud-pressure">--</div><div class="wx-hud-label">hPa</div></div>' +
+          '<div class="wx-hud-divider"></div>' +
+          '<div class="wx-hud-item"><div class="wx-hud-value" id="wx-hud-comfort">--</div><div class="wx-hud-label">Comfort</div></div>' +
+        '</div>' +
+        // Timeline player
+        '<div class="wx-timeline hidden" id="wx-timeline">' +
+          '<button class="wx-tl-play" id="wx-tl-play" title="Play/Pause">&#9654;</button>' +
+          '<div class="wx-tl-slider-wrap">' +
+            '<input type="range" class="wx-tl-slider" id="wx-tl-slider" min="0" max="1000" value="0">' +
+            '<div class="wx-tl-times"><span id="wx-tl-start">--</span><span id="wx-tl-end">--</span></div>' +
+          '</div>' +
+          '<div class="wx-tl-current" id="wx-tl-current">--</div>' +
+          '<select class="wx-tl-speed" id="wx-tl-speed" title="Playback speed">' +
+            '<option value="30">30x</option>' +
+            '<option value="60" selected>60x</option>' +
+            '<option value="120">120x</option>' +
+            '<option value="300">300x</option>' +
+          '</select>' +
+        '</div>' +
       '</div>' +
     '</div>';
   }
@@ -476,6 +514,7 @@
       saveResult();
       renderResults(lastResult);
       renderWeatherRoute(lastResult);
+      initTimeline(lastResult);
     } catch (e) {
       if (summaryDiv) summaryDiv.innerHTML = '<div style="color:#EF4444;padding:8px;font-size:0.82rem">Error: ' + esc(e.message) + '</div>';
     } finally {
@@ -579,6 +618,7 @@
     lastResult = null;
     rebuildMarkers();
     clearSampleMarkers();
+    destroyTimeline();
     if (routeLine) { map.removeLayer(routeLine); routeLine = null; }
     renderWaypointList();
     clearResults();
@@ -1059,8 +1099,208 @@
     }
   }
 
+  // ── Timeline Player ──
+  function initTimeline(result) {
+    var tl = $('wx-timeline');
+    var hud = $('wx-hud');
+    if (!tl || !result || !result.samples || result.samples.length < 2) {
+      if (tl) tl.classList.add('hidden');
+      if (hud) hud.classList.add('hidden');
+      return;
+    }
+
+    var samples = result.samples.filter(function(s) { return s.weather && s.eta; });
+    if (samples.length < 2) return;
+
+    tlStartTime = new Date(samples[0].eta).getTime();
+    tlEndTime = new Date(samples[samples.length - 1].eta).getTime();
+
+    // Format start/end labels
+    var fmtShort = function(d) {
+      var dt = new Date(d);
+      var mon = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      return mon[dt.getUTCMonth()] + ' ' + dt.getUTCDate() + ' ' +
+        String(dt.getUTCHours()).padStart(2,'0') + ':' + String(dt.getUTCMinutes()).padStart(2,'0');
+    };
+
+    $('wx-tl-start').textContent = fmtShort(tlStartTime);
+    $('wx-tl-end').textContent = fmtShort(tlEndTime);
+
+    var slider = $('wx-tl-slider');
+    slider.value = 0;
+    tl.classList.remove('hidden');
+
+    // Bind events
+    slider.oninput = function() {
+      var frac = parseInt(slider.value) / 1000;
+      var t = tlStartTime + frac * (tlEndTime - tlStartTime);
+      updateTimelineAt(new Date(t).toISOString(), samples);
+    };
+
+    $('wx-tl-play').onclick = function() {
+      if (tlPlaying) { pauseTimeline(); }
+      else { playTimeline(samples); }
+    };
+
+    $('wx-tl-speed').onchange = function() {
+      tlSpeed = parseInt(this.value) || 60;
+    };
+
+    // Set to start position
+    updateTimelineAt(samples[0].eta, samples);
+  }
+
+  function updateTimelineAt(isoTime, samples) {
+    var interp = MCWeather.interpolateSample(samples, isoTime);
+    if (!interp) return;
+
+    // Update slider position
+    var slider = $('wx-tl-slider');
+    if (slider && !tlPlaying) {
+      var frac = (new Date(isoTime).getTime() - tlStartTime) / (tlEndTime - tlStartTime);
+      slider.value = Math.round(frac * 1000);
+    }
+
+    // Update current time label
+    var cur = $('wx-tl-current');
+    if (cur) {
+      var dt = new Date(isoTime);
+      var mon = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      var day = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+      cur.textContent = day[dt.getUTCDay()] + ' ' + mon[dt.getUTCMonth()] + ' ' + dt.getUTCDate() + ' ' +
+        String(dt.getUTCHours()).padStart(2,'0') + ':' + String(dt.getUTCMinutes()).padStart(2,'0') + ' UTC';
+    }
+
+    // Move boat marker
+    moveBoat(interp.lat, interp.lon, interp.weather ? interp.weather.wind_direction : 0);
+
+    // Update HUD
+    updateHUD(interp.weather);
+  }
+
+  function moveBoat(lat, lon, heading) {
+    var boatSVG = '<svg width="28" height="28" viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg">' +
+      '<g transform="rotate(' + (heading || 0) + ' 14 14)">' +
+      '<path d="M14 3 L21 22 L14 18 L7 22 Z" fill="#0EA5E9" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/>' +
+      '</g></svg>';
+
+    var icon = L.divIcon({
+      className: 'wx-boat-marker',
+      html: boatSVG,
+      iconSize: [28, 28],
+      iconAnchor: [14, 14]
+    });
+
+    if (tlBoatMarker) {
+      tlBoatMarker.setLatLng([lat, lon]);
+      tlBoatMarker.setIcon(icon);
+    } else {
+      tlBoatMarker = L.marker([lat, lon], { icon: icon, zIndexOffset: 2000, interactive: false }).addTo(map);
+    }
+  }
+
+  function updateHUD(w) {
+    var hud = $('wx-hud');
+    if (!hud || !w) return;
+    hud.classList.remove('hidden');
+
+    var windEl = $('wx-hud-wind');
+    var gustEl = $('wx-hud-gust');
+    var waveEl = $('wx-hud-wave');
+    var dirEl = $('wx-hud-dir');
+    var pressEl = $('wx-hud-pressure');
+    var comfortEl = $('wx-hud-comfort');
+
+    var ws = w.wind_speed != null ? Math.round(w.wind_speed) : '--';
+    if (windEl) {
+      windEl.textContent = ws;
+      windEl.style.color = w.wind_speed != null ? MCWeather.windColor(w.wind_speed) : '#fff';
+    }
+    if (gustEl) {
+      gustEl.textContent = w.wind_gusts != null ? Math.round(w.wind_gusts) : '--';
+      gustEl.style.color = w.wind_gusts != null ? MCWeather.windColor(w.wind_gusts) : '#fff';
+    }
+    if (waveEl) {
+      waveEl.textContent = w.wave_height != null ? w.wave_height.toFixed(1) : '--';
+      waveEl.style.color = w.wave_height != null ? MCWeather.waveColor(w.wave_height) : '#fff';
+    }
+    if (dirEl) {
+      dirEl.textContent = w.wind_direction != null ? MCWeather.formatBearing(w.wind_direction) : '--';
+    }
+    if (pressEl) {
+      pressEl.textContent = w.pressure != null ? Math.round(w.pressure) : '--';
+    }
+    if (comfortEl) {
+      var c = MCWeather.comfortScore(w);
+      var pct = Math.round(c * 100);
+      comfortEl.textContent = pct + '%';
+      comfortEl.style.color = c > 0.7 ? '#10B981' : c > 0.4 ? '#FBBF24' : '#EF4444';
+    }
+  }
+
+  function playTimeline(samples) {
+    if (!samples && lastResult) {
+      samples = lastResult.samples.filter(function(s) { return s.weather && s.eta; });
+    }
+    if (!samples || samples.length < 2) return;
+
+    tlPlaying = true;
+    var playBtn = $('wx-tl-play');
+    if (playBtn) playBtn.innerHTML = '&#9646;&#9646;'; // pause icon
+
+    var slider = $('wx-tl-slider');
+    var startFrac = parseInt(slider.value) / 1000;
+    if (startFrac >= 0.999) startFrac = 0; // restart if at end
+
+    tlLastTick = performance.now();
+    var currentTime = tlStartTime + startFrac * (tlEndTime - tlStartTime);
+
+    function tick(now) {
+      if (!tlPlaying) return;
+      var delta = (now - tlLastTick) / 1000; // real seconds elapsed
+      tlLastTick = now;
+
+      // Advance passage time: delta * speed * 60 (speed is in minutes per real second)
+      currentTime += delta * tlSpeed * 60 * 1000;
+
+      if (currentTime >= tlEndTime) {
+        currentTime = tlEndTime;
+        pauseTimeline();
+      }
+
+      var frac = (currentTime - tlStartTime) / (tlEndTime - tlStartTime);
+      slider.value = Math.round(frac * 1000);
+      updateTimelineAt(new Date(currentTime).toISOString(), samples);
+
+      if (tlPlaying) {
+        tlAnimFrame = requestAnimationFrame(tick);
+      }
+    }
+
+    tlAnimFrame = requestAnimationFrame(tick);
+  }
+
+  function pauseTimeline() {
+    tlPlaying = false;
+    if (tlAnimFrame) { cancelAnimationFrame(tlAnimFrame); tlAnimFrame = null; }
+    var playBtn = $('wx-tl-play');
+    if (playBtn) playBtn.innerHTML = '&#9654;'; // play icon
+  }
+
+  function destroyTimeline() {
+    pauseTimeline();
+    if (tlBoatMarker && map) { map.removeLayer(tlBoatMarker); tlBoatMarker = null; }
+    var tl = $('wx-timeline');
+    var hud = $('wx-hud');
+    if (tl) tl.classList.add('hidden');
+    if (hud) hud.classList.add('hidden');
+    tlStartTime = null;
+    tlEndTime = null;
+  }
+
   // ── Cleanup (called when navigating away) ──
   function cleanup() {
+    destroyTimeline();
     if (healthInterval) { clearInterval(healthInterval); healthInterval = null; }
     if (gpsInterval) { clearInterval(gpsInterval); gpsInterval = null; }
     if (gpsMarker && map) { map.removeLayer(gpsMarker); gpsMarker = null; }

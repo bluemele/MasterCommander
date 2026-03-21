@@ -231,6 +231,54 @@
     return nm < 1 ? nm.toFixed(2) + ' nm' : nm.toFixed(1) + ' nm';
   }
 
+  // ── Interpolate weather sample at a given time ──
+  // samples: array of {lat, lon, eta, weather:{...}}
+  // Returns {lat, lon, eta, weather, fraction} or null
+  function interpolateSample(samples, isoTime) {
+    if (!samples || samples.length === 0) return null;
+    var t = new Date(isoTime).getTime();
+    var first = new Date(samples[0].eta).getTime();
+    var last = new Date(samples[samples.length - 1].eta).getTime();
+    if (t <= first) return Object.assign({fraction: 0}, samples[0]);
+    if (t >= last) return Object.assign({fraction: 1}, samples[samples.length - 1]);
+
+    for (var i = 1; i < samples.length; i++) {
+      var t0 = new Date(samples[i - 1].eta).getTime();
+      var t1 = new Date(samples[i].eta).getTime();
+      if (t >= t0 && t <= t1) {
+        var f = (t1 === t0) ? 0 : (t - t0) / (t1 - t0);
+        var a = samples[i - 1], b = samples[i];
+        var w = {};
+        var keys = ['wind_speed','wind_gusts','wind_direction','wave_height','wave_period','wave_direction','swell_height','swell_direction','pressure','visibility','precipitation'];
+        for (var k = 0; k < keys.length; k++) {
+          var key = keys[k];
+          var va = (a.weather && a.weather[key] != null) ? a.weather[key] : null;
+          var vb = (b.weather && b.weather[key] != null) ? b.weather[key] : null;
+          if (va != null && vb != null) {
+            if (key.indexOf('direction') !== -1) {
+              // Circular interpolation for direction
+              var diff = ((vb - va + 540) % 360) - 180;
+              w[key] = ((va + diff * f) + 360) % 360;
+            } else {
+              w[key] = va + (vb - va) * f;
+            }
+          } else if (va != null) { w[key] = va; }
+          else if (vb != null) { w[key] = vb; }
+        }
+        var totalFrac = (i - 1 + f) / (samples.length - 1);
+        return {
+          lat: a.lat + (b.lat - a.lat) * f,
+          lon: a.lon + (b.lon - a.lon) * f,
+          eta: isoTime,
+          weather: w,
+          fraction: totalFrac,
+          sampleIndex: i - 1
+        };
+      }
+    }
+    return Object.assign({fraction: 1}, samples[samples.length - 1]);
+  }
+
   // ── Public API ──
   window.MCWeather = {
     haversine: haversine,
@@ -248,7 +296,8 @@
     combinedMarkerSVG: combinedMarkerSVG,
     comfortScore: comfortScore,
     formatDuration: formatDuration,
-    formatDistance: formatDistance
+    formatDistance: formatDistance,
+    interpolateSample: interpolateSample
   };
 
 })();

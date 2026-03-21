@@ -727,6 +727,175 @@ main:has(.weather-container) {
   color: #92400E;
 }
 
+/* ── Passage Timeline Player ── */
+.wx-timeline {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  background: rgba(15, 23, 42, 0.92);
+  backdrop-filter: blur(8px);
+  border-radius: 12px;
+  padding: 10px 16px 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 420px;
+  max-width: 90%;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.35);
+  color: #fff;
+  font-size: 0.78rem;
+  font-family: inherit;
+  transition: opacity 0.3s;
+}
+
+.wx-timeline.hidden {
+  display: none;
+}
+
+.wx-tl-play {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 6px;
+  transition: background 0.15s;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.wx-tl-play:hover {
+  background: rgba(255,255,255,0.15);
+}
+
+.wx-tl-slider-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.wx-tl-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(255,255,255,0.2);
+  outline: none;
+  cursor: pointer;
+}
+
+.wx-tl-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #0EA5E9;
+  border: 2px solid #fff;
+  cursor: grab;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+
+.wx-tl-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #0EA5E9;
+  border: 2px solid #fff;
+  cursor: grab;
+}
+
+.wx-tl-times {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.65rem;
+  color: rgba(255,255,255,0.5);
+}
+
+.wx-tl-current {
+  font-weight: 600;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  flex-shrink: 0;
+  min-width: 110px;
+  text-align: center;
+}
+
+.wx-tl-speed {
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 6px;
+  color: #fff;
+  font-size: 0.7rem;
+  font-family: inherit;
+  padding: 2px 4px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* ── Boat marker on map ── */
+.wx-boat-marker {
+  background: none !important;
+  border: none !important;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+  transition: transform 0.15s;
+}
+
+/* ── Weather HUD (floating near timeline) ── */
+.wx-hud {
+  position: absolute;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 999;
+  background: rgba(15, 23, 42, 0.88);
+  backdrop-filter: blur(6px);
+  border-radius: 10px;
+  padding: 10px 16px;
+  display: flex;
+  gap: 16px;
+  color: #fff;
+  font-size: 0.78rem;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+  white-space: nowrap;
+  transition: opacity 0.3s;
+}
+
+.wx-hud.hidden {
+  display: none;
+}
+
+.wx-hud-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.wx-hud-value {
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.wx-hud-label {
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: rgba(255,255,255,0.55);
+}
+
+.wx-hud-divider {
+  width: 1px;
+  background: rgba(255,255,255,0.2);
+  align-self: stretch;
+}
+
 /* ── Responsive ── */
 @media (max-width: 1024px) {
   .weather-container {
