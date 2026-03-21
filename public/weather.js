@@ -14,6 +14,9 @@
   var calculating = false;
   var comparing = false;
   var healthInterval = null;
+  var gpsInterval = null;
+  var gpsMarker = null;
+  var gpsData = null;
 
   var STORAGE_ROUTE = 'mc_weather_route';
   var STORAGE_RESULT = 'mc_weather_last_result';
@@ -72,6 +75,10 @@
     // Health indicator
     fetchHealth();
     healthInterval = setInterval(fetchHealth, 60000);
+
+    // GPS boat position
+    fetchGPS();
+    gpsInterval = setInterval(fetchGPS, 30000);
 
     // Force map resize after layout settles (needs time for :has() CSS to apply)
     setTimeout(function() { map.invalidateSize(); }, 50);
@@ -757,6 +764,91 @@
     });
   }
 
+  // ── GPS Position ──
+  async function fetchGPS() {
+    try {
+      var resp = await fetch('/api/telemetry/latest');
+      if (!resp.ok) return;
+      var data = await resp.json();
+      var nav = data.navigation;
+      if (!nav || !nav.position) return;
+
+      // Parse "lat, lon" string
+      var parts = nav.position.split(',').map(function(s) { return parseFloat(s.trim()); });
+      if (parts.length < 2 || isNaN(parts[0]) || isNaN(parts[1])) return;
+
+      gpsData = {
+        lat: parts[0],
+        lon: parts[1],
+        sog: nav.sog || 0,
+        cog: nav.cog || 0,
+        heading: nav.heading || 0
+      };
+
+      updateGPSMarker();
+    } catch (e) {
+      // silent
+    }
+  }
+
+  function updateGPSMarker() {
+    if (!gpsData || !map) return;
+
+    var heading = gpsData.heading || 0;
+    var boatSvg = '<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">' +
+      '<g transform="rotate(' + heading + ' 16 16)">' +
+      '<path d="M16 4 L22 26 L16 22 L10 26 Z" fill="#0C4A6E" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/>' +
+      '</g></svg>';
+
+    var icon = L.divIcon({
+      className: 'wx-gps-marker',
+      html: boatSvg,
+      iconSize: [32, 32],
+      iconAnchor: [16, 16]
+    });
+
+    if (gpsMarker) {
+      gpsMarker.setLatLng([gpsData.lat, gpsData.lon]);
+      gpsMarker.setIcon(icon);
+    } else {
+      gpsMarker = L.marker([gpsData.lat, gpsData.lon], {
+        icon: icon,
+        zIndexOffset: 2000,
+        interactive: true
+      }).addTo(map);
+
+      gpsMarker.bindPopup(function() {
+        if (!gpsData) return '';
+        return '<div class="wx-popup">' +
+          '<div class="wx-popup-title">Boat Position</div>' +
+          '<div class="wx-popup-row"><span class="wx-popup-label">Lat</span><span class="wx-popup-value">' + gpsData.lat.toFixed(4) + '</span></div>' +
+          '<div class="wx-popup-row"><span class="wx-popup-label">Lon</span><span class="wx-popup-value">' + gpsData.lon.toFixed(4) + '</span></div>' +
+          '<div class="wx-popup-row"><span class="wx-popup-label">SOG</span><span class="wx-popup-value">' + gpsData.sog.toFixed(1) + ' kts</span></div>' +
+          '<div class="wx-popup-row"><span class="wx-popup-label">COG</span><span class="wx-popup-value">' + Math.round(gpsData.cog) + '&deg;</span></div>' +
+          '<div class="wx-popup-row"><span class="wx-popup-label">HDG</span><span class="wx-popup-value">' + Math.round(gpsData.heading) + '&deg;</span></div>' +
+          '<div style="margin-top:8px"><button class="wx-btn wx-btn-primary" style="padding:6px 12px;font-size:0.75rem" onclick="window.MCWeatherUI.useGPSAsStart()">Use as Start</button></div>' +
+          '</div>';
+      });
+    }
+  }
+
+  function useGPSAsStart() {
+    if (!gpsData) return;
+    // If first waypoint exists, replace it; otherwise add
+    if (waypoints.length > 0) {
+      waypoints[0] = { lat: gpsData.lat, lon: gpsData.lon, name: 'Boat GPS' };
+      rebuildMarkers();
+      updateRouteLine();
+      renderWaypointList();
+      saveRoute();
+      clearResults();
+    } else {
+      addWaypoint(gpsData.lat, gpsData.lon, 'Boat GPS');
+    }
+    if (gpsMarker) gpsMarker.closePopup();
+    updateUI();
+  }
+
   // ── Health Indicator ──
   async function fetchHealth() {
     try {
@@ -785,6 +877,9 @@
   // ── Cleanup (called when navigating away) ──
   function cleanup() {
     if (healthInterval) { clearInterval(healthInterval); healthInterval = null; }
+    if (gpsInterval) { clearInterval(gpsInterval); gpsInterval = null; }
+    if (gpsMarker && map) { map.removeLayer(gpsMarker); gpsMarker = null; }
+    gpsData = null;
     if (map) {
       map.remove();
       map = null;
@@ -797,7 +892,8 @@
   // ── Public API ──
   window.MCWeatherUI = {
     init: init,
-    cleanup: cleanup
+    cleanup: cleanup,
+    useGPSAsStart: useGPSAsStart
   };
 
 })();

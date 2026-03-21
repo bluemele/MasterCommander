@@ -448,6 +448,12 @@ main:has(.weather-container) {
   transform: scale(1.15);
 }
 
+/* GPS boat marker */
+.wx-gps-marker {
+  background: none;
+  border: none;
+}
+
 /* Wind barb markers */
 .wx-wind-barb {
   display: flex;
