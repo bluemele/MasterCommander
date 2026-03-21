@@ -672,9 +672,11 @@ router.post('/optimal-departure', async (req, res) => {
     const start = new Date(window_start || Date.now());
     const end = new Date(window_end || (start.getTime() + 72 * 3600000)); // Default 72h window
 
-    // Test departures every 3 hours
+    // Test interval scales with window size: 1h for <=6h, 2h for <=12h, 3h for longer
+    const windowHrs = (end - start) / 3600000;
+    const stepHrs = windowHrs <= 6 ? 1 : windowHrs <= 12 ? 2 : 3;
     const departures = [];
-    for (let t = start.getTime(); t <= end.getTime(); t += 3 * 3600000) {
+    for (let t = start.getTime(); t <= end.getTime(); t += stepHrs * 3600000) {
       departures.push(new Date(t).toISOString());
     }
 
