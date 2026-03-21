@@ -852,6 +852,104 @@ router.post('/compare', async (req, res) => {
 });
 
 // ── GET /health — provider health + rate limits ──
+// ── GET /grid — weather grid for map overlay ──
+router.get('/grid', async (req, res) => {
+  try {
+    const { north, south, east, west, time, model } = req.query;
+    if (!north || !south || !east || !west || !time) {
+      return res.status(400).json({ error: 'Required: north, south, east, west, time' });
+    }
+
+    const n = parseFloat(north), s = parseFloat(south);
+    const e = parseFloat(east), w = parseFloat(west);
+    const t = new Date(time);
+    if (isNaN(t.getTime())) return res.status(400).json({ error: 'Invalid time' });
+
+    // Determine grid spacing based on area size — aim for ~6x6 grid
+    const latSpan = n - s;
+    const lonSpan = e - w;
+    const step = Math.max(0.25, Math.round(Math.max(latSpan, lonSpan) / 5 * 4) / 4); // snap to 0.25
+
+    const points = [];
+    for (let lat = s; lat <= n; lat += step) {
+      for (let lon = w; lon <= e; lon += step) {
+        points.push({ lat: roundToGrid(lat), lon: roundToGrid(lon) });
+      }
+    }
+
+    // Cap at 49 points to limit API load
+    if (points.length > 49) {
+      const bigStep = Math.max(0.5, Math.round(Math.max(latSpan, lonSpan) / 6 * 4) / 4);
+      points.length = 0;
+      for (let lat = s; lat <= n; lat += bigStep) {
+        for (let lon = w; lon <= e; lon += bigStep) {
+          points.push({ lat: roundToGrid(lat), lon: roundToGrid(lon) });
+        }
+      }
+    }
+
+    // Deduplicate (roundToGrid may collapse nearby points)
+    const seen = new Set();
+    const unique = points.filter(p => {
+      const key = `${p.lat}:${p.lon}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+
+    // Fetch weather for all points in parallel (caching handles dedup)
+    const hours = 168; // 7 days of hourly data
+    const results = await Promise.all(unique.map(async (p) => {
+      try {
+        const [weather, marine] = await Promise.all([
+          fetchWeather(p.lat, p.lon, hours, model || 'best'),
+          fetchMarine(p.lat, p.lon, hours, model || 'best')
+        ]);
+        const merged = mergeData(weather, marine);
+        if (!merged) return null;
+
+        // Find the closest time index
+        const targetMs = t.getTime();
+        let best = 0;
+        let bestDiff = Infinity;
+        for (let i = 0; i < merged.length; i++) {
+          const diff = Math.abs(new Date(merged[i].time).getTime() - targetMs);
+          if (diff < bestDiff) { bestDiff = diff; best = i; }
+        }
+
+        // Interpolate between surrounding hours
+        const wx = merged[best];
+        return {
+          lat: p.lat,
+          lon: p.lon,
+          weather: {
+            wind_speed: wx.wind_speed,
+            wind_direction: wx.wind_direction,
+            wind_gusts: wx.wind_gusts,
+            wave_height: wx.wave_height,
+            wave_direction: wx.wave_direction,
+            wave_period: wx.wave_period,
+            pressure: wx.pressure,
+            swell_height: wx.swell_height,
+            swell_direction: wx.swell_direction
+          }
+        };
+      } catch (err) {
+        return null;
+      }
+    }));
+
+    res.json({
+      time: t.toISOString(),
+      step,
+      points: results.filter(Boolean)
+    });
+  } catch (err) {
+    console.error('[weather-service] grid error:', err.message);
+    res.status(500).json({ error: 'Grid fetch failed' });
+  }
+});
+
 router.get('/health', (req, res) => {
   res.json({
     providers: getHealthStatus(),

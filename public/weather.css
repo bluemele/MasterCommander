@@ -896,6 +896,55 @@ main:has(.weather-container) {
   align-self: stretch;
 }
 
+/* ── Wind Grid Overlay ── */
+.wx-grid-barb {
+  background: none !important;
+  border: none !important;
+  opacity: 0.85;
+  transition: opacity 0.2s;
+  pointer-events: none;
+}
+
+.wx-grid-tile {
+  border-radius: 0;
+  pointer-events: none;
+}
+
+/* ── Grid toggle button ── */
+.wx-grid-toggle {
+  position: absolute;
+  top: 60px;
+  right: 12px;
+  z-index: 1000;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 8px;
+  color: #fff;
+  font-size: 0.7rem;
+  font-family: inherit;
+  padding: 6px 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: background 0.15s;
+}
+
+.wx-grid-toggle:hover {
+  background: rgba(15, 23, 42, 1);
+}
+
+.wx-grid-toggle.active {
+  background: rgba(14, 165, 233, 0.4);
+  border-color: #0EA5E9;
+}
+
+.wx-grid-toggle svg {
+  width: 14px;
+  height: 14px;
+}
+
 /* ── Responsive ── */
 @media (max-width: 1024px) {
   .weather-container {

@@ -32,6 +32,13 @@
   var tlEndTime = null;
   var tlLastTick = null;
 
+  // Grid overlay state
+  var gridLayer = null;
+  var gridTileLayer = null;
+  var gridEnabled = true;
+  var gridFetchTimeout = null;
+  var gridCurrentTime = null;
+
   var STORAGE_ROUTE = 'mc_weather_route';
   var STORAGE_GPS_TRACK = 'mc_weather_gps_track';
   var STORAGE_RESULT = 'mc_weather_last_result';
@@ -102,6 +109,14 @@
     loadGPSTrack();
     fetchGPS();
     gpsInterval = setInterval(fetchGPS, 30000);
+
+    // Grid overlay toggle
+    $('wx-grid-toggle').onclick = toggleGrid;
+
+    // Refresh grid on map move/zoom
+    map.on('moveend', function() {
+      if (gridEnabled && gridCurrentTime) fetchGrid(gridCurrentTime);
+    });
 
     // Force map resize after layout settles (needs time for :has() CSS to apply)
     setTimeout(function() { map.invalidateSize(); }, 50);
@@ -194,6 +209,11 @@
       '<div class="weather-map-wrap">' +
         '<div id="weather-map"></div>' +
         '<div class="wx-map-hint" id="wx-hint">Click map to add waypoints</div>' +
+        // Grid toggle
+        '<button class="wx-grid-toggle active" id="wx-grid-toggle" title="Toggle wind grid overlay">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20M6 6l12 12M18 6L6 18"/></svg>' +
+          'Wind Grid' +
+        '</button>' +
         // Weather HUD
         '<div class="wx-hud hidden" id="wx-hud">' +
           '<div class="wx-hud-item"><div class="wx-hud-value" id="wx-hud-wind">--</div><div class="wx-hud-label">Wind kts</div></div>' +
@@ -1099,6 +1119,99 @@
     }
   }
 
+  // ── Wind Grid Overlay ──
+  function fetchGrid(time) {
+    if (!map || !gridEnabled) return;
+    if (gridFetchTimeout) clearTimeout(gridFetchTimeout);
+
+    gridFetchTimeout = setTimeout(async function() {
+      var bounds = map.getBounds();
+      var params = new URLSearchParams({
+        north: bounds.getNorth().toFixed(2),
+        south: bounds.getSouth().toFixed(2),
+        east: bounds.getEast().toFixed(2),
+        west: bounds.getWest().toFixed(2),
+        time: time || new Date().toISOString()
+      });
+
+      try {
+        var resp = await fetch('/api/weather/grid?' + params);
+        if (!resp.ok) return;
+        var data = await resp.json();
+        renderGrid(data);
+      } catch (e) {
+        console.warn('[weather] grid fetch error:', e.message);
+      }
+    }, 400); // debounce 400ms
+  }
+
+  function renderGrid(data) {
+    if (!map || !data || !data.points) return;
+
+    // Clear existing grid
+    if (gridLayer) { map.removeLayer(gridLayer); }
+    if (gridTileLayer) { map.removeLayer(gridTileLayer); }
+    gridLayer = L.layerGroup();
+    gridTileLayer = L.layerGroup();
+
+    var step = data.step || 0.5;
+    // Overlap tiles slightly to avoid visible grid lines
+    var tileSizeDeg = step * 1.05;
+
+    data.points.forEach(function(pt) {
+      var w = pt.weather;
+      if (!w) return;
+
+      // Color tile for wind speed
+      var color = MCWeather.windColor(w.wind_speed || 0);
+      var half = tileSizeDeg / 2;
+      var tileBounds = [[pt.lat - half, pt.lon - half], [pt.lat + half, pt.lon + half]];
+      var tile = L.rectangle(tileBounds, {
+        color: color,
+        fillColor: color,
+        fillOpacity: 0.25,
+        weight: 0,
+        interactive: false,
+        className: 'wx-grid-tile'
+      });
+      gridTileLayer.addLayer(tile);
+
+      // Wind barb at grid point
+      var barbSize = 40;
+      var barbSvg = MCWeather.windBarbSVG(w.wind_speed || 0, w.wind_direction || 0, barbSize);
+      var icon = L.divIcon({
+        className: 'wx-grid-barb',
+        html: barbSvg,
+        iconSize: [barbSize, barbSize],
+        iconAnchor: [barbSize / 2, barbSize / 2]
+      });
+
+      var marker = L.marker([pt.lat, pt.lon], { icon: icon, interactive: false });
+      gridLayer.addLayer(marker);
+    });
+
+    gridTileLayer.addTo(map);
+    gridLayer.addTo(map);
+  }
+
+  function clearGrid() {
+    if (gridLayer && map) { map.removeLayer(gridLayer); gridLayer = null; }
+    if (gridTileLayer && map) { map.removeLayer(gridTileLayer); gridTileLayer = null; }
+  }
+
+  function toggleGrid() {
+    gridEnabled = !gridEnabled;
+    var btn = $('wx-grid-toggle');
+    if (btn) {
+      btn.classList.toggle('active', gridEnabled);
+    }
+    if (gridEnabled && gridCurrentTime) {
+      fetchGrid(gridCurrentTime);
+    } else {
+      clearGrid();
+    }
+  }
+
   // ── Timeline Player ──
   function initTimeline(result) {
     var tl = $('wx-timeline');
@@ -1176,6 +1289,10 @@
 
     // Update HUD
     updateHUD(interp.weather);
+
+    // Update grid overlay (debounced)
+    gridCurrentTime = isoTime;
+    if (gridEnabled) fetchGrid(isoTime);
   }
 
   function moveBoat(lat, lon, heading) {
@@ -1296,6 +1413,8 @@
     if (hud) hud.classList.add('hidden');
     tlStartTime = null;
     tlEndTime = null;
+    clearGrid();
+    gridCurrentTime = null;
   }
 
   // ── Cleanup (called when navigating away) ──
