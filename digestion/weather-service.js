@@ -865,10 +865,10 @@ router.get('/grid', async (req, res) => {
     const t = new Date(time);
     if (isNaN(t.getTime())) return res.status(400).json({ error: 'Invalid time' });
 
-    // Determine grid spacing based on area size — aim for ~6x6 grid
+    // Determine grid spacing — aim for dense coverage (~10x10)
     const latSpan = n - s;
     const lonSpan = e - w;
-    const step = Math.max(0.25, Math.round(Math.max(latSpan, lonSpan) / 5 * 4) / 4); // snap to 0.25
+    const step = Math.max(0.25, Math.round(Math.max(latSpan, lonSpan) / 10 * 4) / 4); // snap to 0.25
 
     const points = [];
     for (let lat = s; lat <= n; lat += step) {
@@ -877,9 +877,9 @@ router.get('/grid', async (req, res) => {
       }
     }
 
-    // Cap at 49 points to limit API load
-    if (points.length > 49) {
-      const bigStep = Math.max(0.5, Math.round(Math.max(latSpan, lonSpan) / 6 * 4) / 4);
+    // Cap at 120 points
+    if (points.length > 120) {
+      const bigStep = Math.max(0.25, Math.round(Math.max(latSpan, lonSpan) / 10 * 4) / 4);
       points.length = 0;
       for (let lat = s; lat <= n; lat += bigStep) {
         for (let lon = w; lon <= e; lon += bigStep) {

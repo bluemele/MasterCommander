@@ -1156,7 +1156,7 @@
       if (!w) return;
 
       // Wind barb at grid point
-      var barbSize = 40;
+      var barbSize = 34;
       var barbSvg = MCWeather.windBarbSVG(w.wind_speed || 0, w.wind_direction || 0, barbSize);
       var icon = L.divIcon({
         className: 'wx-grid-barb',
