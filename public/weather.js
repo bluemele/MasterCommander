@@ -34,7 +34,6 @@
 
   // Grid overlay state
   var gridLayer = null;
-  var gridTileLayer = null;
   var gridEnabled = true;
   var gridFetchTimeout = null;
   var gridCurrentTime = null;
@@ -1150,31 +1149,11 @@
 
     // Clear existing grid
     if (gridLayer) { map.removeLayer(gridLayer); }
-    if (gridTileLayer) { map.removeLayer(gridTileLayer); }
     gridLayer = L.layerGroup();
-    gridTileLayer = L.layerGroup();
-
-    var step = data.step || 0.5;
-    // Overlap tiles slightly to avoid visible grid lines
-    var tileSizeDeg = step * 1.05;
 
     data.points.forEach(function(pt) {
       var w = pt.weather;
       if (!w) return;
-
-      // Color tile for wind speed
-      var color = MCWeather.windColor(w.wind_speed || 0);
-      var half = tileSizeDeg / 2;
-      var tileBounds = [[pt.lat - half, pt.lon - half], [pt.lat + half, pt.lon + half]];
-      var tile = L.rectangle(tileBounds, {
-        color: color,
-        fillColor: color,
-        fillOpacity: 0.25,
-        weight: 0,
-        interactive: false,
-        className: 'wx-grid-tile'
-      });
-      gridTileLayer.addLayer(tile);
 
       // Wind barb at grid point
       var barbSize = 40;
@@ -1190,13 +1169,11 @@
       gridLayer.addLayer(marker);
     });
 
-    gridTileLayer.addTo(map);
     gridLayer.addTo(map);
   }
 
   function clearGrid() {
     if (gridLayer && map) { map.removeLayer(gridLayer); gridLayer = null; }
-    if (gridTileLayer && map) { map.removeLayer(gridTileLayer); gridTileLayer = null; }
   }
 
   function toggleGrid() {
