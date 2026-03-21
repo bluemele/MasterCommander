@@ -662,7 +662,7 @@ router.post('/route', async (req, res) => {
 // ── POST /optimal-departure — find best departure time ──
 router.post('/optimal-departure', async (req, res) => {
   try {
-    const { waypoints, boat_speed_kts, model, window_start, window_end } = req.body;
+    const { waypoints, boat_speed_kts, model, window_start, window_end, interval_hours } = req.body;
 
     if (!waypoints || waypoints.length < 2) {
       return res.status(400).json({ error: 'At least 2 waypoints required' });
@@ -670,11 +670,10 @@ router.post('/optimal-departure', async (req, res) => {
 
     const speed = parseFloat(boat_speed_kts) || 7;
     const start = new Date(window_start || Date.now());
-    const end = new Date(window_end || (start.getTime() + 72 * 3600000)); // Default 72h window
+    const end = new Date(window_end || (start.getTime() + 72 * 3600000));
 
-    // Test interval scales with window size: 1h for <=6h, 2h for <=12h, 3h for longer
-    const windowHrs = (end - start) / 3600000;
-    const stepHrs = windowHrs <= 6 ? 1 : windowHrs <= 12 ? 2 : 3;
+    // Use requested interval (3/6/12/24), default 3h
+    const stepHrs = [3, 6, 12, 24].includes(interval_hours) ? interval_hours : 3;
     const departures = [];
     for (let t = start.getTime(); t <= end.getTime(); t += stepHrs * 3600000) {
       departures.push(new Date(t).toISOString());
@@ -755,30 +754,14 @@ router.post('/optimal-departure', async (req, res) => {
       };
     });
 
-    // For short windows (<=24h), return all departures sorted by comfort
-    // For longer windows, pick best per day for spread
-    const windowHours = (end - start) / 3600000;
-    let spread;
-    if (windowHours <= 24) {
-      scored.sort((a, b) => b.comfort_score - a.comfort_score);
-      spread = scored;
-    } else {
-      const byDay = new Map();
-      for (const s of scored) {
-        const day = s.departure.slice(0, 10);
-        if (!byDay.has(day) || s.comfort_score > byDay.get(day).comfort_score) {
-          byDay.set(day, s);
-        }
-      }
-      spread = Array.from(byDay.values());
-      spread.sort((a, b) => new Date(a.departure) - new Date(b.departure));
-    }
+    // Sort by comfort descending — each slot is already at the requested interval
+    scored.sort((a, b) => b.comfort_score - a.comfort_score);
 
     res.json({
       total_distance_nm: Math.round(totalDist * 10) / 10,
       total_hours: Math.round((totalDist / speed) * 10) / 10,
       window: { start: start.toISOString(), end: end.toISOString() },
-      departures: spread
+      departures: scored
     });
   } catch (err) {
     console.error('Optimal departure error:', err.message);
