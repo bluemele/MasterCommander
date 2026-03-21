@@ -79,11 +79,9 @@
     $('wx-clear').addEventListener('click', clearRoute);
     $('wx-find-window').addEventListener('click', findBestWindow);
 
-    // Default departure window: tomorrow → +3 days
+    // Default departure window start: tomorrow
     var wStart = new Date(); wStart.setDate(wStart.getDate() + 1);
-    var wEnd = new Date(); wEnd.setDate(wEnd.getDate() + 4);
     $('wx-window-start').value = wStart.toISOString().slice(0, 10);
-    $('wx-window-end').value = wEnd.toISOString().slice(0, 10);
 
     // Health indicator
     fetchHealth();
@@ -144,12 +142,17 @@
           '<div class="wx-section-title">Best Departure Window</div>' +
           '<div class="wx-form-row">' +
             '<div class="wx-form-group">' +
-              '<label for="wx-window-start">From</label>' +
+              '<label for="wx-window-start">Start Date</label>' +
               '<input type="date" id="wx-window-start">' +
             '</div>' +
             '<div class="wx-form-group">' +
-              '<label for="wx-window-end">To</label>' +
-              '<input type="date" id="wx-window-end">' +
+              '<label for="wx-window-period">Period</label>' +
+              '<select id="wx-window-period">' +
+                '<option value="3">3 hours</option>' +
+                '<option value="6">6 hours</option>' +
+                '<option value="12">12 hours</option>' +
+                '<option value="24" selected>24 hours</option>' +
+              '</select>' +
             '</div>' +
           '</div>' +
           '<button class="wx-btn wx-btn-primary" id="wx-find-window" style="background:#0E7490" disabled>Find Best Window</button>' +
@@ -815,8 +818,11 @@
 
     try {
       var startVal = $('wx-window-start').value;
-      var endVal = $('wx-window-end').value;
-      if (!startVal || !endVal) throw new Error('Set start and end dates');
+      if (!startVal) throw new Error('Set a start date');
+      var periodHrs = parseInt($('wx-window-period').value) || 24;
+
+      var windowStart = new Date(startVal + 'T00:00:00Z');
+      var windowEnd = new Date(windowStart.getTime() + periodHrs * 3600000);
 
       var resp = await fetch('/api/weather/optimal-departure', {
         method: 'POST',
@@ -825,8 +831,8 @@
           waypoints: waypoints,
           boat_speed_kts: parseFloat($('wx-speed') ? $('wx-speed').value : '7.5'),
           model: $('wx-model') ? $('wx-model').value : 'best',
-          window_start: startVal + 'T00:00:00Z',
-          window_end: endVal + 'T23:59:00Z'
+          window_start: windowStart.toISOString(),
+          window_end: windowEnd.toISOString()
         })
       });
 

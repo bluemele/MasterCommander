@@ -753,16 +753,24 @@ router.post('/optimal-departure', async (req, res) => {
       };
     });
 
-    // Group by day, pick the best per day, then sort chronologically
-    const byDay = new Map();
-    for (const s of scored) {
-      const day = s.departure.slice(0, 10); // "YYYY-MM-DD"
-      if (!byDay.has(day) || s.comfort_score > byDay.get(day).comfort_score) {
-        byDay.set(day, s);
+    // For short windows (<=24h), return all departures sorted by comfort
+    // For longer windows, pick best per day for spread
+    const windowHours = (end - start) / 3600000;
+    let spread;
+    if (windowHours <= 24) {
+      scored.sort((a, b) => b.comfort_score - a.comfort_score);
+      spread = scored;
+    } else {
+      const byDay = new Map();
+      for (const s of scored) {
+        const day = s.departure.slice(0, 10);
+        if (!byDay.has(day) || s.comfort_score > byDay.get(day).comfort_score) {
+          byDay.set(day, s);
+        }
       }
+      spread = Array.from(byDay.values());
+      spread.sort((a, b) => new Date(a.departure) - new Date(b.departure));
     }
-    const spread = Array.from(byDay.values());
-    spread.sort((a, b) => new Date(a.departure) - new Date(b.departure));
 
     res.json({
       total_distance_nm: Math.round(totalDist * 10) / 10,
