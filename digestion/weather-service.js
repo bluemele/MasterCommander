@@ -753,13 +753,22 @@ router.post('/optimal-departure', async (req, res) => {
       };
     });
 
-    // Sort by comfort (descending) and return top 5
-    scored.sort((a, b) => b.comfort_score - a.comfort_score);
+    // Group by day, pick the best per day, then sort chronologically
+    const byDay = new Map();
+    for (const s of scored) {
+      const day = s.departure.slice(0, 10); // "YYYY-MM-DD"
+      if (!byDay.has(day) || s.comfort_score > byDay.get(day).comfort_score) {
+        byDay.set(day, s);
+      }
+    }
+    const spread = Array.from(byDay.values());
+    spread.sort((a, b) => new Date(a.departure) - new Date(b.departure));
+
     res.json({
       total_distance_nm: Math.round(totalDist * 10) / 10,
       total_hours: Math.round((totalDist / speed) * 10) / 10,
       window: { start: start.toISOString(), end: end.toISOString() },
-      departures: scored.slice(0, 5)
+      departures: spread
     });
   } catch (err) {
     console.error('Optimal departure error:', err.message);
