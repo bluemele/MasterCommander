@@ -73,8 +73,9 @@
     fetchHealth();
     healthInterval = setInterval(fetchHealth, 60000);
 
-    // Force map resize after layout settles
-    setTimeout(function() { map.invalidateSize(); }, 100);
+    // Force map resize after layout settles (needs time for :has() CSS to apply)
+    setTimeout(function() { map.invalidateSize(); }, 50);
+    setTimeout(function() { map.invalidateSize(); }, 300);
   }
 
   // ── Build HTML layout ──

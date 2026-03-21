@@ -3,18 +3,30 @@
    Soft blue-gray palette matching dashboard (#F1F5F9 base)
    ============================================================ */
 
+/* Override parent .container and main constraints when weather is active */
+body:has(.weather-container) {
+  overflow: hidden;
+}
+
+main:has(.weather-container) {
+  padding: 0 !important;
+  margin: 0 !important;
+  max-width: none !important;
+}
+
 /* ── Layout ── */
 .weather-container {
   display: flex;
   gap: 0;
-  height: calc(100vh - 72px);
-  margin: -24px -16px -24px -16px;
+  height: calc(100dvh - 61px);
+  width: 100%;
   overflow: hidden;
 }
 
 .weather-sidebar {
-  width: 340px;
-  min-width: 340px;
+  width: 320px;
+  min-width: 320px;
+  flex-shrink: 0;
   background: #EDF1F7;
   border-right: 1px solid #D5DCE6;
   display: flex;
