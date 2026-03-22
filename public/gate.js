@@ -83,9 +83,8 @@
 
   async function api(path, opts = {}) {
     const headers = { 'Content-Type': 'application/json' };
-    const token = localStorage.getItem(tokenKey());
-    if (token) headers['Authorization'] = 'Bearer ' + token;
-    const res = await fetch(API_BASE + path, { ...opts, headers });
+    // Token sent via httpOnly cookie (credentials: 'include')
+    const res = await fetch(API_BASE + path, { ...opts, headers, credentials: 'include' });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Request failed');
     return data;
@@ -135,7 +134,7 @@
         method: 'POST',
         body: JSON.stringify({ email: state.email, code, site: config.site }),
       });
-      localStorage.setItem(tokenKey(), data.token);
+      // Token set via httpOnly cookie by server
       if (data.ndaAccepted) {
         grantAccess();
       } else {
@@ -168,7 +167,7 @@
         method: 'POST',
         body: JSON.stringify({ site: config.site }),
       });
-      localStorage.setItem(tokenKey(), data.token);
+      // Token set via httpOnly cookie by server
       grantAccess();
     } catch (err) {
       setError(3, err.message);
@@ -183,24 +182,20 @@
     setTimeout(() => overlay.remove(), 600);
   }
 
-  // Check existing session on load
+  // Check existing session on load (via httpOnly cookie)
   async function checkSession() {
-    const token = localStorage.getItem(tokenKey());
-    if (!token) return false;
-
     try {
       const data = await api('/session?site=' + encodeURIComponent(config.site));
       state.name = data.name || '';
       state.email = data.email || '';
       if (data.valid && data.ndaAccepted) return true;
-      // Token valid but NDA not accepted — show NDA step
       if (data.valid && !data.ndaAccepted) {
         showNDA();
         showStep(3);
         return 'nda';
       }
     } catch {
-      localStorage.removeItem(tokenKey());
+      // No valid session — show login form
     }
     return false;
   }
@@ -247,10 +242,7 @@
       if (!config.site) return console.error('[SiteGate] Missing site ID');
 
       // If token exists in localStorage, start hidden — verify async, only show if invalid
-      const hasToken = !!localStorage.getItem(tokenKey());
-
       buildOverlay();
-      if (hasToken) el('site-gate-overlay').classList.add('gate-hidden');
       bindEvents();
 
       // Pre-fill name from cache

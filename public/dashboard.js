@@ -1,21 +1,15 @@
 (function() {
   'use strict';
 
-  // ── Auth helpers ──
-  function getToken() { return localStorage.getItem('mc_token'); }
-  function getUser() { try { return JSON.parse(localStorage.getItem('mc_user') || 'null'); } catch { return null; } }
+  // ── Auth helpers (cookie-based) ──
   function authHeaders() {
-    var t = getToken();
-    return t ? { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + t } : { 'Content-Type': 'application/json' };
+    return { 'Content-Type': 'application/json' };
   }
   function esc(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 
-  // ── Auth guard ──
-  if (!getToken()) { window.location.href = 'index.html'; return; }
-
-  // ── API ──
+  // ── API (credentials: include sends httpOnly cookie) ──
   async function api(path, opts) {
-    var res = await fetch(path, Object.assign({ headers: authHeaders() }, opts || {}));
+    var res = await fetch(path, Object.assign({ headers: authHeaders(), credentials: 'include' }, opts || {}));
     if (res.status === 401) { window.mcAuth.logout(); throw new Error('Session expired'); }
     if (res.status === 403) {
       var errData = await res.json();
@@ -86,8 +80,7 @@
   // ── Auth (logout) ──
   window.mcAuth = {
     logout: function() {
-      localStorage.removeItem('mc_token');
-      localStorage.removeItem('mc_user');
+      fetch('/api/auth/logout', { method: 'POST', credentials: 'include' }).catch(function(){});
       window.location.href = 'index.html';
     }
   };
