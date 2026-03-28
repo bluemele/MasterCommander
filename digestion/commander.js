@@ -17,6 +17,11 @@ import { LLMRouter } from './lib/llm-router.js';
 import { StatusBuilder } from './lib/status-builder.js';
 import { WhatsAppBot } from './lib/whatsapp.js';
 import { startTelemetryServer } from './lib/telemetry-server.js';
+import { SailingAdvisor } from './lib/intelligence/advisor.js';
+import { PolarEngine } from './lib/intelligence/polar-engine.js';
+import { TacticalAdvisor } from './lib/intelligence/tactical-advisor.js';
+import { WeatherIntelligence } from './lib/intelligence/weather-intelligence.js';
+import { EnergyManager } from './lib/intelligence/energy-manager.js';
 
 // ── Parse CLI args ───────────────────────────────────────
 const args = process.argv.slice(2);
@@ -51,6 +56,33 @@ const sk = new SignalKClient(config.signalk || {});
 const alerts = new AlertEngine(sk, config);
 const llm = new LLMRouter(config.llm || {});
 const status = new StatusBuilder(sk, config);
+
+// ── Initialize Intelligence Layer ──────────────────────
+let advisor = null;
+try {
+  const polar = new PolarEngine();
+  advisor = new SailingAdvisor({ signalkClient: sk, polarEngine: polar, config });
+
+  const tactical = new TacticalAdvisor({ signalkClient: sk, polarEngine: polar, config });
+  const weather = new WeatherIntelligence({ signalkClient: sk, config });
+  const energy = new EnergyManager({
+    signalkClient: sk,
+    config: {
+      batteryCapacityAh: config.batteries?.house?.capacity || 1700,
+      nominalVoltage: config.batteries?.house?.nominal || 24,
+      socWarning: config.batteries?.thresholds?.socWarning || 20,
+      socCritical: config.batteries?.thresholds?.socCritical || 10,
+    },
+  });
+
+  advisor.register('tactical', tactical, 30);
+  advisor.register('weather', weather, 60);
+  advisor.register('energy', energy, 30);
+  console.log('🧠 Intelligence layer initialized');
+} catch (e) {
+  console.warn('⚠️  Intelligence layer failed to load:', e.message);
+  console.warn('   Advisor features disabled. Core monitoring still active.');
+}
 
 let wa = null;
 if (!noWhatsApp && config.whatsapp?.adminNumber) {
@@ -192,7 +224,26 @@ sk.connect();
 alerts.start();
 
 // Start telemetry API for dashboard gauges
-const telemetry = startTelemetryServer({ sk, alerts, config });
+const telemetry = startTelemetryServer({ sk, alerts, advisor, config });
+
+// Start advisor after SignalK connects (needs live data)
+if (advisor) {
+  sk.on('discovered', () => {
+    if (!advisor._running) {
+      advisor.start();
+    }
+  });
+  // Forward critical recommendations to WhatsApp
+  advisor.on('critical', async (rec) => {
+    const msg = `🚨 *${rec.title}*\n${rec.reasoning}`;
+    if (wa?.connected) {
+      await wa.sendAlert(msg);
+    } else {
+      const file = `${dataDir}/alerts.jsonl`;
+      try { writeFileSync(file, JSON.stringify({ ...rec, timestamp: new Date().toISOString() }) + '\n', { flag: 'a' }); } catch {}
+    }
+  });
+}
 
 if (wa) {
   // Delay WhatsApp start slightly to let SignalK connect first
@@ -206,6 +257,7 @@ if (wa) {
 process.on('SIGINT', () => {
   console.log('\n⚓ Commander shutting down...');
   alerts.stop();
+  if (advisor) advisor.stop();
   process.exit(0);
 });
 

@@ -278,7 +278,7 @@
         '<div class="alert-ticker" id="telem-alerts"><div class="alert-empty">Connecting...</div></div>';
 
       // ── Telem panel order ──
-      var defaultPanelOrder = ['batt', 'nav', 'engines', 'tanks', 'wind'];
+      var defaultPanelOrder = ['advisor', 'perf', 'energy', 'batt', 'nav', 'engines', 'tanks', 'wind'];
       var panelOrder = defaultPanelOrder;
       try {
         var savedPanels = JSON.parse(localStorage.getItem('mc_telem_' + id));
@@ -606,6 +606,9 @@
     _telemClient.onUpdate(function(snap) {
       var T = window.MCTelemetry;
       var el;
+      el = document.getElementById('telem-advisor');  if (el && T.renderAdvisorPanel) T.renderAdvisorPanel(el, snap);
+      el = document.getElementById('telem-perf');    if (el && T.renderPerformancePanel) T.renderPerformancePanel(el, snap);
+      el = document.getElementById('telem-energy');  if (el && T.renderEnergyPanel) T.renderEnergyPanel(el, snap);
       el = document.getElementById('telem-nav');     if (el) T.renderNavPanel(el, snap);
       el = document.getElementById('telem-batt');    if (el) T.renderBatteryPanel(el, snap);
       el = document.getElementById('telem-engines'); if (el) T.renderEnginePanel(el, snap);

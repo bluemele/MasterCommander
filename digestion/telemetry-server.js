@@ -26,7 +26,7 @@ const MAX_SSE_CONNECTIONS = 20;
 const RATE_WINDOW_MS = 60_000;
 const RATE_MAX_REQUESTS = 60;
 
-export function startTelemetryServer({ sk, alerts, config }) {
+export function startTelemetryServer({ sk, alerts, advisor, config }) {
   const app = express();
   const port = parseInt(process.env.TELEMETRY_PORT || '3100');
   const simPort = config?.signalk?.port || 3858;
@@ -81,7 +81,11 @@ export function startTelemetryServer({ sk, alerts, config }) {
   let sseConnectionCount = 0;
 
   // Valid scenario names (must match simulator.js allowlist)
-  const VALID_SCENARIOS = ['atAnchor', 'motoring', 'sailing', 'charging', 'shorepower', 'alarm'];
+  const VALID_SCENARIOS = [
+    'atAnchor', 'motoring', 'sailing', 'charging', 'shorepower', 'alarm',
+    'windShift', 'weatherBuilding', 'nightPassage', 'approachingPort',
+    'crossingCurrent', 'heavyWeather', 'manOverboard',
+  ];
 
   // ── SSE: live telemetry stream ──────────────────────────
   app.get('/api/telemetry/live', rateLimit, (req, res) => {
@@ -104,6 +108,7 @@ export function startTelemetryServer({ sk, alerts, config }) {
       }
       const snapshot = sk.getSnapshot();
       snapshot._alerts = alertBuffer.slice(-10);
+      if (advisor) snapshot._advisor = advisor.getActive();
       res.write('data: ' + JSON.stringify(snapshot) + '\n\n');
     };
 
@@ -158,9 +163,76 @@ export function startTelemetryServer({ sk, alerts, config }) {
     res.json({ alerts: alertBuffer.slice().reverse() });
   });
 
+  // ── ADVISOR: active recommendations ────────────────────
+  app.get('/api/advisor/recommendations', rateLimit, (req, res) => {
+    if (!advisor) return res.json({ recommendations: [] });
+    res.json({ recommendations: advisor.getActive() });
+  });
+
+  app.post('/api/advisor/accept/:id', rateLimit, (req, res) => {
+    if (!advisor) return res.status(404).json({ error: 'Advisor not initialized' });
+    const rec = advisor.accept(req.params.id);
+    if (!rec) return res.status(404).json({ error: 'Recommendation not found or not active' });
+    res.json({ accepted: rec });
+  });
+
+  app.post('/api/advisor/dismiss/:id', rateLimit, (req, res) => {
+    if (!advisor) return res.status(404).json({ error: 'Advisor not initialized' });
+    const rec = advisor.dismiss(req.params.id);
+    if (!rec) return res.status(404).json({ error: 'Recommendation not found or not active' });
+    res.json({ dismissed: rec });
+  });
+
+  app.get('/api/advisor/explain/:id', rateLimit, (req, res) => {
+    if (!advisor) return res.status(404).json({ error: 'Advisor not initialized' });
+    const explanation = advisor.explain(req.params.id);
+    if (!explanation) return res.status(404).json({ error: 'Recommendation not found' });
+    res.json(explanation);
+  });
+
+  app.get('/api/advisor/history', rateLimit, (req, res) => {
+    if (!advisor) return res.json({ history: [] });
+    res.json({ history: advisor.getHistory() });
+  });
+
+  // ── PERFORMANCE: polar data ───────────────────────────
+  app.get('/api/performance', rateLimit, (req, res) => {
+    if (!sk.connected) return res.json({ connected: false });
+    const snap = sk.getSnapshot();
+    const tws = snap.environment?.windSpeedTrue;
+    const twa = snap.environment?.windAngleTrue;
+    const sog = snap.navigation?.sog;
+    const polar = advisor?.polar;
+
+    const result = { tws, twa, sog };
+    if (polar && tws != null && twa != null && sog != null) {
+      result.targetSpeed = polar.getTargetSpeed(tws, twa);
+      result.performance = polar.getPerformance(tws, twa, sog);
+      result.optimalBeatAngle = polar.getOptimalBeatAngle(tws);
+      result.optimalRunAngle = polar.getOptimalRunAngle(tws);
+    }
+    res.json(result);
+  });
+
+  // ── ENERGY: projection ────────────────────────────────
+  app.get('/api/energy/projection', rateLimit, (req, res) => {
+    if (!advisor) return res.json({ error: 'Advisor not initialized' });
+    const energyModule = advisor.modules.get('energy');
+    if (!energyModule) return res.json({ error: 'Energy module not loaded' });
+    const summary = energyModule.module.getSummary();
+    res.json(summary || { error: 'No data' });
+  });
+
   // ── Health check ──────────────────────────────────────
   app.get('/api/health', (req, res) => {
-    res.json({ status: 'ok', connected: sk.connected, sseClients: sseConnectionCount, uptime: Math.floor(process.uptime()) });
+    res.json({
+      status: 'ok',
+      connected: sk.connected,
+      sseClients: sseConnectionCount,
+      advisorModules: advisor ? advisor.modules.size : 0,
+      activeRecommendations: advisor ? advisor.getActive().length : 0,
+      uptime: Math.floor(process.uptime()),
+    });
   });
 
   // ── Start server ────────────────────────────────────────

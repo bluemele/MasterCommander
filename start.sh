@@ -8,7 +8,7 @@ NGINX_PID=$!
 cd /app
 
 # Start simulator (fake SignalK source on :3858)
-node simulator.js --profile cat58 &
+node simulator.js --profile ${SIM_PROFILE:-gilsboat} &
 SIM_PID=$!
 sleep 1
 

@@ -309,30 +309,237 @@
       '<a class="pos-link" href="' + esc(mapUrl) + '" target="_blank" rel="noopener">Open in Google Maps &#8599;</a>';
   }
 
-  // ── Scenario control bar ──
+  // ── Scenario control bar (with intelligence scenarios) ──
   function renderScenarioControl(el, currentScenario) {
     el.innerHTML = '';
     var scenarios = ['atAnchor', 'motoring', 'sailing', 'charging', 'shorepower', 'alarm'];
-    var labels = { atAnchor: 'At Anchor', motoring: 'Motoring', sailing: 'Sailing', charging: 'Charging', shorepower: 'Shore Power', alarm: 'Alarm' };
+    var intelligenceScenarios = ['windShift', 'weatherBuilding', 'nightPassage', 'approachingPort', 'crossingCurrent', 'heavyWeather', 'manOverboard'];
+    var labels = {
+      atAnchor: 'At Anchor', motoring: 'Motoring', sailing: 'Sailing', charging: 'Charging', shorepower: 'Shore Power', alarm: 'Alarm',
+      windShift: 'Wind Shift', weatherBuilding: 'Weather Build', nightPassage: 'Night Passage',
+      approachingPort: 'Port Approach', crossingCurrent: 'Current', heavyWeather: 'Heavy Weather', manOverboard: 'MOB',
+    };
 
-    for (var i = 0; i < scenarios.length; i++) {
+    function makeBtn(name, isIntel) {
       var btn = document.createElement('button');
-      btn.className = 'scenario-btn' + (scenarios[i] === currentScenario ? ' active' : '');
-      btn.textContent = labels[scenarios[i]] || scenarios[i];
-      btn.setAttribute('data-scenario', scenarios[i]);
+      btn.className = 'scenario-btn' + (name === currentScenario ? ' active' : '') + (isIntel ? ' intel' : '');
+      btn.textContent = labels[name] || name;
+      btn.setAttribute('data-scenario', name);
       btn.addEventListener('click', function() {
-        var name = this.getAttribute('data-scenario');
-        fetch('/api/telemetry/scenario/' + name, { method: 'POST' })
+        var n = this.getAttribute('data-scenario');
+        fetch('/api/telemetry/scenario/' + n, { method: 'POST' })
           .then(function(r) { return r.json(); })
           .then(function(d) {
-            // Update active state
             el.querySelectorAll('.scenario-btn').forEach(function(b) { b.classList.remove('active'); });
-            el.querySelector('[data-scenario="' + d.scenario + '"]').classList.add('active');
+            var active = el.querySelector('[data-scenario="' + d.scenario + '"]');
+            if (active) active.classList.add('active');
           })
           .catch(function() {});
       });
-      el.appendChild(btn);
+      return btn;
     }
+
+    var group1 = document.createElement('div');
+    group1.className = 'scenario-group';
+    for (var i = 0; i < scenarios.length; i++) group1.appendChild(makeBtn(scenarios[i], false));
+    el.appendChild(group1);
+
+    var divider = document.createElement('div');
+    divider.className = 'scenario-divider';
+    divider.textContent = 'Intelligence';
+    el.appendChild(divider);
+
+    var group2 = document.createElement('div');
+    group2.className = 'scenario-group';
+    for (var j = 0; j < intelligenceScenarios.length; j++) group2.appendChild(makeBtn(intelligenceScenarios[j], true));
+    el.appendChild(group2);
+  }
+
+  // ============================================================
+  // INTELLIGENCE PANELS
+  // ============================================================
+
+  // ── Advisor panel (recommendations) ──
+  function renderAdvisorPanel(el, snap) {
+    var recs = snap._advisor || [];
+    var urgencyIcons = { critical: '&#128680;', advisory: '&#9888;&#65039;', suggestion: '&#128161;', info: '&#8505;&#65039;' };
+    var urgencyLabels = { critical: 'CRITICAL', advisory: 'ADVISORY', suggestion: 'SUGGESTION', info: 'INFO' };
+    var urgencyClasses = { critical: 'rec-critical', advisory: 'rec-advisory', suggestion: 'rec-suggestion', info: 'rec-info' };
+
+    if (recs.length === 0) {
+      el.innerHTML =
+        '<div class="telem-panel-title"><span>&#129504;</span> Advisor</div>' +
+        '<div style="color:var(--slate);font-size:.82rem;text-align:center;padding:20px">All optimal &mdash; no recommendations</div>';
+      return;
+    }
+
+    var html = '<div class="telem-panel-title"><span>&#129504;</span> Advisor <span class="rec-count">' + recs.length + ' active</span></div>';
+
+    for (var i = 0; i < recs.length; i++) {
+      var r = recs[i];
+      var cls = urgencyClasses[r.urgency] || 'rec-info';
+      var icon = urgencyIcons[r.urgency] || '';
+      var label = urgencyLabels[r.urgency] || 'INFO';
+      var ago = r.createdAt ? Math.round((Date.now() - r.createdAt) / 60000) : 0;
+      var agoStr = ago < 1 ? 'just now' : ago + 'min ago';
+
+      html +=
+        '<div class="rec-card ' + cls + '">' +
+        '<div class="rec-header">' +
+        '<span class="rec-badge ' + cls + '">' + icon + ' ' + esc(label) + '</span>' +
+        '<span class="rec-time">' + esc(agoStr) + '</span>' +
+        '</div>' +
+        '<div class="rec-title">' + esc(r.title) + '</div>' +
+        '<div class="rec-reasoning">' + esc(r.reasoning) + '</div>' +
+        (r.impact ? '<div class="rec-impact">' + esc(r.impact) + '</div>' : '') +
+        '<div class="rec-actions">' +
+        '<button class="rec-btn rec-accept" data-rec-id="' + esc(r.id) + '">Agree</button>' +
+        '<button class="rec-btn rec-dismiss" data-rec-id="' + esc(r.id) + '">Dismiss</button>' +
+        '<button class="rec-btn rec-why" data-rec-id="' + esc(r.id) + '">Why?</button>' +
+        '</div></div>';
+    }
+
+    el.innerHTML = html;
+
+    // Wire up buttons
+    el.onclick = function(e) {
+      var btn = e.target.closest('.rec-btn');
+      if (!btn) return;
+      var id = btn.getAttribute('data-rec-id');
+      if (!id) return;
+      if (btn.classList.contains('rec-accept')) {
+        fetch('/api/advisor/accept/' + id, { method: 'POST' }).then(function() {
+          btn.closest('.rec-card').style.opacity = '0.4';
+          btn.closest('.rec-card').innerHTML = '<div style="padding:8px;color:var(--emerald)">&#10003; Accepted</div>';
+        });
+      } else if (btn.classList.contains('rec-dismiss')) {
+        fetch('/api/advisor/dismiss/' + id, { method: 'POST' }).then(function() {
+          btn.closest('.rec-card').remove();
+        });
+      } else if (btn.classList.contains('rec-why')) {
+        fetch('/api/advisor/explain/' + id).then(function(r) { return r.json(); }).then(function(data) {
+          var card = btn.closest('.rec-card');
+          var existing = card.querySelector('.rec-explain');
+          if (existing) { existing.remove(); return; }
+          var explain = document.createElement('div');
+          explain.className = 'rec-explain';
+          explain.innerHTML = '<strong>Full context:</strong><br>' + esc(data.reasoning || 'No additional details.');
+          if (data.action) explain.innerHTML += '<br><strong>Action:</strong> ' + esc(JSON.stringify(data.action));
+          if (data.alternatives && data.alternatives.length) {
+            explain.innerHTML += '<br><strong>Alternatives:</strong>';
+            for (var a = 0; a < data.alternatives.length; a++) {
+              explain.innerHTML += '<br>&bull; ' + esc(data.alternatives[a].note || '') + ' (' + esc(data.alternatives[a].heading) + '&deg;M, ' + esc(data.alternatives[a].vmg) + 'kts VMG)';
+            }
+          }
+          card.appendChild(explain);
+        });
+      }
+    };
+  }
+
+  // ── Performance panel (polar %) ──
+  function renderPerformancePanel(el, snap) {
+    // Fetch from dedicated endpoint for polar data
+    var env = snap.environment || {};
+    var nav = snap.navigation || {};
+    var tws = env.windSpeedTrue;
+    var twa = env.windAngleTrue;
+    var sog = nav.sog;
+
+    if (tws == null || twa == null || sog == null || sog < 0.5) {
+      el.innerHTML =
+        '<div class="telem-panel-title"><span>&#128200;</span> Performance</div>' +
+        '<div style="color:var(--slate);font-size:.82rem;text-align:center;padding:20px">Not sailing &mdash; performance N/A</div>';
+      return;
+    }
+
+    // Use cached performance data if available (set by async fetch)
+    var perf = el._perfData || {};
+    var pct = perf.performance || '--';
+    var target = perf.targetSpeed || '--';
+    var pctNum = typeof pct === 'number' ? pct : 0;
+    var pctColor = pctNum >= 90 ? 'var(--emerald)' : pctNum >= 70 ? 'var(--amber)' : pctNum > 0 ? 'var(--red)' : 'var(--slate)';
+
+    el.innerHTML =
+      '<div class="telem-panel-title"><span>&#128200;</span> Performance</div>' +
+      '<div class="perf-big" style="color:' + pctColor + '">' + pct + '<span class="perf-unit">%</span></div>' +
+      '<div class="perf-label">of polar</div>' +
+      '<div class="perf-details">' +
+      '<div class="telem-row"><span class="telem-label">TWA</span><span class="telem-value">' + fmt(twa) + '&deg;' + (perf.optimalBeatAngle ? ' <span class="telem-unit">(beat: ' + perf.optimalBeatAngle + '&deg;)</span>' : '') + '</span></div>' +
+      '<div class="telem-row"><span class="telem-label">TWS</span><span class="telem-value">' + fmt(tws, 1) + '<span class="telem-unit">kts</span></span></div>' +
+      '<div class="telem-row"><span class="telem-label">Target Speed</span><span class="telem-value">' + fmt(target, 1) + '<span class="telem-unit">kts</span></span></div>' +
+      '<div class="telem-row"><span class="telem-label">Actual Speed</span><span class="telem-value">' + fmt(sog, 1) + '<span class="telem-unit">kts</span></span></div>' +
+      '</div>';
+
+    // Async fetch performance data
+    if (!el._perfTimer || Date.now() - el._perfTimer > 5000) {
+      el._perfTimer = Date.now();
+      fetch('/api/performance').then(function(r) { return r.json(); }).then(function(d) {
+        el._perfData = d;
+      }).catch(function() {});
+    }
+  }
+
+  // ── Energy projection panel ──
+  function renderEnergyPanel(el, snap) {
+    var batts = snap.batteries || {};
+    var b = batts.house;
+    var elec = snap.electrical || {};
+
+    if (!b) {
+      el.innerHTML = '<div class="telem-panel-title"><span>&#9889;</span> Energy</div><div style="color:var(--slate);font-size:.82rem;text-align:center;padding:12px">No battery data</div>';
+      return;
+    }
+
+    var soc = b.soc != null ? b.soc : 0;
+    var current = b.current != null ? b.current : 0;
+    var voltage = b.voltage != null ? b.voltage : 0;
+    var power = Math.round(voltage * current);
+    var solarW = elec.solar ? Math.round(elec.solar.power) : 0;
+    var netW = power + solarW;
+    var charging = current > 0.5;
+    var draw = Math.abs(Math.round(current * 10) / 10);
+
+    // Bar color
+    var barCls = charging ? 'vrm-charging' : soc > 40 ? 'vrm-discharging' : 'vrm-critical';
+
+    // Time estimate
+    var timeStr = '';
+    if (!charging && draw > 0.5) {
+      var ahTo20 = ((soc - 20) / 100) * 1700;
+      if (ahTo20 > 0) {
+        var hrs = ahTo20 / draw;
+        var targetTime = new Date(Date.now() + hrs * 3600000);
+        timeStr = targetTime.toTimeString().slice(0, 5);
+      }
+    }
+
+    // Solar status
+    var solarStr = solarW > 10 ? solarW + 'W' : 'None';
+    var hour = new Date().getHours();
+    var solarNote = hour < 6 || hour > 18 ? ' (night)' : solarW < 50 ? ' (cloudy?)' : '';
+
+    // Fetch energy projection
+    var proj = el._energyData || {};
+    if (!el._energyTimer || Date.now() - el._energyTimer > 10000) {
+      el._energyTimer = Date.now();
+      fetch('/api/energy/projection').then(function(r) { return r.json(); }).then(function(d) {
+        el._energyData = d;
+      }).catch(function() {});
+    }
+
+    el.innerHTML =
+      '<div class="telem-panel-title"><span>&#9889;</span> Energy</div>' +
+      '<div class="energy-soc">' +
+        '<span class="energy-soc-num">' + fmt(soc) + '%</span>' +
+        '<div class="vrm-soc-bar"><div class="vrm-soc-fill ' + barCls + '" style="width:' + Math.max(1, soc) + '%"></div></div>' +
+      '</div>' +
+      '<div class="energy-rows">' +
+      '<div class="telem-row"><span class="telem-label">Draw</span><span class="telem-value">' + draw + '<span class="telem-unit">A (' + Math.abs(power) + 'W)</span></span></div>' +
+      '<div class="telem-row"><span class="telem-label">Solar</span><span class="telem-value">' + esc(solarStr + solarNote) + '</span></div>' +
+      '<div class="telem-row"><span class="telem-label">Net</span><span class="telem-value" style="color:' + (netW > 0 ? 'var(--emerald)' : 'var(--amber)') + '">' + (netW > 0 ? '+' : '') + netW + '<span class="telem-unit">W</span></span></div>' +
+      (timeStr ? '<div class="telem-row"><span class="telem-label">Hits 20% at</span><span class="telem-value" style="color:var(--amber)">' + esc(timeStr) + '</span></div>' : '') +
+      '</div>';
   }
 
   // ── Alert ticker ──
@@ -506,7 +713,11 @@
     renderPositionPanel: renderPositionPanel,
     renderScenarioControl: renderScenarioControl,
     renderAlertTicker: renderAlertTicker,
-    renderEnergyFlow: renderEnergyFlow
+    renderEnergyFlow: renderEnergyFlow,
+    // Intelligence panels
+    renderAdvisorPanel: renderAdvisorPanel,
+    renderPerformancePanel: renderPerformancePanel,
+    renderEnergyPanel: renderEnergyPanel,
   };
 
 })();

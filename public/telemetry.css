@@ -184,6 +184,55 @@
 .ef-card{position:relative;overflow:hidden}
 @keyframes ef-dot-pulse{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1.2)}}
 
+/* ============================================================
+   INTELLIGENCE PANELS
+   ============================================================ */
+
+/* ── Scenario control groups ── */
+.scenario-group{display:flex;gap:4px;flex-wrap:wrap}
+.scenario-divider{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--amber);padding:4px 8px;align-self:center}
+.scenario-btn.intel{border-color:var(--amber);color:var(--amber)}
+.scenario-btn.intel.active{background:var(--amber);color:#fff;border-color:var(--amber)}
+
+/* ── Advisor recommendation cards ── */
+.rec-count{font-size:.7rem;font-weight:500;color:var(--slate);margin-left:6px}
+.rec-card{border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-top:8px;transition:opacity .3s}
+.rec-card.rec-critical{border-left:3px solid var(--red);background:rgba(239,68,68,.04)}
+.rec-card.rec-advisory{border-left:3px solid var(--amber);background:rgba(245,158,11,.04)}
+.rec-card.rec-suggestion{border-left:3px solid var(--sky);background:rgba(14,165,233,.04)}
+.rec-card.rec-info{border-left:3px solid var(--slate);background:rgba(100,116,139,.04)}
+.rec-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.rec-badge{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:2px 6px;border-radius:4px}
+.rec-badge.rec-critical{color:var(--red);background:rgba(239,68,68,.1)}
+.rec-badge.rec-advisory{color:var(--amber);background:rgba(245,158,11,.1)}
+.rec-badge.rec-suggestion{color:var(--sky);background:rgba(14,165,233,.1)}
+.rec-badge.rec-info{color:var(--slate);background:rgba(100,116,139,.1)}
+.rec-time{font-size:.7rem;color:var(--slate)}
+.rec-title{font-size:.88rem;font-weight:600;color:var(--text);margin:4px 0 2px}
+.rec-reasoning{font-size:.78rem;color:var(--slate);line-height:1.4;margin-bottom:4px}
+.rec-impact{font-size:.75rem;color:var(--ocean);font-style:italic;margin-bottom:6px}
+.rec-actions{display:flex;gap:6px}
+.rec-btn{padding:4px 12px;border-radius:6px;border:1px solid var(--border);background:#fff;cursor:pointer;font-size:.75rem;font-weight:600;transition:all .15s}
+.rec-btn.rec-accept{color:var(--emerald);border-color:var(--emerald)}
+.rec-btn.rec-accept:hover{background:var(--emerald);color:#fff}
+.rec-btn.rec-dismiss{color:var(--slate)}
+.rec-btn.rec-dismiss:hover{background:var(--slate);color:#fff}
+.rec-btn.rec-why{color:var(--sky)}
+.rec-btn.rec-why:hover{background:var(--sky);color:#fff}
+.rec-explain{font-size:.75rem;color:var(--slate);padding:8px;margin-top:8px;background:rgba(14,165,233,.04);border-radius:6px;line-height:1.5}
+
+/* ── Performance panel ── */
+.perf-big{font-size:2.5rem;font-weight:800;text-align:center;line-height:1}
+.perf-unit{font-size:1rem;font-weight:600;opacity:.7}
+.perf-label{text-align:center;font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--slate);margin-bottom:10px}
+.perf-details{border-top:1px solid var(--border);padding-top:8px}
+
+/* ── Energy panel ── */
+.energy-soc{text-align:center;margin:8px 0}
+.energy-soc-num{font-size:2rem;font-weight:800;color:var(--text)}
+.energy-rows{border-top:1px solid var(--border);padding-top:8px}
+.vrm-critical .vrm-soc-fill,.vrm-soc-fill.vrm-critical{background:var(--red)!important}
+
 /* ── Responsive ── */
 @media(max-width:768px){
   .telem-grid{grid-template-columns:1fr}
@@ -192,4 +241,5 @@
   .ef-modal{padding:16px;width:96vw}
   .ef-grid{grid-template-columns:1fr 1fr;gap:8px}
   .ef-grid .ef-card:nth-child(5){grid-column:1/-1}
+  .rec-actions{flex-wrap:wrap}
 }
