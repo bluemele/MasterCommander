@@ -234,24 +234,37 @@ main{padding:32px 24px 64px}
   .billing-current .card{flex-direction:column;align-items:flex-start}
 }
 
-/* ── DEMO MODE TOGGLE ── */
-.demo-toggle{position:fixed;bottom:24px;right:24px;z-index:200}
-.demo-toggle-btn{display:flex;align-items:center;gap:6px;padding:10px 18px;background:#1e293b;color:#e2e8f0;border:1.5px solid #334155;border-radius:24px;cursor:pointer;font-family:inherit;font-size:.82rem;font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,.2);transition:all .2s}
-.demo-toggle-btn:hover{background:#334155;transform:translateY(-2px)}
-.demo-toggle-btn.active{background:#0EA5E9;border-color:#0284C7;color:#fff}
-.demo-icon{font-size:1.1rem}
-.demo-dropdown{position:absolute;bottom:52px;right:0;width:340px;background:#fff;border:1.5px solid #E2E8F0;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,.15);overflow:hidden}
-.demo-dropdown-header{padding:14px 16px;font-size:.85rem;font-weight:700;color:#0C4A6E;border-bottom:1px solid #E2E8F0}
-.demo-dropdown-footer{padding:10px 16px;border-top:1px solid #E2E8F0;text-align:right}
-.demo-exit-btn{padding:6px 14px;border-radius:8px;border:1px solid #EF4444;background:transparent;color:#EF4444;cursor:pointer;font-size:.78rem;font-weight:600}
-.demo-exit-btn:hover{background:#EF4444;color:#fff}
-.demo-persona-item{display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;transition:background .15s;border-bottom:1px solid #F8FAFC}
-.demo-persona-item:last-child{border-bottom:none}
-.demo-persona-item:hover{background:#F8FAFC}
-.demo-persona-item.active{background:rgba(14,165,233,.06);border-left:3px solid #0EA5E9}
-.demo-persona-icon{font-size:1.3rem;width:28px;text-align:center;flex-shrink:0}
-.demo-persona-info{flex:1;min-width:0}
-.demo-persona-name{font-size:.85rem;font-weight:600;color:#0F172A}
-.demo-persona-role{font-size:.72rem;font-weight:600;color:#0EA5E9;margin-bottom:1px}
-.demo-persona-desc{font-size:.72rem;color:#64748B;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.demo-persona-count{background:#F1F5F9;border:1px solid #E2E8F0;border-radius:12px;padding:2px 8px;font-size:.72rem;font-weight:700;color:#64748B;flex-shrink:0}
+/* ── PERSONA SWITCHER ── */
+.ps-wrap{position:fixed;bottom:0;right:24px;z-index:200;width:320px}
+.ps-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:11px 0;background:#0C4A6E;color:#fff;border:none;border-radius:10px 10px 0 0;cursor:pointer;font-family:inherit;font-size:.82rem;font-weight:600;box-shadow:0 -2px 16px rgba(0,0,0,.12);transition:background .2s}
+.ps-btn:hover{background:#0369A1}
+.ps-btn .ps-arrow{transition:transform .2s;font-size:.7rem}
+.ps-btn.open .ps-arrow{transform:rotate(180deg)}
+.ps-panel{max-height:0;overflow:hidden;background:#fff;border:1.5px solid #E2E8F0;border-bottom:none;border-radius:12px 12px 0 0;box-shadow:0 -4px 24px rgba(0,0,0,.1);transition:max-height .3s ease}
+.ps-panel.open{max-height:500px}
+.ps-header{padding:14px 16px 10px;display:flex;justify-content:space-between;align-items:center}
+.ps-header-title{font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#64748B}
+.ps-header-current{font-size:.72rem;color:#0EA5E9;font-weight:600}
+.ps-list{padding:0 8px 8px}
+.ps-item{display:flex;align-items:center;gap:10px;padding:10px 12px;cursor:pointer;border-radius:10px;transition:background .15s;margin-bottom:2px}
+.ps-item:hover{background:#F1F5F9}
+.ps-item.ps-active{background:rgba(14,165,233,.08);outline:2px solid #0EA5E9}
+.ps-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0}
+.ps-icon.charter{background:#DBEAFE;color:#2563EB}
+.ps-icon.marina{background:#D1FAE5;color:#059669}
+.ps-icon.owner{background:#FEF3C7;color:#D97706}
+.ps-icon.captain{background:#E0E7FF;color:#4F46E5}
+.ps-icon.surveyor{background:#FCE7F3;color:#DB2777}
+.ps-info{flex:1;min-width:0}
+.ps-name{font-size:.82rem;font-weight:600;color:#0F172A}
+.ps-role{font-size:.7rem;font-weight:600;margin-top:1px}
+.ps-role.charter{color:#2563EB}
+.ps-role.marina{color:#059669}
+.ps-role.owner{color:#D97706}
+.ps-role.captain{color:#4F46E5}
+.ps-role.surveyor{color:#DB2777}
+.ps-desc{font-size:.68rem;color:#94A3B8;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ps-count{font-size:.72rem;font-weight:700;color:#64748B;background:#F1F5F9;border-radius:8px;padding:3px 8px;flex-shrink:0}
+.ps-switching{opacity:.5;pointer-events:none}
+.ps-switching .ps-name::after{content:' ...';color:#0EA5E9}
+@media(max-width:768px){.ps-wrap{right:0;left:0;width:100%;border-radius:0}.ps-panel{border-radius:12px 12px 0 0}.ps-btn{border-radius:0}}

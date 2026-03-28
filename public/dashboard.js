@@ -1044,51 +1044,74 @@
     });
   }
 
-  // ── PERSONA SWITCHER (bottom-right) ─────────────────────
+  // ── PERSONA SWITCHER ────────────────────────────────────
   var PERSONAS = [
-    { email: 'charter@demo.mc', name: 'Sarah Mitchell', role: 'Charter Fleet Manager', desc: '10 boats, BVI & Eastern Caribbean', icon: '&#9973;', boats: 10 },
-    { email: 'marina@demo.mc', name: 'James Kowalski', role: 'Marina Owner', desc: '15 boats, Coconut Palm Marina, Fort Lauderdale', icon: '&#9875;', boats: 15 },
-    { email: 'owner@demo.mc', name: 'Gil Barden', role: 'Individual Owner', desc: '1 boat — Catana 581, Trinidad', icon: '&#9973;', boats: 1 },
-    { email: 'captain@demo.mc', name: 'Mike Torres', role: 'Delivery Captain', desc: '4 boats — 1 active delivery, 3 queued', icon: '&#129517;', boats: 4 },
-    { email: 'surveyor@demo.mc', name: 'Linda Chen', role: 'Marine Surveyor', desc: '6 boats — 2 active surveys, San Diego', icon: '&#128203;', boats: 6 },
+    { email: 'charter@demo.mc', name: 'Sarah Mitchell', role: 'Charter Fleet Manager', desc: '10 boats across BVI & Eastern Caribbean', key: 'charter', boats: 10 },
+    { email: 'marina@demo.mc', name: 'James Kowalski', role: 'Marina Owner', desc: '15 boats at Coconut Palm Marina, Fort Lauderdale', key: 'marina', boats: 15 },
+    { email: 'owner@demo.mc', name: 'Gil Barden', role: 'Individual Owner', desc: 'Catana 581 in Chaguaramas, Trinidad', key: 'owner', boats: 1 },
+    { email: 'captain@demo.mc', name: 'Mike Torres', role: 'Delivery Captain', desc: '1 active delivery (Bermuda-Azores), 3 queued', key: 'captain', boats: 4 },
+    { email: 'surveyor@demo.mc', name: 'Linda Chen', role: 'Marine Surveyor', desc: '2 active surveys, 4 scheduled — San Diego', key: 'surveyor', boats: 6 },
   ];
 
   function initPersonaSwitcher() {
-    var el = document.createElement('div');
-    el.id = 'demo-toggle';
-    el.className = 'demo-toggle';
+    var currentUser = getUser();
+    var currentEmail = currentUser ? currentUser.email : '';
+
+    var wrap = document.createElement('div');
+    wrap.className = 'ps-wrap';
+
+    var icons = { charter: '&#9973;', marina: '&#9875;', owner: '&#9973;', captain: '&#129517;', surveyor: '&#128203;' };
+
     var itemsHtml = PERSONAS.map(function(p) {
-      return '<div class="demo-persona-item" data-email="' + esc(p.email) + '">' +
-        '<span class="demo-persona-icon">' + p.icon + '</span>' +
-        '<div class="demo-persona-info"><div class="demo-persona-name">' + esc(p.name) + '</div>' +
-        '<div class="demo-persona-role">' + esc(p.role) + '</div>' +
-        '<div class="demo-persona-desc">' + esc(p.desc) + '</div></div>' +
-        '<span class="demo-persona-count">' + p.boats + '</span></div>';
+      var isActive = currentEmail === p.email;
+      return '<div class="ps-item' + (isActive ? ' ps-active' : '') + '" data-email="' + esc(p.email) + '">' +
+        '<div class="ps-icon ' + p.key + '">' + icons[p.key] + '</div>' +
+        '<div class="ps-info">' +
+        '<div class="ps-name">' + esc(p.name) + '</div>' +
+        '<div class="ps-role ' + p.key + '">' + esc(p.role) + '</div>' +
+        '<div class="ps-desc">' + esc(p.desc) + '</div>' +
+        '</div>' +
+        '<span class="ps-count">' + p.boats + '</span></div>';
     }).join('');
 
-    el.innerHTML =
-      '<button class="demo-toggle-btn" id="demo-btn"><span class="demo-icon">&#128100;</span> Switch User</button>' +
-      '<div class="demo-dropdown" id="demo-dropdown" style="display:none">' +
-      '<div class="demo-dropdown-header">Switch Persona</div>' +
-      '<div id="demo-persona-list">' + itemsHtml + '</div></div>';
-    document.body.appendChild(el);
+    var currentPersona = PERSONAS.find(function(p) { return p.email === currentEmail; });
 
-    document.getElementById('demo-btn').addEventListener('click', function(e) {
+    wrap.innerHTML =
+      '<div class="ps-panel" id="ps-panel">' +
+      '<div class="ps-header"><span class="ps-header-title">Switch Persona</span>' +
+      (currentPersona ? '<span class="ps-header-current">' + esc(currentPersona.role) + '</span>' : '') +
+      '</div>' +
+      '<div class="ps-list" id="ps-list">' + itemsHtml + '</div>' +
+      '</div>' +
+      '<button class="ps-btn" id="ps-btn">' +
+      '<span class="ps-arrow">&#9650;</span> Switch User' +
+      '</button>';
+
+    document.body.appendChild(wrap);
+
+    var panel = document.getElementById('ps-panel');
+    var btn = document.getElementById('ps-btn');
+
+    btn.addEventListener('click', function(e) {
       e.stopPropagation();
-      var dd = document.getElementById('demo-dropdown');
-      dd.style.display = dd.style.display === 'none' ? 'block' : 'none';
-    });
-    document.addEventListener('click', function(e) {
-      if (!e.target.closest('#demo-toggle')) document.getElementById('demo-dropdown').style.display = 'none';
+      var isOpen = panel.classList.contains('open');
+      panel.classList.toggle('open');
+      btn.classList.toggle('open');
     });
 
-    document.getElementById('demo-persona-list').addEventListener('click', function(e) {
-      var item = e.target.closest('.demo-persona-item');
-      if (!item) return;
+    document.addEventListener('click', function(e) {
+      if (!e.target.closest('.ps-wrap')) {
+        panel.classList.remove('open');
+        btn.classList.remove('open');
+      }
+    });
+
+    document.getElementById('ps-list').addEventListener('click', function(e) {
+      var item = e.target.closest('.ps-item');
+      if (!item || item.classList.contains('ps-active') || item.classList.contains('ps-switching')) return;
       var email = item.getAttribute('data-email');
-      item.style.opacity = '0.5';
-      item.querySelector('.demo-persona-name').textContent = 'Switching...';
-      // Login as this persona
+      item.classList.add('ps-switching');
+
       fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1097,16 +1120,13 @@
       }).then(function(r) { return r.json(); }).then(function(data) {
         if (data.user) {
           localStorage.setItem('mc_user', JSON.stringify(data.user));
-          localStorage.removeItem('mc_demo_active');
           window.location.href = 'dashboard.html#/';
           window.location.reload();
         } else {
-          item.style.opacity = '1';
-          item.querySelector('.demo-persona-name').textContent = 'Login failed';
+          item.classList.remove('ps-switching');
         }
       }).catch(function() {
-        item.style.opacity = '1';
-        item.querySelector('.demo-persona-name').textContent = 'Error';
+        item.classList.remove('ps-switching');
       });
     });
   }
