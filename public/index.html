@@ -412,6 +412,11 @@ footer{background:var(--surface);border-top:1px solid var(--border);padding:32px
 .auth-links{display:flex;justify-content:space-between;font-size:.75rem}
 .auth-links a{color:var(--slate);cursor:pointer}
 .auth-links a:hover{color:var(--sky)}
+.pw-wrap{position:relative;display:flex}
+.pw-wrap input{flex:1;padding-right:36px}
+.pw-eye{position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:1.1rem;opacity:.5;padding:2px 4px;line-height:1}
+.pw-eye:hover{opacity:.9}
+.pw-eye.showing{opacity:.9}
 .auth-user-info{font-size:.85rem;color:var(--slate);padding:4px 0}
 .auth-user-info strong{color:var(--text)}
 
@@ -570,7 +575,7 @@ body.has-verify-banner nav{top:2rem}
           <div class="nav-login-dropdown" id="auth-dropdown">
             <form id="auth-login" class="auth-form active" onsubmit="return mcAuth.login(event)">
               <input type="email" id="login-email" placeholder="Email" autocomplete="email" required>
-              <input type="password" id="login-password" placeholder="Password" autocomplete="current-password" required>
+              <div class="pw-wrap"><input type="password" id="login-password" placeholder="Password" autocomplete="current-password" required><button type="button" class="pw-eye" onclick="togglePw(this)" tabindex="-1">&#128065;</button></div>
               <div class="auth-error" id="login-error"></div>
               <button type="submit" id="login-submit">Sign In</button>
               <div class="auth-links">
@@ -581,7 +586,7 @@ body.has-verify-banner nav{top:2rem}
             <form id="auth-signup" class="auth-form" onsubmit="return mcAuth.signup(event)">
               <input type="text" id="signup-name" placeholder="Full Name" autocomplete="name" required>
               <input type="email" id="signup-email" placeholder="Email" autocomplete="email" required>
-              <input type="password" id="signup-password" placeholder="Password (8+ chars)" autocomplete="new-password" required minlength="8">
+              <div class="pw-wrap"><input type="password" id="signup-password" placeholder="Password (8+ chars)" autocomplete="new-password" required minlength="8"><button type="button" class="pw-eye" onclick="togglePw(this)" tabindex="-1">&#128065;</button></div>
               <div class="auth-error" id="signup-error"></div>
               <button type="submit" id="signup-submit">Create Account</button>
               <div class="auth-links">
@@ -1567,8 +1572,8 @@ body.has-verify-banner nav{top:2rem}
     <button class="auth-modal-close" onclick="document.getElementById('reset-modal').classList.remove('open')">&times;</button>
     <h3>Reset Password</h3>
     <form id="auth-reset" onsubmit="return mcAuth.resetPassword(event)">
-      <input type="password" id="reset-password" placeholder="New password (8+ chars)" autocomplete="new-password" required minlength="8">
-      <input type="password" id="reset-confirm" placeholder="Confirm new password" autocomplete="new-password" required minlength="8">
+      <div class="pw-wrap"><input type="password" id="reset-password" placeholder="New password (8+ chars)" autocomplete="new-password" required minlength="8"><button type="button" class="pw-eye" onclick="togglePw(this)" tabindex="-1">&#128065;</button></div>
+      <div class="pw-wrap"><input type="password" id="reset-confirm" placeholder="Confirm new password" autocomplete="new-password" required minlength="8"><button type="button" class="pw-eye" onclick="togglePw(this)" tabindex="-1">&#128065;</button></div>
       <div class="auth-error" id="reset-error"></div>
       <div class="auth-success" id="reset-success"></div>
       <button type="submit" id="reset-submit">Reset Password</button>
@@ -1996,6 +2001,13 @@ function runAutoPlay() {
       else { banner.classList.remove('visible'); document.body.classList.remove('has-verify-banner'); }
     }
   };
+
+  function togglePw(btn) {
+    var input = btn.parentElement.querySelector('input');
+    if (input.type === 'password') { input.type = 'text'; btn.classList.add('showing'); }
+    else { input.type = 'password'; btn.classList.remove('showing'); }
+  }
+  window.togglePw = togglePw;
 
   window.mcAuth = {
     showForm: function(name) {

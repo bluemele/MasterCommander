@@ -1,0 +1,88 @@
+{
+  "personas": [
+    {
+      "id": "charter",
+      "name": "Charter Fleet Manager",
+      "icon": "sailboat",
+      "description": "Blue Horizon Charters — 10 boats, BVI & Eastern Caribbean",
+      "subscription": { "plan": "fleet", "status": "active", "header": "Blue Horizon Charters", "boatCount": 10, "maxBoats": 15 },
+      "boats": [
+        { "id": -101, "name": "Trade Wind", "model": "Lagoon 450", "year": 2019, "boat_type": "Sailing Catamaran", "length_ft": 45, "beam_ft": 25.6, "draft_ft": 4.3, "engine_count": 2, "engine_type": "2x Yanmar 57hp", "fuel_capacity": 200, "water_capacity": 300, "status": "online", "home_port": "Road Town, BVI", "simProfile": "cat58", "simScenario": "sailing", "notes": "Charter group aboard — Day 3 of 7" },
+        { "id": -102, "name": "Windward Spirit", "model": "Fountaine Pajot Elba 45", "year": 2021, "boat_type": "Sailing Catamaran", "length_ft": 45, "beam_ft": 25.3, "draft_ft": 4.1, "engine_count": 2, "engine_type": "2x Volvo D2-40", "fuel_capacity": 198, "water_capacity": 320, "status": "online", "home_port": "Road Town, BVI", "simProfile": "cat58", "simScenario": "motoring", "notes": "Returning to base, charter ends tomorrow" },
+        { "id": -103, "name": "Sea Breeze", "model": "Beneteau Oceanis 46.1", "year": 2020, "boat_type": "Sailing Monohull", "length_ft": 46, "beam_ft": 14.6, "draft_ft": 6.9, "engine_count": 1, "engine_type": "Yanmar 57hp", "fuel_capacity": 55, "water_capacity": 200, "status": "alert", "home_port": "Road Town, BVI", "simProfile": "mono40", "simScenario": "alarm", "notes": "ALERT: Bilge pump cycling. Maintenance dispatched." },
+        { "id": -104, "name": "Island Time", "model": "Lagoon 42", "year": 2022, "boat_type": "Sailing Catamaran", "length_ft": 42, "beam_ft": 24.0, "draft_ft": 4.1, "engine_count": 2, "engine_type": "2x Yanmar 45hp", "fuel_capacity": 200, "water_capacity": 280, "status": "online", "home_port": "Norman Island, BVI", "simProfile": "cat58", "simScenario": "atAnchor", "notes": "Charter group anchored at The Bight" },
+        { "id": -105, "name": "Coconut Telegraph", "model": "Jeanneau Sun Odyssey 440", "year": 2018, "boat_type": "Sailing Monohull", "length_ft": 44, "beam_ft": 13.8, "draft_ft": 6.7, "engine_count": 1, "engine_type": "Yanmar 45hp", "fuel_capacity": 50, "water_capacity": 300, "status": "offline", "home_port": "Road Town, BVI", "simProfile": "mono40", "simScenario": "shorepower", "notes": "In for maintenance — bottom paint + zincs" },
+        { "id": -106, "name": "Reef Runner", "model": "Catana 53", "year": 2017, "boat_type": "Sailing Catamaran", "length_ft": 53, "beam_ft": 27.5, "draft_ft": 3.6, "engine_count": 2, "engine_type": "2x Yanmar 75hp", "fuel_capacity": 260, "water_capacity": 400, "status": "online", "home_port": "Jost Van Dyke, BVI", "simProfile": "cat58", "simScenario": "sailing", "notes": "Premium charter — sailing to Anegada" },
+        { "id": -107, "name": "Mango Tango", "model": "Bavaria 42", "year": 2019, "boat_type": "Sailing Monohull", "length_ft": 42, "beam_ft": 13.5, "draft_ft": 6.4, "engine_count": 1, "engine_type": "Volvo D2-40", "fuel_capacity": 52, "water_capacity": 230, "status": "online", "home_port": "Road Town, BVI", "simProfile": "mono40", "simScenario": "charging", "notes": "Docked, generator running for turnaround prep" },
+        { "id": -108, "name": "Blue Lagoon", "model": "Leopard 45", "year": 2020, "boat_type": "Sailing Catamaran", "length_ft": 45, "beam_ft": 24.0, "draft_ft": 4.5, "engine_count": 2, "engine_type": "2x Yanmar 45hp", "fuel_capacity": 211, "water_capacity": 264, "status": "online", "home_port": "St. Martin", "simProfile": "cat58", "simScenario": "motoring", "notes": "Repositioning from St. Martin to BVI" },
+        { "id": -109, "name": "Rum Punch", "model": "Dufour 470", "year": 2021, "boat_type": "Sailing Monohull", "length_ft": 47, "beam_ft": 14.8, "draft_ft": 7.2, "engine_count": 1, "engine_type": "Volvo D2-50", "fuel_capacity": 58, "water_capacity": 350, "status": "offline", "home_port": "Road Town, BVI", "simProfile": "mono40", "simScenario": "shorepower", "notes": "Between charters. Available Saturday." },
+        { "id": -110, "name": "Paradise Found", "model": "Fountaine Pajot Astrea 42", "year": 2022, "boat_type": "Sailing Catamaran", "length_ft": 42, "beam_ft": 23.0, "draft_ft": 3.9, "engine_count": 2, "engine_type": "2x Volvo D1-30", "fuel_capacity": 158, "water_capacity": 264, "status": "online", "home_port": "Peter Island, BVI", "simProfile": "cat58", "simScenario": "atAnchor", "notes": "Honeymoon charter — anchored at Deadman's Bay" }
+      ]
+    },
+    {
+      "id": "marina",
+      "name": "Marina Owner",
+      "icon": "anchor",
+      "description": "Coconut Palm Marina — 18 boats across 7 docks, Fort Lauderdale",
+      "subscription": { "plan": "enterprise", "status": "active", "header": "Coconut Palm Marina", "boatCount": 18, "maxBoats": 50 },
+      "boats": [
+        { "id": -201, "name": "Lady Patricia", "model": "Hatteras 60 MY", "year": 2015, "boat_type": "Motor Yacht", "length_ft": 60, "status": "online", "home_port": "Slip A-1", "simProfile": "power", "simScenario": "shorepower", "notes": "Owner aboard weekends. Shore power OK." },
+        { "id": -202, "name": "Dock Holiday", "model": "Sea Ray 520", "year": 2018, "boat_type": "Motor Yacht", "length_ft": 52, "status": "online", "home_port": "Slip A-3", "simProfile": "power", "simScenario": "shorepower" },
+        { "id": -203, "name": "Knot Working", "model": "Viking 44", "year": 2017, "boat_type": "Motor Yacht", "length_ft": 44, "status": "online", "home_port": "Slip A-5", "simProfile": "power", "simScenario": "shorepower" },
+        { "id": -204, "name": "Reel Deal", "model": "Bertram 43", "year": 2016, "boat_type": "Motor Yacht", "length_ft": 43, "status": "alert", "home_port": "Slip B-2", "simProfile": "power", "simScenario": "alarm", "notes": "ALERT: Bilge pump cycling since 0340. Owner notified." },
+        { "id": -205, "name": "Second Wind", "model": "Beneteau 50", "year": 2019, "boat_type": "Sailing Monohull", "length_ft": 50, "status": "online", "home_port": "Slip B-4", "simProfile": "mono40", "simScenario": "shorepower" },
+        { "id": -206, "name": "Nauti Girl", "model": "Catalina 445", "year": 2014, "boat_type": "Sailing Monohull", "length_ft": 44, "status": "online", "home_port": "Slip B-6", "simProfile": "mono40", "simScenario": "shorepower" },
+        { "id": -207, "name": "Miss Behavin", "model": "Grand Banks 46 EU", "year": 2012, "boat_type": "Motor Yacht", "length_ft": 46, "status": "online", "home_port": "Slip C-1", "simProfile": "power", "simScenario": "shorepower" },
+        { "id": -208, "name": "Aquaholic", "model": "Sea Ray 400 SLX", "year": 2020, "boat_type": "Motor Yacht", "length_ft": 40, "status": "offline", "home_port": "Slip C-3", "simProfile": "power", "simScenario": "shorepower", "notes": "Hauled out for bottom job. Returns April 5." },
+        { "id": -209, "name": "Seas the Day", "model": "Leopard 43 PC", "year": 2018, "boat_type": "Sailing Catamaran", "length_ft": 43, "status": "online", "home_port": "Slip D-1", "simProfile": "cat58", "simScenario": "shorepower" },
+        { "id": -210, "name": "Vitamin Sea", "model": "Hunter 45 DS", "year": 2013, "boat_type": "Sailing Monohull", "length_ft": 45, "status": "online", "home_port": "Slip D-3", "simProfile": "mono40", "simScenario": "shorepower" },
+        { "id": -211, "name": "Lucky Star", "model": "Tiara 50 Coupe", "year": 2019, "boat_type": "Motor Yacht", "length_ft": 50, "status": "online", "home_port": "Slip D-5", "simProfile": "power", "simScenario": "shorepower" },
+        { "id": -212, "name": "Salt Life", "model": "Boston Whaler 350 Realm", "year": 2021, "boat_type": "Center Console", "length_ft": 35, "status": "online", "home_port": "Slip E-1", "simProfile": "power", "simScenario": "shorepower" },
+        { "id": -213, "name": "Windchaser", "model": "J/121", "year": 2020, "boat_type": "Sailing Monohull", "length_ft": 40, "status": "offline", "home_port": "Slip E-3", "simProfile": "mono40", "simScenario": "shorepower", "notes": "Owner away until May. Monitoring only." },
+        { "id": -214, "name": "No Agenda", "model": "Riviera 53 Flybridge", "year": 2017, "boat_type": "Motor Yacht", "length_ft": 53, "status": "online", "home_port": "Slip F-1", "simProfile": "power", "simScenario": "shorepower" },
+        { "id": -215, "name": "O-Fish-Ally Done", "model": "Yellowfin 42 Offshore", "year": 2022, "boat_type": "Center Console", "length_ft": 42, "status": "online", "home_port": "Slip F-3", "simProfile": "power", "simScenario": "shorepower" },
+        { "id": -216, "name": "Blue Moon", "model": "Swan 48", "year": 2011, "boat_type": "Sailing Monohull", "length_ft": 48, "status": "online", "home_port": "Slip G-1", "simProfile": "mono40", "simScenario": "charging", "notes": "Generator running for battery top-up" },
+        { "id": -217, "name": "Fair Winds", "model": "Lagoon 40", "year": 2023, "boat_type": "Sailing Catamaran", "length_ft": 40, "status": "online", "home_port": "Slip G-3", "simProfile": "cat58", "simScenario": "shorepower" },
+        { "id": -218, "name": "Current Sea", "model": "Cabo 44 HTX", "year": 2018, "boat_type": "Motor Yacht", "length_ft": 44, "status": "online", "home_port": "Slip G-5", "simProfile": "power", "simScenario": "shorepower" }
+      ]
+    },
+    {
+      "id": "individual",
+      "name": "Individual Owner",
+      "icon": "person",
+      "description": "Gil's Catana 581 — Chaguaramas, Trinidad",
+      "subscription": { "plan": "private", "status": "active", "header": "My Boat", "boatCount": 1, "maxBoats": 1 },
+      "boats": [
+        { "id": -301, "name": "Nami Barden", "model": "Catana 581", "year": 2008, "boat_type": "Sailing Catamaran", "length_ft": 58, "beam_ft": 28.9, "draft_ft": 3.9, "engine_count": 2, "engine_type": "2x Yanmar 4JH5E 110hp", "fuel_capacity": 400, "water_capacity": 500, "mmsi": "368219850", "registration": "Trinidad", "status": "online", "home_port": "Chaguaramas, Trinidad", "simProfile": "gilsboat", "simScenario": "atAnchor", "notes": "B&G Zeus 3, Victron Cerbo GX, 1700Ah LiFePO4, Onan 11kW" }
+      ]
+    },
+    {
+      "id": "delivery",
+      "name": "Delivery Captain",
+      "icon": "compass",
+      "description": "Capt. Mike — 1 active delivery, 3 queued",
+      "subscription": { "plan": "delivery", "status": "active", "header": "Capt. Mike's Deliveries", "boatCount": 4, "maxBoats": 5 },
+      "boats": [
+        { "id": -401, "name": "Meridian", "model": "Hallberg-Rassy 44", "year": 2016, "boat_type": "Sailing Monohull", "length_ft": 44, "beam_ft": 13.1, "draft_ft": 6.6, "engine_count": 1, "engine_type": "Volvo D2-75", "fuel_capacity": 240, "water_capacity": 440, "status": "online", "home_port": "En Route: Bermuda to Azores", "simProfile": "mono40", "simScenario": "nightPassage", "notes": "ACTIVE DELIVERY — Day 6 of ~14. 1,800nm passage. Crew of 3." },
+        { "id": -402, "name": "Zephyr", "model": "Outremer 51", "year": 2020, "boat_type": "Sailing Catamaran", "length_ft": 51, "beam_ft": 26.2, "draft_ft": 4.3, "engine_count": 2, "engine_type": "2x Volvo D2-40", "status": "offline", "home_port": "Horta, Azores", "simProfile": "cat58", "simScenario": "shorepower", "notes": "Queued. Pickup April 8. Delivery to Plymouth, UK." },
+        { "id": -403, "name": "Atlas", "model": "Nordhavn 47", "year": 2014, "boat_type": "Motor Yacht", "length_ft": 47, "beam_ft": 15.5, "draft_ft": 5.5, "engine_count": 1, "engine_type": "Deere 6068 270hp", "fuel_capacity": 2100, "water_capacity": 500, "status": "offline", "home_port": "Las Palmas, Canary Islands", "simProfile": "power", "simScenario": "shorepower", "notes": "Queued. Pickup April 22. Delivery to Fort Lauderdale." },
+        { "id": -404, "name": "Southern Cross", "model": "Amel 50", "year": 2019, "boat_type": "Sailing Monohull", "length_ft": 50, "beam_ft": 15.4, "draft_ft": 7.2, "engine_count": 1, "engine_type": "Volvo D2-75", "fuel_capacity": 170, "water_capacity": 520, "status": "offline", "home_port": "Gibraltar", "simProfile": "mono40", "simScenario": "shorepower", "notes": "Queued. Pickup May 5. Delivery to Palma de Mallorca." }
+      ]
+    },
+    {
+      "id": "surveyor",
+      "name": "Marine Surveyor",
+      "icon": "clipboard",
+      "description": "Pacific Marine Surveys — 6 boats in queue, San Diego area",
+      "subscription": { "plan": "tech", "status": "active", "header": "Pacific Marine Surveys", "boatCount": 6, "maxBoats": 10 },
+      "boats": [
+        { "id": -501, "name": "Integrity", "model": "Grand Banks 42 Classic", "year": 2010, "boat_type": "Motor Yacht", "length_ft": 42, "beam_ft": 13.6, "draft_ft": 4.0, "engine_count": 2, "engine_type": "2x Cummins 6BTA 330hp", "fuel_capacity": 600, "water_capacity": 200, "status": "online", "home_port": "Shelter Island, San Diego", "simProfile": "power", "simScenario": "motoring", "notes": "ACTIVE SURVEY: Engine sea trial in progress. Port engine running hot — investigating." },
+        { "id": -502, "name": "Wind Song", "model": "Catalina 380", "year": 2005, "boat_type": "Sailing Monohull", "length_ft": 38, "beam_ft": 12.0, "draft_ft": 6.5, "engine_count": 1, "engine_type": "Universal M-35B", "fuel_capacity": 30, "water_capacity": 80, "status": "alert", "home_port": "Shelter Island, San Diego", "simProfile": "mono40", "simScenario": "alarm", "notes": "ACTIVE SURVEY: Bilge pump issue found. Float switch sticking. Pre-purchase survey." },
+        { "id": -503, "name": "Good Times", "model": "Sea Ray 460 Sundancer", "year": 2018, "boat_type": "Motor Yacht", "length_ft": 46, "beam_ft": 13.8, "draft_ft": 3.7, "engine_count": 2, "engine_type": "2x Mercury 370hp", "status": "online", "home_port": "Harbor Island, San Diego", "simProfile": "power", "simScenario": "charging", "notes": "Survey complete. Systems check — charging test running. Report due Monday." },
+        { "id": -504, "name": "Wanderlust", "model": "Hylas 46", "year": 2012, "boat_type": "Sailing Monohull", "length_ft": 46, "beam_ft": 13.9, "draft_ft": 6.8, "engine_count": 1, "engine_type": "Yanmar 75hp", "status": "offline", "home_port": "Newport Beach", "simProfile": "mono40", "simScenario": "shorepower", "notes": "Scheduled: March 30. Insurance survey." },
+        { "id": -505, "name": "Pacific Dream", "model": "Kadey-Krogen 48 AE", "year": 2015, "boat_type": "Motor Yacht", "length_ft": 48, "beam_ft": 15.5, "draft_ft": 5.3, "engine_count": 1, "engine_type": "John Deere 6068 250hp", "fuel_capacity": 1000, "water_capacity": 400, "status": "offline", "home_port": "San Pedro", "simProfile": "power", "simScenario": "shorepower", "notes": "Scheduled: April 2. Pre-purchase survey for buyer." },
+        { "id": -506, "name": "Eclipse", "model": "Jeanneau 64", "year": 2017, "boat_type": "Sailing Monohull", "length_ft": 64, "beam_ft": 16.4, "draft_ft": 8.2, "engine_count": 1, "engine_type": "Yanmar 4JH110 110hp", "fuel_capacity": 110, "water_capacity": 660, "status": "offline", "home_port": "Long Beach Marina", "simProfile": "mono40", "simScenario": "shorepower", "notes": "Scheduled: April 5. Post-refit systems commissioning." }
+      ]
+    }
+  ]
+}

@@ -29,6 +29,9 @@ COPY digestion/signalk-client.js digestion/alert-engine.js digestion/llm-router.
 # Intelligence layer
 COPY digestion/intelligence/ ./lib/intelligence/
 
+# Demo data
+COPY digestion/demo/ ./demo/
+
 # Start script: nginx in background, commander in foreground
 COPY start.sh /start.sh
 RUN chmod +x /start.sh

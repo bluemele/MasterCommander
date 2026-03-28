@@ -102,12 +102,6 @@
     state.name = name;
     state.email = email;
 
-    // Test user passthrough
-    if (email === 'test@test.com') {
-      grantAccess();
-      return;
-    }
-
     setBtnLoading('site-gate-btn1', true);
 
     try {

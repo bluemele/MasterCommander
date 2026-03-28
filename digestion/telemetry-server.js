@@ -14,6 +14,7 @@
 // ============================================================
 
 import express from 'express';
+import { readFileSync } from 'fs';
 import { createServer } from 'http';
 import pino from 'pino';
 import weatherRouter from './weather-service.js';
@@ -221,6 +222,68 @@ export function startTelemetryServer({ sk, alerts, advisor, config }) {
     if (!energyModule) return res.json({ error: 'Energy module not loaded' });
     const summary = energyModule.module.getSummary();
     res.json(summary || { error: 'No data' });
+  });
+
+  // ── DEMO MODE ──────────────────────────────────────────
+  let demoPersonas = null;
+  let activeDemoPersona = null;
+  try {
+    // In container: /app/demo/personas.json. On host: ./demo/personas.json
+    const paths = ['/app/demo/personas.json', new URL('./demo/personas.json', import.meta.url).pathname, new URL('../demo/personas.json', import.meta.url).pathname];
+    for (const p of paths) {
+      try { demoPersonas = JSON.parse(readFileSync(p, 'utf8')); break; } catch {}
+    }
+    if (demoPersonas) console.log(`  🎭 Demo: loaded ${demoPersonas.personas.length} personas (${demoPersonas.personas.reduce((s, p) => s + p.boats.length, 0)} boats)`);
+  } catch {}
+
+  app.get('/api/demo/personas', rateLimit, (req, res) => {
+    if (!demoPersonas) return res.status(404).json({ error: 'Demo data not found' });
+    res.json({
+      personas: demoPersonas.personas.map(p => ({ id: p.id, name: p.name, icon: p.icon, description: p.description, boatCount: p.boats.length })),
+      active: activeDemoPersona,
+    });
+  });
+
+  app.post('/api/demo/activate/:id', rateLimit, (req, res) => {
+    if (!demoPersonas) return res.status(404).json({ error: 'Demo data not found' });
+    if (req.params.id === 'off') { activeDemoPersona = null; return res.json({ active: null }); }
+    const persona = demoPersonas.personas.find(p => p.id === req.params.id);
+    if (!persona) return res.status(404).json({ error: 'Unknown persona' });
+    activeDemoPersona = req.params.id;
+    res.json({ active: req.params.id, persona: persona.name });
+  });
+
+  app.get('/api/demo/boats', rateLimit, (req, res) => {
+    if (!demoPersonas || !activeDemoPersona) return res.json({ boats: [], subscription: {} });
+    const persona = demoPersonas.personas.find(p => p.id === activeDemoPersona);
+    if (!persona) return res.status(404).json({ error: 'Persona not found' });
+    res.json({ boats: persona.boats, subscription: persona.subscription });
+  });
+
+  app.get('/api/demo/boat/:id', rateLimit, (req, res) => {
+    if (!demoPersonas || !activeDemoPersona) return res.status(400).json({ error: 'No demo active' });
+    const persona = demoPersonas.personas.find(p => p.id === activeDemoPersona);
+    if (!persona) return res.status(404).json({ error: 'Persona not found' });
+    const boat = persona.boats.find(b => b.id === parseInt(req.params.id));
+    if (!boat) return res.status(404).json({ error: 'Boat not found' });
+    res.json({ boat });
+  });
+
+  app.post('/api/demo/switch-boat/:id', rateLimit, async (req, res) => {
+    if (!demoPersonas || !activeDemoPersona) return res.status(400).json({ error: 'No demo active' });
+    const persona = demoPersonas.personas.find(p => p.id === activeDemoPersona);
+    if (!persona) return res.status(404).json({ error: 'Persona not found' });
+    const boat = persona.boats.find(b => b.id === parseInt(req.params.id));
+    if (!boat) return res.status(404).json({ error: 'Boat not found' });
+    const scenario = boat.simScenario || 'atAnchor';
+    try {
+      const simPort = process.env.SIM_PORT || 3858;
+      const resp = await fetch(`http://127.0.0.1:${simPort}/scenario/${scenario}`, { method: 'POST' });
+      const data = await resp.json();
+      res.json({ boat: boat.name, scenario: data.scenario, profile: boat.simProfile });
+    } catch (e) {
+      res.status(502).json({ error: 'Simulator not reachable' });
+    }
   });
 
   // ── Health check ──────────────────────────────────────

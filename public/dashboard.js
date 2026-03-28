@@ -1,6 +1,10 @@
 (function() {
   'use strict';
 
+  // ── Demo mode state ──
+  var _demoActive = localStorage.getItem('mc_demo_active') || null;
+  var _demoPersonas = null;
+
   // ── Auth helpers (cookie-based) ──
   function authHeaders() {
     return { 'Content-Type': 'application/json' };
@@ -9,8 +13,16 @@
 
   // ── API (credentials: include sends httpOnly cookie) ──
   async function api(path, opts) {
+    // Demo mode: intercept boat API calls
+    if (_demoActive) {
+      if (path === '/api/boats') return api('/api/demo/boats', opts);
+      var boatMatch = path.match(/^\/api\/boats\/(-?\d+)$/);
+      if (boatMatch) return api('/api/demo/boat/' + boatMatch[1], opts);
+    }
     var res = await fetch(path, Object.assign({ headers: authHeaders(), credentials: 'include' }, opts || {}));
-    if (res.status === 401) { window.mcAuth.logout(); throw new Error('Session expired'); }
+    if (res.status === 401) { if (window.mcAuth && window.mcAuth.logout) window.mcAuth.logout(); throw new Error('Session expired'); }
+    var ct = res.headers.get('content-type') || '';
+    if (ct.indexOf('json') === -1) throw new Error('API unavailable');
     if (res.status === 403) {
       var errData = await res.json();
       if (errData.error && errData.error.indexOf('subscription') !== -1) {
@@ -89,7 +101,14 @@
   async function renderFleet() {
     app.innerHTML = '<div class="fleet-header"><h1 id="fleet-title">Loading...</h1><div id="fleet-actions"></div></div><div id="fleet-grid" class="fleet-grid"><p style="color:var(--slate)">Loading...</p></div>';
     try {
-      var data = await api('/api/boats');
+      var data;
+      try {
+        data = await api('/api/boats');
+      } catch (e) {
+        // API unavailable (test user or no backend) — show demo boat
+        navigate('#/boat/demo');
+        return;
+      }
       var sub = data.subscription || {};
       var grid = document.getElementById('fleet-grid');
       var title = document.getElementById('fleet-title');
@@ -239,6 +258,10 @@
   // ── Boat Page ──
   async function renderBoat(id) {
     app.innerHTML = '<p style="color:var(--slate);padding:40px 0">Loading...</p>';
+    // Demo mode: switch simulator scenario for this boat
+    if (_demoActive && parseInt(id) < 0) {
+      fetch('/api/demo/switch-boat/' + id, { method: 'POST' }).catch(function(){});
+    }
     try {
       var data = await api('/api/boats/' + id);
       var b = data.boat;
@@ -1020,7 +1043,76 @@
     });
   }
 
+  // ── DEMO MODE TOGGLE ────────────────────────────────────
+  function initDemoToggle() {
+    var btn = document.createElement('div');
+    btn.id = 'demo-toggle';
+    btn.className = 'demo-toggle';
+    btn.innerHTML =
+      '<button class="demo-toggle-btn' + (_demoActive ? ' active' : '') + '" id="demo-btn">' +
+      '<span class="demo-icon">&#9881;</span> Demo' +
+      '</button>' +
+      '<div class="demo-dropdown" id="demo-dropdown" style="display:none">' +
+      '<div class="demo-dropdown-header">Select Persona</div>' +
+      '<div id="demo-persona-list"><div style="padding:12px;color:#64748b;font-size:.82rem">Loading...</div></div>' +
+      '<div class="demo-dropdown-footer" id="demo-footer" style="' + (_demoActive ? '' : 'display:none') + '">' +
+      '<button class="demo-exit-btn" id="demo-off">Exit Demo</button>' +
+      '</div></div>';
+    document.body.appendChild(btn);
+
+    document.getElementById('demo-btn').addEventListener('click', function(e) {
+      e.stopPropagation();
+      var dd = document.getElementById('demo-dropdown');
+      dd.style.display = dd.style.display === 'none' ? 'block' : 'none';
+      if (dd.style.display === 'block' && !_demoPersonas) loadDemoPersonas();
+    });
+    document.addEventListener('click', function(e) { if (!e.target.closest('#demo-toggle')) document.getElementById('demo-dropdown').style.display = 'none'; });
+    document.getElementById('demo-off').addEventListener('click', function() {
+      _demoActive = null;
+      localStorage.removeItem('mc_demo_active');
+      fetch('/api/demo/activate/off', { method: 'POST' }).catch(function(){});
+      document.getElementById('demo-btn').classList.remove('active');
+      document.getElementById('demo-footer').style.display = 'none';
+      document.getElementById('demo-dropdown').style.display = 'none';
+      navigate('#/');
+    });
+  }
+
+  function loadDemoPersonas() {
+    fetch('/api/demo/personas').then(function(r) { return r.json(); }).then(function(data) {
+      _demoPersonas = data.personas;
+      var list = document.getElementById('demo-persona-list');
+      if (!list) return;
+      var icons = { sailboat: '&#9973;', anchor: '&#9875;', person: '&#128100;', compass: '&#129517;', clipboard: '&#128203;' };
+      list.innerHTML = '';
+      data.personas.forEach(function(p) {
+        var item = document.createElement('div');
+        item.className = 'demo-persona-item' + (_demoActive === p.id ? ' active' : '');
+        item.innerHTML =
+          '<span class="demo-persona-icon">' + (icons[p.icon] || '&#9881;') + '</span>' +
+          '<div class="demo-persona-info"><div class="demo-persona-name">' + esc(p.name) + '</div><div class="demo-persona-desc">' + esc(p.description) + '</div></div>' +
+          '<span class="demo-persona-count">' + p.boatCount + '</span>';
+        item.addEventListener('click', function() { activatePersona(p.id); });
+        list.appendChild(item);
+      });
+    }).catch(function() {});
+  }
+
+  function activatePersona(personaId) {
+    fetch('/api/demo/activate/' + personaId, { method: 'POST' }).then(function(r) { return r.json(); }).then(function() {
+      _demoActive = personaId;
+      localStorage.setItem('mc_demo_active', personaId);
+      document.getElementById('demo-btn').classList.add('active');
+      document.getElementById('demo-footer').style.display = '';
+      document.getElementById('demo-dropdown').style.display = 'none';
+      document.querySelectorAll('.demo-persona-item').forEach(function(el) { el.classList.remove('active'); });
+      navigate('#/');
+    }).catch(function() {});
+  }
+
   // ── Init ──
+  initDemoToggle();
+  if (_demoActive) fetch('/api/demo/activate/' + _demoActive, { method: 'POST' }).catch(function(){});
   onRoute();
 
 })();

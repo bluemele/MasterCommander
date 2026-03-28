@@ -233,3 +233,24 @@ main{padding:32px 24px 64px}
   .billing-plans-grid{grid-template-columns:1fr}
   .billing-current .card{flex-direction:column;align-items:flex-start}
 }
+
+/* ── DEMO MODE TOGGLE ── */
+.demo-toggle{position:fixed;bottom:24px;right:24px;z-index:200}
+.demo-toggle-btn{display:flex;align-items:center;gap:6px;padding:10px 18px;background:#1e293b;color:#e2e8f0;border:1.5px solid #334155;border-radius:24px;cursor:pointer;font-family:inherit;font-size:.82rem;font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,.2);transition:all .2s}
+.demo-toggle-btn:hover{background:#334155;transform:translateY(-2px)}
+.demo-toggle-btn.active{background:#0EA5E9;border-color:#0284C7;color:#fff}
+.demo-icon{font-size:1.1rem}
+.demo-dropdown{position:absolute;bottom:52px;right:0;width:340px;background:#fff;border:1.5px solid #E2E8F0;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,.15);overflow:hidden}
+.demo-dropdown-header{padding:14px 16px;font-size:.85rem;font-weight:700;color:#0C4A6E;border-bottom:1px solid #E2E8F0}
+.demo-dropdown-footer{padding:10px 16px;border-top:1px solid #E2E8F0;text-align:right}
+.demo-exit-btn{padding:6px 14px;border-radius:8px;border:1px solid #EF4444;background:transparent;color:#EF4444;cursor:pointer;font-size:.78rem;font-weight:600}
+.demo-exit-btn:hover{background:#EF4444;color:#fff}
+.demo-persona-item{display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;transition:background .15s;border-bottom:1px solid #F8FAFC}
+.demo-persona-item:last-child{border-bottom:none}
+.demo-persona-item:hover{background:#F8FAFC}
+.demo-persona-item.active{background:rgba(14,165,233,.06);border-left:3px solid #0EA5E9}
+.demo-persona-icon{font-size:1.3rem;width:28px;text-align:center;flex-shrink:0}
+.demo-persona-info{flex:1;min-width:0}
+.demo-persona-name{font-size:.85rem;font-weight:600;color:#0F172A}
+.demo-persona-desc{font-size:.72rem;color:#64748B;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.demo-persona-count{background:#F1F5F9;border:1px solid #E2E8F0;border-radius:12px;padding:2px 8px;font-size:.72rem;font-weight:700;color:#64748B;flex-shrink:0}
