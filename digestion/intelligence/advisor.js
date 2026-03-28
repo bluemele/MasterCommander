@@ -164,6 +164,48 @@ export class SailingAdvisor extends EventEmitter {
     return rec;
   }
 
+  // ── Process an alert from the alert engine ─────────────
+  // Converts system alerts into contextual advisor recommendations
+  processAlert(alert) {
+    const alertMap = {
+      anchor_drag: {
+        type: 'anchor_safety',
+        urgency: 'critical',
+        titleFn: (a) => 'Anchor dragging — take action',
+        reasoningFn: (a) => `${a.message}. Start engines and re-anchor, or motor to hold position. Check rode for chafe.`,
+        impact: 'Vessel may drift onto shore or into other boats.',
+      },
+      bilge: {
+        type: 'bilge_safety',
+        urgency: 'critical',
+        titleFn: (a) => 'Bilge pump cycling — possible water ingress',
+        reasoningFn: (a) => `${a.message}. Check thru-hulls, shaft seal, rudder post, and raw water strainer. Monitor battery draw — bilge pump increases load.`,
+        impact: 'Sustained cycling can drain batteries. Find and stop the leak.',
+      },
+      shallow: {
+        type: 'depth_safety',
+        urgency: 'advisory',
+        titleFn: (a) => 'Shallow water warning',
+        reasoningFn: (a) => `${a.message}. Check chart for channel markers. Consider altering course to deeper water.`,
+        impact: 'Risk of grounding.',
+      },
+    };
+
+    // Match alert ID prefix (e.g., "batt_crit_house" → "batt_crit")
+    const key = Object.keys(alertMap).find(k => alert.id && alert.id.startsWith(k));
+    if (!key) return; // No advisor mapping for this alert type
+
+    const mapping = alertMap[key];
+    this._addRecommendation('safety', {
+      type: mapping.type,
+      urgency: mapping.urgency,
+      title: mapping.titleFn(alert),
+      reasoning: mapping.reasoningFn(alert),
+      impact: mapping.impact,
+      expiresAt: Date.now() + 30 * 60 * 1000,
+    });
+  }
+
   // ── Get deeper explanation (for "Why?" button) ────────
   explain(id) {
     const rec = this.recommendations.find(r => r.id === id);

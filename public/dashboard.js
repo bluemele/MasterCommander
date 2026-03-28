@@ -9,6 +9,14 @@
     return { 'Content-Type': 'application/json' };
   }
   function esc(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+  function timeAgo(d) {
+    var s = Math.floor((Date.now() - d.getTime()) / 1000);
+    if (s < 60) return 'just now';
+    if (s < 3600) return Math.floor(s / 60) + 'min ago';
+    if (s < 86400) return Math.floor(s / 3600) + 'hr ago';
+    if (s < 604800) return Math.floor(s / 86400) + 'd ago';
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
 
   // ── API (credentials: include sends httpOnly cookie) ──
   async function api(path, opts) {
@@ -377,7 +385,12 @@
       app.innerHTML =
         '<div class="boat-page-header">' +
         '<button class="back-btn" onclick="window.location.hash=\'#/\'">&larr; Fleet</button>' +
-        '<h1>' + esc(b.name) + '</h1>' +
+        '<div class="boat-header-info">' +
+        '<h1>' + esc(b.name) + ' <span class="boat-header-model">' + esc(b.model || '') + '</span></h1>' +
+        '<div class="boat-header-meta">' +
+        '<span class="status-dot ' + esc(statusLabel) + '"></span><span class="boat-header-status">' + esc(statusLabel) + '</span>' +
+        (b.home_port ? '<span class="boat-header-sep">&bull;</span><span>' + esc(b.home_port) + '</span>' : '') +
+        '</div></div>' +
         '<div class="boat-page-actions">' +
         '<button class="btn btn-outline btn-sm" id="edit-boat-btn">Edit</button>' +
         '<button class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red)" id="delete-boat-btn">Delete</button>' +
@@ -770,7 +783,7 @@
         el.id = 'log-entry-' + log.id;
         var typeLabel = log.log_type === 'maintenance' ? 'Maintenance' : log.log_type === 'alert' ? 'Alert' : 'Note';
         var date = new Date(log.created_at);
-        var dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' ' + date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        var dateStr = timeAgo(date);
         el.innerHTML =
           '<div class="log-entry-actions">' +
           '<button class="log-action-btn log-entry-edit" title="Edit" data-log-id="' + log.id + '" data-boat-id="' + log.boat_id + '" data-type="' + esc(log.log_type || 'note') + '" data-title="' + esc(log.title || '') + '" data-body="' + esc(log.body || '') + '">&#9998;</button>' +

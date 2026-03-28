@@ -257,6 +257,11 @@ main{padding:32px 24px 64px}
 .ps-icon.surveyor{background:#FCE7F3;color:#DB2777}
 .ps-info{flex:1;min-width:0}
 .ps-name{font-size:.82rem;font-weight:600;color:#0F172A}
+.boat-header-info{flex:1;min-width:0}
+.boat-header-model{font-size:.65em;font-weight:400;color:#64748B}
+.boat-header-meta{display:flex;align-items:center;gap:6px;font-size:.78rem;color:#64748B;margin-top:2px}
+.boat-header-meta .status-dot{width:8px;height:8px}
+.boat-header-sep{color:#CBD5E1}
 .ps-role{font-size:.7rem;font-weight:600;margin-top:1px}
 .ps-role.charter{color:#2563EB}
 .ps-role.marina{color:#059669}

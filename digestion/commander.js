@@ -183,6 +183,9 @@ if (wa) {
 const pendingAlerts = [];
 
 alerts.on('alert', async (alert) => {
+  // Forward to advisor for contextual recommendation
+  if (advisor) advisor.processAlert(alert);
+
   if (wa?.connected) {
     const sent = await wa.sendAlert(alert.message);
     if (!sent) pendingAlerts.push(alert);
