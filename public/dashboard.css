@@ -252,5 +252,6 @@ main{padding:32px 24px 64px}
 .demo-persona-icon{font-size:1.3rem;width:28px;text-align:center;flex-shrink:0}
 .demo-persona-info{flex:1;min-width:0}
 .demo-persona-name{font-size:.85rem;font-weight:600;color:#0F172A}
+.demo-persona-role{font-size:.72rem;font-weight:600;color:#0EA5E9;margin-bottom:1px}
 .demo-persona-desc{font-size:.72rem;color:#64748B;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .demo-persona-count{background:#F1F5F9;border:1px solid #E2E8F0;border-radius:12px;padding:2px 8px;font-size:.72rem;font-weight:700;color:#64748B;flex-shrink:0}

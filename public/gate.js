@@ -32,6 +32,18 @@
           <input class="gate-input" id="site-gate-email" type="email" placeholder="you@company.com" autocomplete="email" />
           <div class="gate-error" id="site-gate-err1"></div>
           <button class="gate-btn" id="site-gate-btn1">Send Verification Code</button>
+          <p class="gate-info" style="margin-top:12px"><a href="#" id="site-gate-show-login" style="color:#4F8CFF">Already have an account? Sign in</a></p>
+        </div>
+
+        <!-- Step Login: Email + Password -->
+        <div class="gate-step" id="site-gate-step-login">
+          <label class="gate-label" for="site-gate-login-email">Email</label>
+          <input class="gate-input" id="site-gate-login-email" type="email" placeholder="you@company.com" autocomplete="email" />
+          <label class="gate-label" for="site-gate-login-pw">Password</label>
+          <div style="position:relative"><input class="gate-input" id="site-gate-login-pw" type="password" placeholder="Password" autocomplete="current-password" style="padding-right:36px" /><button type="button" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:1.1rem;opacity:.5" onclick="var i=this.previousElementSibling;i.type=i.type==='password'?'text':'password'">&#128065;</button></div>
+          <div class="gate-error" id="site-gate-err-login"></div>
+          <button class="gate-btn" id="site-gate-btn-login">Sign In</button>
+          <p class="gate-info" style="margin-top:12px"><a href="#" id="site-gate-show-gate" style="color:#4F8CFF">New here? Get a verification code</a></p>
         </div>
 
         <!-- Step 2: Code -->
@@ -101,15 +113,6 @@
 
     state.name = name;
     state.email = email;
-
-    // Test user — bypass gate, activate demo, go to dashboard
-    if (email === 'test@test.com') {
-      localStorage.setItem('mc_demo_active', 'charter');
-      fetch('/api/demo/activate/charter', { method: 'POST' }).catch(function(){});
-      grantAccess();
-      window.location.href = 'dashboard.html';
-      return;
-    }
 
     setBtnLoading('site-gate-btn1', true);
 
@@ -242,6 +245,59 @@
     el('site-gate-resend').addEventListener('click', function (e) {
       e.preventDefault();
       requestCode();
+    });
+
+    // Toggle to login form
+    el('site-gate-show-login').addEventListener('click', function (e) {
+      e.preventDefault();
+      document.querySelectorAll('.gate-step').forEach(s => s.classList.remove('gate-active'));
+      el('site-gate-step-login').classList.add('gate-active');
+      el('site-gate-title').textContent = 'Sign In';
+      el('site-gate-subtitle').textContent = 'Use your email and password';
+      el('site-gate-login-email').focus();
+    });
+
+    // Toggle back to gate
+    el('site-gate-show-gate').addEventListener('click', function (e) {
+      e.preventDefault();
+      document.querySelectorAll('.gate-step').forEach(s => s.classList.remove('gate-active'));
+      el('site-gate-step1').classList.add('gate-active');
+      el('site-gate-title').textContent = config.siteName || 'Access Required';
+      el('site-gate-subtitle').textContent = 'Enter your details to continue';
+    });
+
+    // Login with email + password
+    el('site-gate-btn-login').addEventListener('click', async function () {
+      const email = el('site-gate-login-email').value.trim();
+      const pw = el('site-gate-login-pw').value;
+      const errEl = el('site-gate-err-login');
+      errEl.textContent = '';
+      if (!email || !pw) { errEl.textContent = 'Enter email and password.'; return; }
+      this.disabled = true;
+      this.textContent = 'Signing in...';
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ email, password: pw }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Login failed');
+        // Store user for dashboard
+        if (data.user) localStorage.setItem('mc_user', JSON.stringify(data.user));
+        grantAccess();
+        window.location.href = 'dashboard.html';
+      } catch (err) {
+        errEl.textContent = err.message;
+        this.disabled = false;
+        this.textContent = 'Sign In';
+      }
+    });
+
+    // Enter key on login password
+    el('site-gate-login-pw').addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') el('site-gate-btn-login').click();
     });
   }
 

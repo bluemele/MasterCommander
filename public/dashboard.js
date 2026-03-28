@@ -1,10 +1,6 @@
 (function() {
   'use strict';
 
-  // ── Demo mode state ──
-  var _demoActive = localStorage.getItem('mc_demo_active') || null;
-  var _demoPersonas = null;
-
   // ── Auth helpers (cookie-based) ──
   function getUser() {
     try { return JSON.parse(localStorage.getItem('mc_user')); } catch(e) { return null; }
@@ -16,12 +12,6 @@
 
   // ── API (credentials: include sends httpOnly cookie) ──
   async function api(path, opts) {
-    // Demo mode: intercept boat API calls
-    if (_demoActive) {
-      if (path === '/api/boats') return api('/api/demo/boats', opts);
-      var boatMatch = path.match(/^\/api\/boats\/(-?\d+)$/);
-      if (boatMatch) return api('/api/demo/boat/' + boatMatch[1], opts);
-    }
     var res = await fetch(path, Object.assign({ headers: authHeaders(), credentials: 'include' }, opts || {}));
     if (res.status === 401) throw new Error('Not authenticated');
     var ct = res.headers.get('content-type') || '';
@@ -270,10 +260,6 @@
   // ── Boat Page ──
   async function renderBoat(id) {
     app.innerHTML = '<p style="color:var(--slate);padding:40px 0">Loading...</p>';
-    // Demo mode: switch simulator scenario for this boat
-    if (_demoActive && parseInt(id) < 0) {
-      fetch('/api/demo/switch-boat/' + id, { method: 'POST' }).catch(function(){});
-    }
     try {
       var data = await api('/api/boats/' + id);
       var b = data.boat;
@@ -1058,79 +1044,75 @@
     });
   }
 
-  // ── DEMO MODE TOGGLE ────────────────────────────────────
-  function initDemoToggle() {
-    var btn = document.createElement('div');
-    btn.id = 'demo-toggle';
-    btn.className = 'demo-toggle';
-    btn.innerHTML =
-      '<button class="demo-toggle-btn' + (_demoActive ? ' active' : '') + '" id="demo-btn">' +
-      '<span class="demo-icon">&#9881;</span> Demo' +
-      '</button>' +
+  // ── PERSONA SWITCHER (bottom-right) ─────────────────────
+  var PERSONAS = [
+    { email: 'charter@demo.mc', name: 'Sarah Mitchell', role: 'Charter Fleet Manager', desc: '10 boats, BVI & Eastern Caribbean', icon: '&#9973;', boats: 10 },
+    { email: 'marina@demo.mc', name: 'James Kowalski', role: 'Marina Owner', desc: '15 boats, Coconut Palm Marina, Fort Lauderdale', icon: '&#9875;', boats: 15 },
+    { email: 'owner@demo.mc', name: 'Gil Barden', role: 'Individual Owner', desc: '1 boat — Catana 581, Trinidad', icon: '&#9973;', boats: 1 },
+    { email: 'captain@demo.mc', name: 'Mike Torres', role: 'Delivery Captain', desc: '4 boats — 1 active delivery, 3 queued', icon: '&#129517;', boats: 4 },
+    { email: 'surveyor@demo.mc', name: 'Linda Chen', role: 'Marine Surveyor', desc: '6 boats — 2 active surveys, San Diego', icon: '&#128203;', boats: 6 },
+  ];
+
+  function initPersonaSwitcher() {
+    var el = document.createElement('div');
+    el.id = 'demo-toggle';
+    el.className = 'demo-toggle';
+    var itemsHtml = PERSONAS.map(function(p) {
+      return '<div class="demo-persona-item" data-email="' + esc(p.email) + '">' +
+        '<span class="demo-persona-icon">' + p.icon + '</span>' +
+        '<div class="demo-persona-info"><div class="demo-persona-name">' + esc(p.name) + '</div>' +
+        '<div class="demo-persona-role">' + esc(p.role) + '</div>' +
+        '<div class="demo-persona-desc">' + esc(p.desc) + '</div></div>' +
+        '<span class="demo-persona-count">' + p.boats + '</span></div>';
+    }).join('');
+
+    el.innerHTML =
+      '<button class="demo-toggle-btn" id="demo-btn"><span class="demo-icon">&#128100;</span> Switch User</button>' +
       '<div class="demo-dropdown" id="demo-dropdown" style="display:none">' +
-      '<div class="demo-dropdown-header">Select Persona</div>' +
-      '<div id="demo-persona-list"><div style="padding:12px;color:#64748b;font-size:.82rem">Loading...</div></div>' +
-      '<div class="demo-dropdown-footer" id="demo-footer" style="' + (_demoActive ? '' : 'display:none') + '">' +
-      '<button class="demo-exit-btn" id="demo-off">Exit Demo</button>' +
-      '</div></div>';
-    document.body.appendChild(btn);
+      '<div class="demo-dropdown-header">Switch Persona</div>' +
+      '<div id="demo-persona-list">' + itemsHtml + '</div></div>';
+    document.body.appendChild(el);
 
     document.getElementById('demo-btn').addEventListener('click', function(e) {
       e.stopPropagation();
       var dd = document.getElementById('demo-dropdown');
       dd.style.display = dd.style.display === 'none' ? 'block' : 'none';
-      if (dd.style.display === 'block' && !_demoPersonas) loadDemoPersonas();
     });
-    document.addEventListener('click', function(e) { if (!e.target.closest('#demo-toggle')) document.getElementById('demo-dropdown').style.display = 'none'; });
-    document.getElementById('demo-off').addEventListener('click', function() {
-      _demoActive = null;
-      localStorage.removeItem('mc_demo_active');
-      fetch('/api/demo/activate/off', { method: 'POST' }).catch(function(){});
-      document.getElementById('demo-btn').classList.remove('active');
-      document.getElementById('demo-footer').style.display = 'none';
-      document.getElementById('demo-dropdown').style.display = 'none';
-      navigate('#/');
+    document.addEventListener('click', function(e) {
+      if (!e.target.closest('#demo-toggle')) document.getElementById('demo-dropdown').style.display = 'none';
     });
-  }
 
-  function loadDemoPersonas() {
-    fetch('/api/demo/personas').then(function(r) { return r.json(); }).then(function(data) {
-      _demoPersonas = data.personas;
-      var list = document.getElementById('demo-persona-list');
-      if (!list) return;
-      var icons = { sailboat: '&#9973;', anchor: '&#9875;', person: '&#128100;', compass: '&#129517;', clipboard: '&#128203;' };
-      list.innerHTML = '';
-      data.personas.forEach(function(p) {
-        var item = document.createElement('div');
-        item.className = 'demo-persona-item' + (_demoActive === p.id ? ' active' : '');
-        item.innerHTML =
-          '<span class="demo-persona-icon">' + (icons[p.icon] || '&#9881;') + '</span>' +
-          '<div class="demo-persona-info"><div class="demo-persona-name">' + esc(p.name) + '</div><div class="demo-persona-desc">' + esc(p.description) + '</div></div>' +
-          '<span class="demo-persona-count">' + p.boatCount + '</span>';
-        item.addEventListener('click', function() { activatePersona(p.id); });
-        list.appendChild(item);
+    document.getElementById('demo-persona-list').addEventListener('click', function(e) {
+      var item = e.target.closest('.demo-persona-item');
+      if (!item) return;
+      var email = item.getAttribute('data-email');
+      item.style.opacity = '0.5';
+      item.querySelector('.demo-persona-name').textContent = 'Switching...';
+      // Login as this persona
+      fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email: email, password: 'demo2026' }),
+      }).then(function(r) { return r.json(); }).then(function(data) {
+        if (data.user) {
+          localStorage.setItem('mc_user', JSON.stringify(data.user));
+          localStorage.removeItem('mc_demo_active');
+          window.location.href = 'dashboard.html#/';
+          window.location.reload();
+        } else {
+          item.style.opacity = '1';
+          item.querySelector('.demo-persona-name').textContent = 'Login failed';
+        }
+      }).catch(function() {
+        item.style.opacity = '1';
+        item.querySelector('.demo-persona-name').textContent = 'Error';
       });
-    }).catch(function() {});
-  }
-
-  function activatePersona(personaId) {
-    fetch('/api/demo/activate/' + personaId, { method: 'POST' }).then(function(r) { return r.json(); }).then(function() {
-      _demoActive = personaId;
-      localStorage.setItem('mc_demo_active', personaId);
-      document.getElementById('demo-btn').classList.add('active');
-      document.getElementById('demo-footer').style.display = '';
-      document.getElementById('demo-dropdown').style.display = 'none';
-      document.querySelectorAll('.demo-persona-item').forEach(function(el) { el.classList.remove('active'); });
-      navigate('#/');
-    }).catch(function() {});
+    });
   }
 
   // ── Init ──
-  initDemoToggle();
-  if (_demoActive) {
-    fetch('/api/demo/activate/' + _demoActive, { method: 'POST' }).catch(function(){}).then(function() { onRoute(); });
-  } else {
-    onRoute();
-  }
+  initPersonaSwitcher();
+  onRoute();
 
 })();
