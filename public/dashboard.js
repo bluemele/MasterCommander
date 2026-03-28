@@ -6,6 +6,9 @@
   var _demoPersonas = null;
 
   // ── Auth helpers (cookie-based) ──
+  function getUser() {
+    try { return JSON.parse(localStorage.getItem('mc_user')); } catch(e) { return null; }
+  }
   function authHeaders() {
     return { 'Content-Type': 'application/json' };
   }
@@ -20,7 +23,7 @@
       if (boatMatch) return api('/api/demo/boat/' + boatMatch[1], opts);
     }
     var res = await fetch(path, Object.assign({ headers: authHeaders(), credentials: 'include' }, opts || {}));
-    if (res.status === 401) { if (window.mcAuth && window.mcAuth.logout) window.mcAuth.logout(); throw new Error('Session expired'); }
+    if (res.status === 401) throw new Error('Not authenticated');
     var ct = res.headers.get('content-type') || '';
     if (ct.indexOf('json') === -1) throw new Error('API unavailable');
     if (res.status === 403) {
@@ -76,7 +79,7 @@
 
     // Dispatch
     if (path === '/' || path === '') renderFleet();
-    else if (path.match(/^\/boat\/(\d+)$/)) renderBoat(parseInt(path.match(/^\/boat\/(\d+)$/)[1]));
+    else if (path.match(/^\/boat\/(-?\d+)$/)) renderBoat(parseInt(path.match(/^\/boat\/(-?\d+)$/)[1]));
     else if (path === '/weather') { if (window.MCWeatherUI) window.MCWeatherUI.init(); }
     else if (path === '/billing') renderBilling();
     else if (path === '/settings') renderSettings();
@@ -105,8 +108,17 @@
       try {
         data = await api('/api/boats');
       } catch (e) {
-        // API unavailable (test user or no backend) — show demo boat
-        navigate('#/boat/demo');
+        // API unavailable or not authenticated — show demo prompt
+        var grid = document.getElementById('fleet-grid');
+        var title = document.getElementById('fleet-title');
+        if (title) title.textContent = 'Welcome to MasterCommander';
+        if (grid) grid.innerHTML =
+          '<div style="text-align:center;padding:40px 20px">' +
+          '<div style="font-size:2.5rem;margin-bottom:12px">&#9973;</div>' +
+          '<h2 style="margin-bottom:8px">Your Fleet</h2>' +
+          '<p style="color:var(--slate);margin-bottom:20px">Sign in to see your boats, or try the demo to explore.</p>' +
+          '<button class="btn btn-sky" onclick="document.getElementById(\'demo-btn\').click()" style="font-size:.9rem;padding:10px 24px">Try Demo Mode</button>' +
+          '</div>';
         return;
       }
       var sub = data.subscription || {};
@@ -950,7 +962,10 @@
         });
       });
     } catch (e) {
-      app.innerHTML = '<div class="fleet-header"><h1>Billing</h1></div><p style="color:var(--red)">' + esc(e.message) + '</p>';
+      app.innerHTML = '<div class="fleet-header"><h1>Billing</h1></div>' +
+        '<div style="text-align:center;padding:40px 20px">' +
+        '<p style="color:var(--slate);margin-bottom:16px">Billing requires an active account. Try demo mode to explore the platform.</p>' +
+        '<button class="btn btn-sky" onclick="document.getElementById(\'demo-btn\').click()">Try Demo Mode</button></div>';
     }
   }
 
@@ -1112,7 +1127,10 @@
 
   // ── Init ──
   initDemoToggle();
-  if (_demoActive) fetch('/api/demo/activate/' + _demoActive, { method: 'POST' }).catch(function(){});
-  onRoute();
+  if (_demoActive) {
+    fetch('/api/demo/activate/' + _demoActive, { method: 'POST' }).catch(function(){}).then(function() { onRoute(); });
+  } else {
+    onRoute();
+  }
 
 })();

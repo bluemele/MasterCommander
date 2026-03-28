@@ -102,6 +102,15 @@
     state.name = name;
     state.email = email;
 
+    // Test user — bypass gate, activate demo, go to dashboard
+    if (email === 'test@test.com') {
+      localStorage.setItem('mc_demo_active', 'charter');
+      fetch('/api/demo/activate/charter', { method: 'POST' }).catch(function(){});
+      grantAccess();
+      window.location.href = 'dashboard.html';
+      return;
+    }
+
     setBtnLoading('site-gate-btn1', true);
 
     try {
