@@ -148,7 +148,18 @@
         '<span class="fleet-count">' + esc(String(sub.boatCount || 0)) + '/' + esc(String(sub.maxBoats || 0)) + ' boats</span>';
 
       if (!data.boats || data.boats.length === 0) {
-        grid.innerHTML = '<div class="fleet-empty"><p>No boats registered yet. Add your first boat to get started.</p></div>';
+        grid.innerHTML =
+          '<div style="text-align:center;padding:60px 20px;max-width:480px;margin:0 auto">' +
+          '<div style="font-size:3rem;margin-bottom:16px">&#9973;</div>' +
+          '<h2 style="margin-bottom:8px;color:var(--ocean)">Welcome to MasterCommander</h2>' +
+          '<p style="color:var(--slate);margin-bottom:24px;line-height:1.6">Add your boat to start monitoring engines, batteries, tanks, and weather — all from one dashboard.</p>' +
+          '<button class="btn btn-sky" onclick="window._addBoat()" style="font-size:1rem;padding:12px 32px">Add Your Boat</button>' +
+          '<div style="margin-top:32px;text-align:left;color:var(--slate);font-size:.82rem">' +
+          '<p style="font-weight:600;margin-bottom:8px;color:var(--text)">How it works:</p>' +
+          '<p>1. Add your boat details (name, model, engines)</p>' +
+          '<p>2. Connect a MasterCommander unit to your SignalK server</p>' +
+          '<p>3. Live telemetry, AI recommendations, and alerts — automatically</p>' +
+          '</div></div>';
         return;
       }
       // Single boat — go straight to boat page

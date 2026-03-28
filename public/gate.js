@@ -320,7 +320,7 @@
         // Already hidden if hasToken, remove overlay entirely
         const ov = el('site-gate-overlay');
         if (ov) ov.remove();
-      } else if (hasToken) {
+      } else if (localStorage.getItem(tokenKey())) {
         // Token was bad — show the overlay
         el('site-gate-overlay').classList.remove('gate-hidden');
       }

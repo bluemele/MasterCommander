@@ -95,6 +95,8 @@
       '<div class="telem-row"><span class="telem-label">COG</span><span class="telem-value">' + fmt(nav.cog) + '<span class="telem-unit">&deg;</span></span></div>' +
       '<div class="telem-row"><span class="telem-label">Depth</span><span class="telem-value' + (env.depth != null && env.depth < 3 ? ' warn' : '') + '">' + fmt(env.depth, 1) + '<span class="telem-unit">m</span></span></div>' +
       '<div class="telem-row"><span class="telem-label">Water Temp</span><span class="telem-value">' + fmt(env.waterTemp, 1) + '<span class="telem-unit">&deg;C</span></span></div>' +
+      (env.baroPressure != null ? '<div class="telem-row"><span class="telem-label">Baro</span><span class="telem-value">' + fmt(env.baroPressure) + '<span class="telem-unit">hPa</span></span></div>' : '') +
+      (env.airTemp != null ? '<div class="telem-row"><span class="telem-label">Air Temp</span><span class="telem-value">' + fmt(env.airTemp, 1) + '<span class="telem-unit">&deg;C</span></span></div>' : '') +
       posHtml;
   }
 
@@ -309,8 +311,15 @@
       '<a class="pos-link" href="' + esc(mapUrl) + '" target="_blank" rel="noopener">Open in Google Maps &#8599;</a>';
   }
 
-  // ── Scenario control bar (with intelligence scenarios) ──
+  // ── Scenario control bar (dev mode only) ──
   function renderScenarioControl(el, currentScenario) {
+    // Only show scenarios in dev mode (?dev=1) or for demo users
+    var isDev = window.location.search.indexOf('dev=1') !== -1;
+    var user = null;
+    try { user = JSON.parse(localStorage.getItem('mc_user')); } catch(e) {}
+    var isDemo = user && user.email && user.email.indexOf('@demo.mc') !== -1;
+    if (!isDev && !isDemo) { el.innerHTML = ''; el.style.display = 'none'; return; }
+    el.style.display = '';
     el.innerHTML = '';
     var scenarios = ['atAnchor', 'motoring', 'sailing', 'charging', 'shorepower', 'alarm'];
     var intelligenceScenarios = ['windShift', 'weatherBuilding', 'nightPassage', 'approachingPort', 'crossingCurrent', 'heavyWeather', 'manOverboard'];
@@ -360,8 +369,9 @@
   // ============================================================
 
   // ── Advisor panel (recommendations) ──
+  var _dismissedRecs = {};
   function renderAdvisorPanel(el, snap) {
-    var recs = snap._advisor || [];
+    var recs = (snap._advisor || []).filter(function(r) { return !_dismissedRecs[r.id]; });
     var urgencyIcons = { critical: '&#128680;', advisory: '&#9888;&#65039;', suggestion: '&#128161;', info: '&#8505;&#65039;' };
     var urgencyLabels = { critical: 'CRITICAL', advisory: 'ADVISORY', suggestion: 'SUGGESTION', info: 'INFO' };
     var urgencyClasses = { critical: 'rec-critical', advisory: 'rec-advisory', suggestion: 'rec-suggestion', info: 'rec-info' };
@@ -408,14 +418,19 @@
       var id = btn.getAttribute('data-rec-id');
       if (!id) return;
       if (btn.classList.contains('rec-accept')) {
-        fetch('/api/advisor/accept/' + id, { method: 'POST' }).then(function() {
-          btn.closest('.rec-card').style.opacity = '0.4';
-          btn.closest('.rec-card').innerHTML = '<div style="padding:8px;color:var(--emerald)">&#10003; Accepted</div>';
-        });
+        _dismissedRecs[id] = true;
+        fetch('/api/advisor/accept/' + id, { method: 'POST' });
+        btn.closest('.rec-card').style.opacity = '0.4';
+        btn.closest('.rec-card').innerHTML = '<div style="padding:8px;color:var(--emerald)">&#10003; Accepted — applied</div>';
       } else if (btn.classList.contains('rec-dismiss')) {
-        fetch('/api/advisor/dismiss/' + id, { method: 'POST' }).then(function() {
-          btn.closest('.rec-card').remove();
-        });
+        _dismissedRecs[id] = true;
+        fetch('/api/advisor/dismiss/' + id, { method: 'POST' });
+        btn.closest('.rec-card').remove();
+        // Update count
+        var countEl = el.querySelector('.rec-count');
+        var remaining = el.querySelectorAll('.rec-card').length;
+        if (countEl) countEl.textContent = remaining > 0 ? remaining + ' active' : '';
+        if (remaining === 0) el.querySelector('.rec-count')?.parentElement?.insertAdjacentHTML('afterend', '<div style="color:var(--slate);font-size:.82rem;text-align:center;padding:12px">All optimal</div>');
       } else if (btn.classList.contains('rec-why')) {
         fetch('/api/advisor/explain/' + id).then(function(r) { return r.json(); }).then(function(data) {
           var card = btn.closest('.rec-card');
