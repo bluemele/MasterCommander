@@ -298,6 +298,9 @@ export function startTelemetryServer({ sk, alerts, advisor, config, configManage
     });
 
     app.put('/api/config/:section', (req, res) => {
+      if (req.body == null || typeof req.body !== 'object') return res.status(400).json({ error: 'Body must be a JSON object or array' });
+      // Block direct writes to rules/schedules (use dedicated endpoints)
+      if (['rules', 'schedules'].includes(req.params.section)) return res.status(400).json({ error: 'Use /api/' + req.params.section + ' endpoints instead' });
       try {
         configManager.update(req.params.section, req.body);
         res.json({ ok: true, section: req.params.section });
@@ -364,12 +367,14 @@ export function startTelemetryServer({ sk, alerts, advisor, config, configManage
     });
 
     app.post('/api/schedules', (req, res) => {
+      if (req.body == null || typeof req.body !== 'object') return res.status(400).json({ error: 'Body must be a JSON object' });
       const sched = req.body;
       if (!sched.id) sched.id = configManager.generateId();
       if (sched.enabled === undefined) sched.enabled = true;
       const errors = configManager.validateSchedule(sched);
       if (errors.length) return res.status(400).json({ errors });
       const schedules = configManager.get('schedules') || [];
+      if (schedules.find(s => s.id === sched.id)) return res.status(409).json({ error: 'Schedule ID already exists' });
       schedules.push(sched);
       configManager.update('schedules', schedules);
       if (scheduler) scheduler.reload();
@@ -419,7 +424,9 @@ export function startTelemetryServer({ sk, alerts, advisor, config, configManage
     });
 
     app.put('/api/profiles/active', (req, res) => {
+      if (req.body == null || typeof req.body !== 'object') return res.status(400).json({ error: 'Body must be a JSON object' });
       const { profileId } = req.body;
+      if (profileId && !profileManager.getProfile(profileId)) return res.status(404).json({ error: 'Profile not found' });
       const profile = profileManager.setActive(profileId || null);
       res.json({ active: profileId, profile });
     });

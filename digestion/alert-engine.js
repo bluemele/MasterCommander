@@ -89,7 +89,7 @@ export class AlertEngine extends EventEmitter {
       for (const id of tankIds) {
         const tank = this.sk.getTank(tankType, id);
         const value = tank?.[field];
-        if (value == null || value <= 0) continue;
+        if (value == null) continue;
         if (this._evaluate(value, rule.condition)) {
           const ruleId = `${rule.id}_${id}`;
           const msg = this._formatMessage(rule, value, id);
@@ -99,7 +99,7 @@ export class AlertEngine extends EventEmitter {
     } else {
       // Direct path: e.g. "environment.depth"
       const value = this._resolveDirectPath(trigger);
-      if (value == null || value <= 0) return;
+      if (value == null) return;
       if (this._evaluate(value, rule.condition)) {
         const msg = this._formatMessage(rule, value, null);
         this._fire(rule.id, rule.severity, rule.cooldownMs || 60000, msg);

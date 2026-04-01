@@ -105,40 +105,40 @@ export class Scheduler {
     }
   }
 
-  _sendDigest(sched) {
+  async _sendDigest(sched) {
     const config = this.configManager.getAll();
     const context = this.tpl.buildContext(this.sk, config);
     const message = this.tpl.render('digest', context);
-    this._deliver(message, sched.recipients);
+    await this._deliver(message, sched.recipients);
     console.log(`📅 Digest sent: ${sched.name || sched.id}`);
   }
 
-  _checkMaintenance(sched) {
+  async _checkMaintenance(sched) {
     if (!sched.params?.sensor || !sched.params?.threshold) return;
     const value = this._resolveSensor(sched.params.sensor);
     if (value == null) return;
     if (value >= sched.params.threshold) {
       const context = { task: { name: sched.name || 'Maintenance' }, value };
       const message = this.tpl.render('maintenance', context);
-      this._deliver(message, sched.recipients);
+      await this._deliver(message, sched.recipients);
       console.log(`📅 Maintenance alert: ${sched.name || sched.id}`);
     }
   }
 
-  _watchHandoff(sched) {
+  async _watchHandoff(sched) {
     const config = this.configManager.getAll();
     const context = this.tpl.buildContext(this.sk, config);
     const message = this.tpl.render('watchHandoff', context);
-    this._deliver(message, sched.recipients);
+    await this._deliver(message, sched.recipients);
     console.log(`📅 Watch handoff sent: ${sched.name || sched.id}`);
   }
 
-  _customMessage(sched) {
+  async _customMessage(sched) {
     if (!sched.params?.template) return;
     const config = this.configManager.getAll();
     const context = this.tpl.buildContext(this.sk, config);
     const message = this.tpl.renderString(sched.params.template, context);
-    this._deliver(message, sched.recipients);
+    await this._deliver(message, sched.recipients);
   }
 
   _resolveSensor(path) {
