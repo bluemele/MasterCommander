@@ -27,7 +27,7 @@ const MAX_SSE_CONNECTIONS = 20;
 const RATE_WINDOW_MS = 60_000;
 const RATE_MAX_REQUESTS = 60;
 
-export function startTelemetryServer({ sk, alerts, advisor, config }) {
+export function startTelemetryServer({ sk, alerts, advisor, config, configManager, profileManager, templateEngine, scheduler }) {
   const app = express();
   const port = parseInt(process.env.TELEMETRY_PORT || '3100');
   const simPort = config?.signalk?.port || 3858;
@@ -285,6 +285,176 @@ export function startTelemetryServer({ sk, alerts, advisor, config }) {
       res.status(502).json({ error: 'Simulator not reachable' });
     }
   });
+
+  // ══════════════════════════════════════════════════════
+  // CONFIG API — Read/write boat-config.json sections
+  // ══════════════════════════════════════════════════════
+
+  if (configManager) {
+    app.get('/api/config/:section', (req, res) => {
+      const data = configManager.get(req.params.section);
+      if (data === undefined) return res.status(404).json({ error: 'Section not found' });
+      res.json(data);
+    });
+
+    app.put('/api/config/:section', (req, res) => {
+      try {
+        configManager.update(req.params.section, req.body);
+        res.json({ ok: true, section: req.params.section });
+      } catch (e) {
+        res.status(400).json({ error: e.message });
+      }
+    });
+  }
+
+  // ══════════════════════════════════════════════════════
+  // RULES API — CRUD for alert rules
+  // ══════════════════════════════════════════════════════
+
+  if (configManager) {
+    app.get('/api/rules', (req, res) => {
+      res.json(configManager.get('rules') || []);
+    });
+
+    app.post('/api/rules', (req, res) => {
+      const rule = req.body;
+      if (!rule.id) rule.id = configManager.generateId();
+      if (rule.enabled === undefined) rule.enabled = true;
+      const errors = configManager.validateRule(rule);
+      if (errors.length) return res.status(400).json({ errors });
+      const rules = configManager.get('rules') || [];
+      if (rules.find(r => r.id === rule.id)) return res.status(409).json({ error: 'Rule ID already exists' });
+      rules.push(rule);
+      configManager.update('rules', rules);
+      if (alerts) alerts.setRules(rules);
+      res.status(201).json(rule);
+    });
+
+    app.put('/api/rules/:id', (req, res) => {
+      const rules = configManager.get('rules') || [];
+      const idx = rules.findIndex(r => r.id === req.params.id);
+      if (idx < 0) return res.status(404).json({ error: 'Rule not found' });
+      const updated = { ...rules[idx], ...req.body, id: req.params.id };
+      const errors = configManager.validateRule(updated);
+      if (errors.length) return res.status(400).json({ errors });
+      rules[idx] = updated;
+      configManager.update('rules', rules);
+      if (alerts) alerts.setRules(rules);
+      res.json(updated);
+    });
+
+    app.delete('/api/rules/:id', (req, res) => {
+      const rules = configManager.get('rules') || [];
+      const idx = rules.findIndex(r => r.id === req.params.id);
+      if (idx < 0) return res.status(404).json({ error: 'Rule not found' });
+      rules.splice(idx, 1);
+      configManager.update('rules', rules);
+      if (alerts) alerts.setRules(rules);
+      res.json({ ok: true });
+    });
+  }
+
+  // ══════════════════════════════════════════════════════
+  // SCHEDULES API — CRUD for scheduled tasks
+  // ══════════════════════════════════════════════════════
+
+  if (configManager) {
+    app.get('/api/schedules', (req, res) => {
+      res.json(configManager.get('schedules') || []);
+    });
+
+    app.post('/api/schedules', (req, res) => {
+      const sched = req.body;
+      if (!sched.id) sched.id = configManager.generateId();
+      if (sched.enabled === undefined) sched.enabled = true;
+      const errors = configManager.validateSchedule(sched);
+      if (errors.length) return res.status(400).json({ errors });
+      const schedules = configManager.get('schedules') || [];
+      schedules.push(sched);
+      configManager.update('schedules', schedules);
+      if (scheduler) scheduler.reload();
+      res.status(201).json(sched);
+    });
+
+    app.put('/api/schedules/:id', (req, res) => {
+      const schedules = configManager.get('schedules') || [];
+      const idx = schedules.findIndex(s => s.id === req.params.id);
+      if (idx < 0) return res.status(404).json({ error: 'Schedule not found' });
+      const updated = { ...schedules[idx], ...req.body, id: req.params.id };
+      const errors = configManager.validateSchedule(updated);
+      if (errors.length) return res.status(400).json({ errors });
+      schedules[idx] = updated;
+      configManager.update('schedules', schedules);
+      if (scheduler) scheduler.reload();
+      res.json(updated);
+    });
+
+    app.delete('/api/schedules/:id', (req, res) => {
+      const schedules = configManager.get('schedules') || [];
+      const idx = schedules.findIndex(s => s.id === req.params.id);
+      if (idx < 0) return res.status(404).json({ error: 'Schedule not found' });
+      schedules.splice(idx, 1);
+      configManager.update('schedules', schedules);
+      if (scheduler) scheduler.reload();
+      res.json({ ok: true });
+    });
+  }
+
+  // ══════════════════════════════════════════════════════
+  // PROFILES API — User profile management
+  // ══════════════════════════════════════════════════════
+
+  if (profileManager) {
+    app.get('/api/profiles', (req, res) => {
+      res.json({
+        profiles: profileManager.getAllProfiles(),
+        active: profileManager.getActive(),
+      });
+    });
+
+    app.get('/api/profiles/active', (req, res) => {
+      const activeId = profileManager.getActive();
+      const profile = activeId ? profileManager.getProfile(activeId) : null;
+      res.json({ active: activeId, profile });
+    });
+
+    app.put('/api/profiles/active', (req, res) => {
+      const { profileId } = req.body;
+      const profile = profileManager.setActive(profileId || null);
+      res.json({ active: profileId, profile });
+    });
+
+    app.post('/api/profiles', (req, res) => {
+      const profile = profileManager.createCustom(req.body);
+      res.status(201).json(profile);
+    });
+
+    app.put('/api/profiles/:id', (req, res) => {
+      const updated = profileManager.updateProfile(req.params.id, req.body);
+      if (!updated) return res.status(404).json({ error: 'Profile not found' });
+      res.json(updated);
+    });
+  }
+
+  // ══════════════════════════════════════════════════════
+  // TEMPLATES API — Message template management
+  // ══════════════════════════════════════════════════════
+
+  if (configManager) {
+    app.get('/api/templates', (req, res) => {
+      res.json(configManager.get('templates') || {});
+    });
+
+    app.put('/api/templates', (req, res) => {
+      const templates = req.body;
+      for (const [key, val] of Object.entries(templates)) {
+        if (typeof val !== 'string') return res.status(400).json({ error: `Template "${key}" must be a string` });
+        if (val.length > 2000) return res.status(400).json({ error: `Template "${key}" exceeds 2000 chars` });
+      }
+      configManager.update('templates', templates);
+      res.json({ ok: true });
+    });
+  }
 
   // ── Health check ──────────────────────────────────────
   app.get('/api/health', (req, res) => {

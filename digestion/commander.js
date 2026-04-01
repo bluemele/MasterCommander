@@ -10,7 +10,7 @@
 //   node commander.js --config my.json   # custom config
 // ============================================================
 
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
+import { writeFileSync, existsSync, mkdirSync } from 'fs';
 import { SignalKClient } from './lib/signalk-client.js';
 import { AlertEngine } from './lib/alert-engine.js';
 import { LLMRouter } from './lib/llm-router.js';
@@ -22,6 +22,10 @@ import { PolarEngine } from './lib/intelligence/polar-engine.js';
 import { TacticalAdvisor } from './lib/intelligence/tactical-advisor.js';
 import { WeatherIntelligence } from './lib/intelligence/weather-intelligence.js';
 import { EnergyManager } from './lib/intelligence/energy-manager.js';
+import { ConfigManager } from './lib/config-manager.js';
+import { TemplateEngine } from './lib/template-engine.js';
+import { ProfileManager } from './lib/profile-manager.js';
+import { Scheduler } from './lib/scheduler.js';
 
 // ── Parse CLI args ───────────────────────────────────────
 const args = process.argv.slice(2);
@@ -37,9 +41,14 @@ if (!existsSync(configFile)) {
   process.exit(1);
 }
 
-const config = JSON.parse(readFileSync(configFile, 'utf8'));
+const configManager = new ConfigManager(configFile);
+const config = configManager.getAll();
 const dataDir = config.dataDir || './data';
 if (!existsSync(dataDir)) mkdirSync(dataDir, { recursive: true });
+
+// ── New module managers ─────────────────────────────────
+const templateEngine = new TemplateEngine(configManager);
+const profileManager = new ProfileManager(configManager);
 
 // ── Banner ───────────────────────────────────────────────
 console.log(`
@@ -54,10 +63,13 @@ console.log(`
 // ── Initialize components ────────────────────────────────
 const sk = new SignalKClient(config.signalk || {});
 const alerts = new AlertEngine(sk, config);
+alerts.setRules(configManager.get('rules'));
+
 const llm = new LLMRouter(config.llm || {});
 const status = new StatusBuilder(sk, config);
 
 // ── Initialize Intelligence Layer ──────────────────────
+const intervals = configManager.get('intelligence')?.intervals || {};
 let advisor = null;
 try {
   const polar = new PolarEngine();
@@ -75,9 +87,9 @@ try {
     },
   });
 
-  advisor.register('tactical', tactical, 30);
-  advisor.register('weather', weather, 60);
-  advisor.register('energy', energy, 30);
+  advisor.register('tactical', tactical, intervals.tactical || 30);
+  advisor.register('weather', weather, intervals.weather || 60);
+  advisor.register('energy', energy, intervals.energy || 30);
   console.log('🧠 Intelligence layer initialized');
 } catch (e) {
   console.warn('⚠️  Intelligence layer failed to load:', e.message);
@@ -95,6 +107,9 @@ if (!noWhatsApp && config.whatsapp?.adminNumber) {
     triggerWord: config.whatsapp.triggerWord || 'commander',
   });
 }
+
+// ── Scheduler ───────────────────────────────────────────
+const scheduler = new Scheduler({ configManager, templateEngine, sk, wa });
 
 // ── Quick command routing (no LLM needed) ────────────────
 const COMMANDS = {
@@ -186,6 +201,9 @@ alerts.on('alert', async (alert) => {
   // Forward to advisor for contextual recommendation
   if (advisor) advisor.processAlert(alert);
 
+  // Check profile filter
+  if (!profileManager.shouldReceiveAlert(alert.severity)) return;
+
   if (wa?.connected) {
     const sent = await wa.sendAlert(alert.message);
     if (!sent) pendingAlerts.push(alert);
@@ -225,9 +243,13 @@ sk.on('discovered', (item) => {
 // ── Start everything ─────────────────────────────────────
 sk.connect();
 alerts.start();
+scheduler.start();
 
 // Start telemetry API for dashboard gauges
-const telemetry = startTelemetryServer({ sk, alerts, advisor, config });
+const telemetry = startTelemetryServer({
+  sk, alerts, advisor, config,
+  configManager, profileManager, templateEngine, scheduler,
+});
 
 // Start advisor after SignalK connects (needs live data)
 if (advisor) {
@@ -260,9 +282,10 @@ if (wa) {
 process.on('SIGINT', () => {
   console.log('\n⚓ Commander shutting down...');
   alerts.stop();
+  scheduler.stop();
   if (advisor) advisor.stop();
   process.exit(0);
 });
 
 // ── Export for testing / integration ─────────────────────
-export { sk, alerts, llm, status, handleMessage, config };
+export { sk, alerts, llm, status, handleMessage, config, configManager, profileManager, scheduler };

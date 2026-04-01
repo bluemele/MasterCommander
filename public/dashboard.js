@@ -1000,9 +1000,485 @@
   }
 
   // ── Settings Page ──
+  // ══════════════════════════════════════════════════════
+  // SETTINGS — Tabbed configuration center
+  // ══════════════════════════════════════════════════════
+
+  var settingsTab = 'rules';
+
   async function renderSettings() {
     app.innerHTML =
       '<div class="fleet-header"><h1>Settings</h1></div>' +
+      '<div class="settings-tabs" id="settings-tabs">' +
+      '<button class="settings-tab' + (settingsTab === 'rules' ? ' active' : '') + '" data-stab="rules">Alert Rules</button>' +
+      '<button class="settings-tab' + (settingsTab === 'schedules' ? ' active' : '') + '" data-stab="schedules">Schedules</button>' +
+      '<button class="settings-tab' + (settingsTab === 'profiles' ? ' active' : '') + '" data-stab="profiles">Profiles</button>' +
+      '<button class="settings-tab' + (settingsTab === 'templates' ? ' active' : '') + '" data-stab="templates">Templates</button>' +
+      '<button class="settings-tab' + (settingsTab === 'modules' ? ' active' : '') + '" data-stab="modules">Modules</button>' +
+      '<button class="settings-tab' + (settingsTab === 'boat' ? ' active' : '') + '" data-stab="boat">Boat Config</button>' +
+      '<button class="settings-tab' + (settingsTab === 'account' ? ' active' : '') + '" data-stab="account">Account</button>' +
+      '</div>' +
+      '<div id="settings-content"></div>';
+
+    document.getElementById('settings-tabs').addEventListener('click', function(e) {
+      var tab = e.target.closest('.settings-tab');
+      if (!tab) return;
+      document.querySelectorAll('.settings-tab').forEach(function(t) { t.classList.remove('active'); });
+      tab.classList.add('active');
+      settingsTab = tab.getAttribute('data-stab');
+      renderSettingsTab(settingsTab);
+    });
+
+    renderSettingsTab(settingsTab);
+  }
+
+  function renderSettingsTab(tab) {
+    switch (tab) {
+      case 'rules': return renderSettingsRules();
+      case 'schedules': return renderSettingsSchedules();
+      case 'profiles': return renderSettingsProfiles();
+      case 'templates': return renderSettingsTemplates();
+      case 'modules': return renderSettingsModules();
+      case 'boat': return renderSettingsBoat();
+      case 'account': return renderSettingsAccount();
+    }
+  }
+
+  // ── RULES TAB ──────────────────────────────────────────
+
+  async function renderSettingsRules() {
+    var el = document.getElementById('settings-content');
+    el.innerHTML = '<p style="color:var(--slate)">Loading rules...</p>';
+    try {
+      var rules = await api('/api/rules');
+      var html = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">' +
+        '<span style="font-size:.82rem;color:var(--slate)">' + rules.length + ' rules configured</span>' +
+        '<button class="btn btn-sky btn-sm" id="add-rule-btn">+ Add Rule</button></div>';
+      for (var i = 0; i < rules.length; i++) {
+        var r = rules[i];
+        html += '<div class="rule-card">' +
+          '<div class="rule-card-header">' +
+          '<div style="display:flex;align-items:center;gap:8px">' +
+          '<span class="rule-card-name">' + esc(r.name || r.id) + '</span>' +
+          '<span class="severity-badge ' + esc(r.severity) + '">' + esc(r.severity) + '</span>' +
+          '</div>' +
+          '<div class="rule-card-actions">' +
+          '<label class="toggle"><input type="checkbox" data-rule-toggle="' + esc(r.id) + '"' + (r.enabled ? ' checked' : '') + '><span class="toggle-slider"></span></label>' +
+          '<button class="btn btn-outline btn-sm" data-rule-edit="' + esc(r.id) + '">Edit</button>' +
+          '<button class="btn btn-outline btn-sm" style="color:var(--red)" data-rule-del="' + esc(r.id) + '">Delete</button>' +
+          '</div></div>' +
+          '<div class="rule-card-detail">' +
+          '<div class="telem-row"><span class="telem-label">Trigger</span><span class="telem-value">' + esc(r.trigger) + ' ' + esc(r.condition.op) + ' ' + r.condition.value + '</span></div>' +
+          '<div class="telem-row"><span class="telem-label">Cooldown</span><span class="telem-value">' + formatCooldown(r.cooldownMs) + '</span></div>' +
+          '</div></div>';
+      }
+      el.innerHTML = html;
+
+      // Toggle handlers
+      el.querySelectorAll('[data-rule-toggle]').forEach(function(inp) {
+        inp.addEventListener('change', async function() {
+          await apiPut('/api/rules/' + inp.getAttribute('data-rule-toggle'), { enabled: inp.checked });
+        });
+      });
+
+      // Delete handlers
+      el.querySelectorAll('[data-rule-del]').forEach(function(btn) {
+        btn.addEventListener('click', async function() {
+          if (!confirm('Delete this rule?')) return;
+          await apiDelete('/api/rules/' + btn.getAttribute('data-rule-del'));
+          renderSettingsRules();
+        });
+      });
+
+      // Edit handlers
+      el.querySelectorAll('[data-rule-edit]').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          var rule = rules.find(function(r) { return r.id === btn.getAttribute('data-rule-edit'); });
+          if (rule) showRuleModal(rule);
+        });
+      });
+
+      // Add handler
+      document.getElementById('add-rule-btn').addEventListener('click', function() { showRuleModal(null); });
+    } catch (e) {
+      el.innerHTML = '<p style="color:var(--red)">' + esc(e.message) + '</p>';
+    }
+  }
+
+  function formatCooldown(ms) {
+    if (!ms) return '1 min';
+    if (ms >= 3600000) return (ms / 3600000) + ' hr';
+    return (ms / 60000) + ' min';
+  }
+
+  function showRuleModal(existing) {
+    var isEdit = !!existing;
+    var m = document.createElement('div');
+    m.className = 'modal-overlay open';
+    m.innerHTML =
+      '<div class="modal">' +
+      '<button class="modal-close" onclick="this.closest(\'.modal-overlay\').remove()">&times;</button>' +
+      '<h2>' + (isEdit ? 'Edit' : 'Add') + ' Alert Rule</h2>' +
+      '<div class="modal-form">' +
+      '<label>Name<input id="rm-name" value="' + esc(existing?.name || '') + '"></label>' +
+      '<label>Trigger Path<input id="rm-trigger" placeholder="e.g. batteries.*.soc" value="' + esc(existing?.trigger || '') + '"></label>' +
+      '<label>Operator<select id="rm-op">' +
+      ['<','>','<=','>=','==','!='].map(function(op) { return '<option' + (existing?.condition?.op === op ? ' selected' : '') + '>' + op + '</option>'; }).join('') +
+      '</select></label>' +
+      '<label>Value<input id="rm-value" type="number" value="' + (existing?.condition?.value ?? '') + '"></label>' +
+      '<label>Severity<select id="rm-severity">' +
+      ['critical','warning','info'].map(function(s) { return '<option' + (existing?.severity === s ? ' selected' : '') + '>' + s + '</option>'; }).join('') +
+      '</select></label>' +
+      '<label>Cooldown (seconds)<input id="rm-cooldown" type="number" value="' + ((existing?.cooldownMs || 60000) / 1000) + '"></label>' +
+      '<label class="full">Message Template<input id="rm-message" value="' + esc(existing?.message || '') + '" placeholder="{{value}}, {{id}}, {{threshold}}"></label>' +
+      '<div class="modal-error" id="rm-error"></div>' +
+      '<div class="modal-btns">' +
+      '<button class="btn btn-sky" id="rm-save">' + (isEdit ? 'Save' : 'Create') + '</button>' +
+      '<button class="btn btn-outline" onclick="this.closest(\'.modal-overlay\').remove()">Cancel</button>' +
+      '</div></div></div>';
+    document.body.appendChild(m);
+
+    document.getElementById('rm-save').addEventListener('click', async function() {
+      var err = document.getElementById('rm-error');
+      var rule = {
+        name: document.getElementById('rm-name').value.trim(),
+        trigger: document.getElementById('rm-trigger').value.trim(),
+        condition: { op: document.getElementById('rm-op').value, value: parseFloat(document.getElementById('rm-value').value) },
+        severity: document.getElementById('rm-severity').value,
+        cooldownMs: parseInt(document.getElementById('rm-cooldown').value) * 1000,
+        message: document.getElementById('rm-message').value.trim(),
+      };
+      if (!rule.name) { err.textContent = 'Name required'; return; }
+      if (!rule.trigger) { err.textContent = 'Trigger path required'; return; }
+      try {
+        if (isEdit) { await apiPut('/api/rules/' + existing.id, rule); }
+        else { await apiPost('/api/rules', rule); }
+        m.remove();
+        renderSettingsRules();
+      } catch (e) { err.textContent = e.message; }
+    });
+  }
+
+  // ── SCHEDULES TAB ──────────────────────────────────────
+
+  async function renderSettingsSchedules() {
+    var el = document.getElementById('settings-content');
+    el.innerHTML = '<p style="color:var(--slate)">Loading schedules...</p>';
+    try {
+      var scheds = await api('/api/schedules');
+      var html = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">' +
+        '<span style="font-size:.82rem;color:var(--slate)">' + scheds.length + ' schedules</span>' +
+        '<button class="btn btn-sky btn-sm" id="add-sched-btn">+ Add Schedule</button></div>';
+      if (scheds.length === 0) {
+        html += '<div class="card"><p style="color:var(--slate);text-align:center;padding:24px 0">No scheduled tasks yet. Add a daily digest, maintenance reminder, or watch handoff.</p></div>';
+      }
+      for (var i = 0; i < scheds.length; i++) {
+        var s = scheds[i];
+        var timing = s.type === 'daily' ? 'Daily at ' + s.time : s.type === 'weekly' ? esc(s.day) + ' at ' + s.time : 'Every ' + esc(s.interval);
+        html += '<div class="sched-card">' +
+          '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">' +
+          '<div style="display:flex;align-items:center;gap:8px">' +
+          '<span class="rule-card-name">' + esc(s.name || s.id) + '</span>' +
+          '<span class="sched-type-badge">' + esc(s.type) + '</span>' +
+          '</div>' +
+          '<div class="rule-card-actions">' +
+          '<label class="toggle"><input type="checkbox" data-sched-toggle="' + esc(s.id) + '"' + (s.enabled ? ' checked' : '') + '><span class="toggle-slider"></span></label>' +
+          '<button class="btn btn-outline btn-sm" style="color:var(--red)" data-sched-del="' + esc(s.id) + '">Delete</button>' +
+          '</div></div>' +
+          '<div class="rule-card-detail">' +
+          '<div class="telem-row"><span class="telem-label">Timing</span><span class="telem-value">' + timing + '</span></div>' +
+          '<div class="telem-row"><span class="telem-label">Action</span><span class="telem-value">' + esc(s.action) + '</span></div>' +
+          '</div></div>';
+      }
+      el.innerHTML = html;
+
+      el.querySelectorAll('[data-sched-toggle]').forEach(function(inp) {
+        inp.addEventListener('change', async function() {
+          await apiPut('/api/schedules/' + inp.getAttribute('data-sched-toggle'), { enabled: inp.checked });
+        });
+      });
+      el.querySelectorAll('[data-sched-del]').forEach(function(btn) {
+        btn.addEventListener('click', async function() {
+          if (!confirm('Delete this schedule?')) return;
+          await apiDelete('/api/schedules/' + btn.getAttribute('data-sched-del'));
+          renderSettingsSchedules();
+        });
+      });
+
+      document.getElementById('add-sched-btn').addEventListener('click', function() {
+        var m = document.createElement('div');
+        m.className = 'modal-overlay open';
+        m.innerHTML =
+          '<div class="modal">' +
+          '<button class="modal-close" onclick="this.closest(\'.modal-overlay\').remove()">&times;</button>' +
+          '<h2>Add Schedule</h2>' +
+          '<div class="modal-form">' +
+          '<label>Name<input id="sm-name"></label>' +
+          '<label>Type<select id="sm-type"><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="interval">Interval</option></select></label>' +
+          '<label>Time (HH:MM)<input id="sm-time" placeholder="07:00"></label>' +
+          '<label>Day (weekly only)<select id="sm-day"><option value="monday">Monday</option><option value="tuesday">Tuesday</option><option value="wednesday">Wednesday</option><option value="thursday">Thursday</option><option value="friday">Friday</option><option value="saturday">Saturday</option><option value="sunday">Sunday</option></select></label>' +
+          '<label>Interval (e.g. 30m, 2h)<input id="sm-interval" placeholder="30m"></label>' +
+          '<label>Action<select id="sm-action"><option value="digest">Status Digest</option><option value="maintenance">Maintenance Check</option><option value="watchHandoff">Watch Handoff</option><option value="custom">Custom Message</option></select></label>' +
+          '<label class="full">Recipients (comma-separated phone numbers)<input id="sm-recipients" placeholder="18681234567"></label>' +
+          '<div class="modal-error" id="sm-error"></div>' +
+          '<div class="modal-btns">' +
+          '<button class="btn btn-sky" id="sm-save">Create</button>' +
+          '<button class="btn btn-outline" onclick="this.closest(\'.modal-overlay\').remove()">Cancel</button>' +
+          '</div></div></div>';
+        document.body.appendChild(m);
+
+        document.getElementById('sm-save').addEventListener('click', async function() {
+          var err = document.getElementById('sm-error');
+          var sched = {
+            name: document.getElementById('sm-name').value.trim(),
+            type: document.getElementById('sm-type').value,
+            time: document.getElementById('sm-time').value.trim(),
+            day: document.getElementById('sm-day').value,
+            interval: document.getElementById('sm-interval').value.trim(),
+            action: document.getElementById('sm-action').value,
+            enabled: true,
+            recipients: document.getElementById('sm-recipients').value.split(',').map(function(s) { return s.trim(); }).filter(Boolean),
+          };
+          if (!sched.name) { err.textContent = 'Name required'; return; }
+          try {
+            await apiPost('/api/schedules', sched);
+            m.remove();
+            renderSettingsSchedules();
+          } catch (e) { err.textContent = (e.message || JSON.stringify(e)); }
+        });
+      });
+    } catch (e) {
+      el.innerHTML = '<p style="color:var(--red)">' + esc(e.message) + '</p>';
+    }
+  }
+
+  // ── PROFILES TAB ───────────────────────────────────────
+
+  async function renderSettingsProfiles() {
+    var el = document.getElementById('settings-content');
+    el.innerHTML = '<p style="color:var(--slate)">Loading profiles...</p>';
+    try {
+      var data = await api('/api/profiles');
+      var profiles = data.profiles;
+      var active = data.active;
+      var html = '<p style="font-size:.82rem;color:var(--slate);margin-bottom:16px">Profiles control which alerts, modules, and dashboard panels are visible. Select one to filter your experience.</p>';
+      html += '<div class="fleet-grid">';
+      for (var i = 0; i < profiles.length; i++) {
+        var p = profiles[i];
+        var isActive = p.id === active;
+        html += '<div class="card" style="cursor:pointer;' + (isActive ? 'border-color:var(--sky);background:rgba(14,165,233,.03)' : '') + '" data-profile-id="' + esc(p.id) + '">' +
+          '<div style="display:flex;justify-content:space-between;align-items:center">' +
+          '<h2 style="margin:0;border:none">' + esc(p.name || p.id) + '</h2>' +
+          (isActive ? '<span class="severity-badge info">ACTIVE</span>' : '') +
+          '</div>' +
+          '<div style="margin-top:8px">' +
+          '<div class="telem-row"><span class="telem-label">Alerts</span><span class="telem-value">' + (p.alerts || []).join(', ') + '</span></div>' +
+          '<div class="telem-row"><span class="telem-label">Modules</span><span class="telem-value">' + (p.modules || []).join(', ') + '</span></div>' +
+          '<div class="telem-row"><span class="telem-label">Panels</span><span class="telem-value">' + (p.panels || []).length + ' visible</span></div>' +
+          '</div></div>';
+      }
+      html += '</div>';
+      el.innerHTML = html;
+
+      el.querySelectorAll('[data-profile-id]').forEach(function(card) {
+        card.addEventListener('click', async function() {
+          var id = card.getAttribute('data-profile-id');
+          var newActive = (id === active) ? null : id; // toggle off if clicking active
+          await apiPut('/api/profiles/active', { profileId: newActive });
+          loadProfileSelector(); // refresh nav dropdown
+          renderSettingsProfiles();
+        });
+      });
+    } catch (e) {
+      el.innerHTML = '<p style="color:var(--red)">' + esc(e.message) + '</p>';
+    }
+  }
+
+  // ── TEMPLATES TAB ──────────────────────────────────────
+
+  async function renderSettingsTemplates() {
+    var el = document.getElementById('settings-content');
+    el.innerHTML = '<p style="color:var(--slate)">Loading templates...</p>';
+    try {
+      var templates = await api('/api/templates');
+      var vars = '{{boat.name}}, {{battery.soc}}, {{battery.voltage}}, {{engine.status}}, {{navigation.sog}}, {{navigation.heading}}, {{navigation.position}}, {{environment.windSpeed}}, {{environment.depth}}, {{time}}, {{date}}, {{severity}}, {{message}}, {{value}}, {{id}}, {{threshold}}, {{task.name}}';
+      var html = '<div class="card" style="max-width:700px">';
+      var keys = Object.keys(templates);
+      for (var i = 0; i < keys.length; i++) {
+        var key = keys[i];
+        html += '<div class="tpl-field">' +
+          '<label>' + esc(key) + '</label>' +
+          '<textarea id="tpl-' + esc(key) + '">' + esc(templates[key]) + '</textarea>' +
+          '<div class="tpl-vars">Variables: ' + vars + '</div>' +
+          '</div>';
+      }
+      html += '<button class="btn btn-sky btn-sm" id="save-templates">Save Templates</button>' +
+        '<div class="settings-msg" id="tpl-msg"></div>' +
+        '</div>';
+      el.innerHTML = html;
+
+      document.getElementById('save-templates').addEventListener('click', async function() {
+        var msg = document.getElementById('tpl-msg');
+        msg.textContent = ''; msg.className = 'settings-msg';
+        var updated = {};
+        for (var j = 0; j < keys.length; j++) {
+          updated[keys[j]] = document.getElementById('tpl-' + keys[j]).value;
+        }
+        try {
+          await apiPut('/api/templates', updated);
+          msg.textContent = 'Templates saved.'; msg.className = 'settings-msg success';
+        } catch (e) { msg.textContent = e.message; msg.className = 'settings-msg error'; }
+      });
+    } catch (e) {
+      el.innerHTML = '<p style="color:var(--red)">' + esc(e.message) + '</p>';
+    }
+  }
+
+  // ── MODULES TAB ────────────────────────────────────────
+
+  async function renderSettingsModules() {
+    var el = document.getElementById('settings-content');
+    el.innerHTML = '<p style="color:var(--slate)">Loading module config...</p>';
+    try {
+      var intel = await api('/api/config/intelligence');
+      var intervals = intel.intervals || {};
+      var html = '<div class="card" style="max-width:500px">' +
+        '<h2>Intelligence Modules</h2>' +
+        '<p style="font-size:.78rem;color:var(--slate);margin-bottom:16px">Set how often each module analyzes boat data.</p>';
+      var mods = [
+        { key: 'tactical', name: 'Tactical Advisor', desc: 'Course optimization, VMG, wave comfort' },
+        { key: 'weather', name: 'Weather Intelligence', desc: 'Barometric trends, reef timing, wind shifts' },
+        { key: 'energy', name: 'Energy Manager', desc: 'Battery projection, solar, generator scheduling' },
+      ];
+      for (var i = 0; i < mods.length; i++) {
+        var mod = mods[i];
+        html += '<div class="config-row" style="margin-bottom:16px">' +
+          '<label style="flex:1"><strong>' + mod.name + '</strong><br><span style="font-weight:400;font-size:.72rem">' + mod.desc + '</span></label>' +
+          '<input type="number" id="mod-' + mod.key + '" value="' + (intervals[mod.key] || 30) + '" min="5" max="300" style="width:70px">' +
+          '<span class="unit">sec</span>' +
+          '</div>';
+      }
+      html += '<div class="config-row" style="margin-bottom:16px">' +
+        '<label style="flex:1"><strong>Dedup Window</strong><br><span style="font-weight:400;font-size:.72rem">Minimum time between duplicate recommendations</span></label>' +
+        '<input type="number" id="mod-dedup" value="' + (intel.dedupWindowMin || 15) + '" min="1" max="120" style="width:70px">' +
+        '<span class="unit">min</span>' +
+        '</div>';
+      html += '<button class="btn btn-sky btn-sm" id="save-modules">Save</button>' +
+        '<div class="settings-msg" id="mod-msg"></div></div>';
+      el.innerHTML = html;
+
+      document.getElementById('save-modules').addEventListener('click', async function() {
+        var msg = document.getElementById('mod-msg');
+        msg.textContent = ''; msg.className = 'settings-msg';
+        try {
+          await apiPut('/api/config/intelligence', {
+            intervals: {
+              tactical: parseInt(document.getElementById('mod-tactical').value) || 30,
+              weather: parseInt(document.getElementById('mod-weather').value) || 60,
+              energy: parseInt(document.getElementById('mod-energy').value) || 30,
+            },
+            dedupWindowMin: parseInt(document.getElementById('mod-dedup').value) || 15,
+          });
+          msg.textContent = 'Module config saved. Restart Commander to apply interval changes.'; msg.className = 'settings-msg success';
+        } catch (e) { msg.textContent = e.message; msg.className = 'settings-msg error'; }
+      });
+    } catch (e) {
+      el.innerHTML = '<p style="color:var(--red)">' + esc(e.message) + '</p>';
+    }
+  }
+
+  // ── BOAT CONFIG TAB ────────────────────────────────────
+
+  async function renderSettingsBoat() {
+    var el = document.getElementById('settings-content');
+    el.innerHTML = '<p style="color:var(--slate)">Loading boat config...</p>';
+    try {
+      var eng = await api('/api/config/engines');
+      var batt = await api('/api/config/batteries');
+      var tanks = await api('/api/config/tanks');
+      var safety = await api('/api/config/safety');
+
+      var engT = eng?.thresholds || {};
+      var battT = batt?.thresholds || {};
+      var tankT = tanks?.thresholds || {};
+
+      var html = '<div style="max-width:600px">';
+
+      html += '<div class="config-section"><h3>Engine Thresholds</h3>' +
+        configRow('bc-eng-coolant', 'Max Coolant Temp', engT.coolantTempMax ?? 95, '°C') +
+        configRow('bc-eng-oil', 'Min Oil Pressure', engT.oilPressureMin ?? 25, 'PSI') +
+        configRow('bc-eng-exhaust', 'Max Exhaust Temp', engT.exhaustTempMax ?? 500, '°C') +
+        '</div>';
+
+      html += '<div class="config-section"><h3>Battery Thresholds</h3>' +
+        configRow('bc-batt-warn', 'SOC Warning', battT.socWarning ?? 20, '%') +
+        configRow('bc-batt-crit', 'SOC Critical', battT.socCritical ?? 10, '%') +
+        '</div>';
+
+      html += '<div class="config-section"><h3>Tank Thresholds</h3>' +
+        configRow('bc-tank-fuel', 'Fuel Low', tankT.fuelLow ?? 15, '%') +
+        configRow('bc-tank-water', 'Water Low', tankT.waterLow ?? 15, '%') +
+        '</div>';
+
+      html += '<div class="config-section"><h3>Safety</h3>' +
+        configRow('bc-depth', 'Min Depth', safety.depthMinimum ?? 2.5, 'm') +
+        configRow('bc-anchor', 'Anchor Alarm Radius', safety.anchorAlarmRadius ?? 30, 'm') +
+        configRow('bc-bilge-max', 'Max Bilge Cycles', safety.bilgeCyclesMax ?? 6, '') +
+        configRow('bc-bilge-win', 'Bilge Window', safety.bilgeWindowMinutes ?? 30, 'min') +
+        '</div>';
+
+      html += '<button class="btn btn-sky btn-sm" id="save-boat">Save Boat Config</button>' +
+        '<div class="settings-msg" id="bc-msg"></div></div>';
+      el.innerHTML = html;
+
+      document.getElementById('save-boat').addEventListener('click', async function() {
+        var msg = document.getElementById('bc-msg');
+        msg.textContent = ''; msg.className = 'settings-msg';
+        try {
+          eng.thresholds = {
+            coolantTempMax: parseFloat(document.getElementById('bc-eng-coolant').value),
+            oilPressureMin: parseFloat(document.getElementById('bc-eng-oil').value),
+            exhaustTempMax: parseFloat(document.getElementById('bc-eng-exhaust').value),
+          };
+          batt.thresholds = {
+            socWarning: parseFloat(document.getElementById('bc-batt-warn').value),
+            socCritical: parseFloat(document.getElementById('bc-batt-crit').value),
+          };
+          tanks.thresholds = {
+            fuelLow: parseFloat(document.getElementById('bc-tank-fuel').value),
+            waterLow: parseFloat(document.getElementById('bc-tank-water').value),
+          };
+          var safetyUpdate = {
+            depthMinimum: parseFloat(document.getElementById('bc-depth').value),
+            anchorAlarmRadius: parseFloat(document.getElementById('bc-anchor').value),
+            bilgeCyclesMax: parseInt(document.getElementById('bc-bilge-max').value),
+            bilgeWindowMinutes: parseInt(document.getElementById('bc-bilge-win').value),
+          };
+          await apiPut('/api/config/engines', eng);
+          await apiPut('/api/config/batteries', batt);
+          await apiPut('/api/config/tanks', tanks);
+          await apiPut('/api/config/safety', safetyUpdate);
+          msg.textContent = 'Boat config saved.'; msg.className = 'settings-msg success';
+        } catch (e) { msg.textContent = e.message; msg.className = 'settings-msg error'; }
+      });
+    } catch (e) {
+      el.innerHTML = '<p style="color:var(--red)">' + esc(e.message) + '</p>';
+    }
+  }
+
+  function configRow(id, label, value, unit) {
+    return '<div class="config-row">' +
+      '<label>' + esc(label) + '</label>' +
+      '<input type="number" id="' + id + '" value="' + value + '" step="any">' +
+      (unit ? '<span class="unit">' + esc(unit) + '</span>' : '') +
+      '</div>';
+  }
+
+  // ── ACCOUNT TAB ────────────────────────────────────────
+
+  async function renderSettingsAccount() {
+    var el = document.getElementById('settings-content');
+    el.innerHTML =
       '<div class="settings-grid">' +
       '<div class="card"><h2>Profile</h2>' +
       '<div class="settings-form" id="profile-form">' +
@@ -1020,10 +1496,8 @@
       '<label>Confirm Password<input type="password" id="sf-pw-confirm"></label>' +
       '<button class="btn btn-sky btn-sm" id="save-password">Change Password</button>' +
       '<div class="settings-msg" id="password-msg"></div>' +
-      '</div></div>' +
-      '</div>';
+      '</div></div></div>';
 
-    // Load profile
     try {
       var data = await api('/api/user/profile');
       document.getElementById('sf-name').value = data.name || '';
@@ -1067,6 +1541,31 @@
       } catch (e) { msg.textContent = e.message; msg.className = 'settings-msg error'; }
     });
   }
+
+  // ── PROFILE SELECTOR (nav) ─────────────────────────────
+
+  async function loadProfileSelector() {
+    try {
+      var data = await api('/api/profiles');
+      var sel = document.getElementById('nav-profile-select');
+      if (!sel) return;
+      sel.innerHTML = '<option value="">All (no profile)</option>';
+      for (var i = 0; i < data.profiles.length; i++) {
+        var p = data.profiles[i];
+        sel.innerHTML += '<option value="' + esc(p.id) + '"' + (p.id === data.active ? ' selected' : '') + '>' + esc(p.name || p.id) + '</option>';
+      }
+      sel.addEventListener('change', async function() {
+        await apiPut('/api/profiles/active', { profileId: sel.value || null });
+      });
+    } catch (e) {
+      // Profile API not available — hide selector
+      var sel = document.getElementById('nav-profile-select');
+      if (sel) sel.style.display = 'none';
+    }
+  }
+
+  // Load profile selector on init
+  loadProfileSelector();
 
   // ── PERSONA SWITCHER ────────────────────────────────────
   var PERSONAS = [

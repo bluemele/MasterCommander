@@ -234,6 +234,58 @@ main{padding:32px 24px 64px}
   .billing-current .card{flex-direction:column;align-items:flex-start}
 }
 
+/* ── SETTINGS SUB-TABS ── */
+.settings-tabs{display:flex;gap:4px;margin-bottom:24px;flex-wrap:wrap}
+.settings-tab{padding:8px 16px;border-radius:8px;font-size:.82rem;font-weight:600;color:var(--slate);background:transparent;border:1.5px solid var(--border);cursor:pointer;transition:all .2s;font-family:inherit}
+.settings-tab:hover{border-color:var(--sky);color:var(--sky)}
+.settings-tab.active{background:var(--sky);color:#fff;border-color:var(--sky)}
+
+/* ── SEVERITY BADGES ── */
+.severity-badge{font-size:.65rem;font-weight:700;padding:2px 8px;border-radius:4px;text-transform:uppercase;letter-spacing:.03em;display:inline-block}
+.severity-badge.critical{background:#FEE2E2;color:#DC2626}
+.severity-badge.warning{background:#FEF3C7;color:#D97706}
+.severity-badge.info{background:#DBEAFE;color:#2563EB}
+
+/* ── TOGGLE SWITCH ── */
+.toggle{position:relative;display:inline-block;width:36px;height:20px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:var(--border);border-radius:20px;transition:.2s}
+.toggle-slider:before{content:'';position:absolute;height:16px;width:16px;left:2px;bottom:2px;background:#fff;border-radius:50%;transition:.2s}
+.toggle input:checked+.toggle-slider{background:var(--sky)}
+.toggle input:checked+.toggle-slider:before{transform:translateX(16px)}
+
+/* ── RULE CARD ── */
+.rule-card{background:#fff;border:1.5px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:10px}
+.rule-card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.rule-card-name{font-size:.88rem;font-weight:700;color:var(--ocean)}
+.rule-card-actions{display:flex;gap:8px;align-items:center}
+.rule-card-detail{display:flex;gap:24px;flex-wrap:wrap}
+.rule-card-detail .telem-row{flex:1;min-width:120px}
+
+/* ── SCHEDULE CARD ── */
+.sched-card{background:#fff;border:1.5px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:10px}
+.sched-type-badge{font-size:.65rem;font-weight:700;padding:2px 8px;border-radius:4px;text-transform:uppercase;background:rgba(14,165,233,.1);color:var(--sky)}
+
+/* ── TEMPLATE EDITOR ── */
+.tpl-field{margin-bottom:16px}
+.tpl-field label{display:block;font-size:.78rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--slate);margin-bottom:4px}
+.tpl-field textarea{width:100%;min-height:80px;font-family:'Courier New',monospace;font-size:.82rem;background:var(--surface);border:1.5px solid var(--border);border-radius:8px;padding:10px;resize:vertical;color:var(--text);outline:none}
+.tpl-field textarea:focus{border-color:var(--sky)}
+.tpl-vars{font-size:.68rem;color:var(--slate);margin-top:4px}
+
+/* ── NAV PROFILE SELECTOR ── */
+.nav-profile-select{padding:5px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:.78rem;font-weight:600;font-family:inherit;color:var(--text);background:#fff;cursor:pointer;outline:none}
+.nav-profile-select:focus{border-color:var(--sky)}
+
+/* ── CONFIG SECTION ── */
+.config-section{margin-bottom:24px}
+.config-section h3{font-size:.85rem;font-weight:700;color:var(--ocean);margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.config-row{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.config-row label{flex:0 0 180px;font-size:.78rem;font-weight:600;color:var(--slate)}
+.config-row input[type="number"]{width:100px;padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:.85rem;font-family:inherit;outline:none}
+.config-row input[type="number"]:focus{border-color:var(--sky)}
+.config-row .unit{font-size:.72rem;color:var(--slate)}
+
 /* ── PERSONA SWITCHER ── */
 .ps-wrap{position:fixed;bottom:0;right:24px;z-index:200;width:320px}
 .ps-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:11px 0;background:#0C4A6E;color:#fff;border:none;border-radius:10px 10px 0 0;cursor:pointer;font-family:inherit;font-size:.82rem;font-weight:600;box-shadow:0 -2px 16px rgba(0,0,0,.12);transition:background .2s}

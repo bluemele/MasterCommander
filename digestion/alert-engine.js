@@ -1,8 +1,9 @@
 // ============================================================
-// ALERT ENGINE — Auto-adapting rule-based monitoring
+// ALERT ENGINE — Configurable rule-based monitoring
 // ============================================================
-// No LLM. Pure code. Runs on anything. Rules auto-enable
-// when the relevant sensors are discovered by SignalK client.
+// Evaluates rules from config against live SignalK data.
+// Rules auto-enable when relevant sensors are discovered.
+// Special handlers for stateful checks (anchor, bilge).
 // ============================================================
 
 import { EventEmitter } from 'events';
@@ -13,9 +14,15 @@ export class AlertEngine extends EventEmitter {
     super();
     this.sk = sk;
     this.config = config;
+    this.rules = [];
     this.lastFired = {};
     this.bilgeCycles = [];
     this.interval = null;
+  }
+
+  setRules(rules) {
+    this.rules = Array.isArray(rules) ? rules : [];
+    console.log(`🚨 Alert engine loaded ${this.rules.filter(r => r.enabled).length}/${this.rules.length} rules`);
   }
 
   start(ms = 5000) {
@@ -35,92 +42,159 @@ export class AlertEngine extends EventEmitter {
 
   _check() {
     if (!this.sk.connected) return;
-    const t = this.config;
-    const battT  = t.batteries?.thresholds || {};
-    const engT   = t.engines?.thresholds || {};
-    const safeT  = t.safety || {};
-    const tankT  = t.tanks?.thresholds || {};
 
-    // ── Batteries ────────────────────────────────────────
-    for (const id of this.sk.discovered.batteries) {
-      const b = this.sk.getBattery(id);
-      if (b.soc == null) continue;
-
-      if (b.soc < (battT.socCritical ?? 10)) {
-        this._fire(`batt_crit_${id}`, 'critical', 300000,
-          `🚨 BATTERY CRITICAL [${id}]: ${b.soc}% | ${b.voltage}V | ${b.current > 0 ? '+' : ''}${b.current}A — SHED LOADS NOW`);
-      } else if (b.soc < (battT.socWarning ?? 20)) {
-        this._fire(`batt_low_${id}`, 'warning', 600000,
-          `⚠️ Battery low [${id}]: ${b.soc}% | ${b.voltage}V | ${b.current > 0 ? 'charging' : 'discharging'} ${Math.abs(b.current)}A`);
+    for (const rule of this.rules) {
+      if (!rule.enabled) continue;
+      try {
+        // Special-case handlers for stateful rules
+        if (rule.special === 'anchor_drag') {
+          this._checkAnchorDrag(rule);
+          continue;
+        }
+        if (rule.special === 'bilge') {
+          this._checkBilge(rule);
+          continue;
+        }
+        // Standard rule evaluation with wildcard expansion
+        this._evaluateRule(rule);
+      } catch (e) {
+        // Skip broken rules silently
       }
     }
+  }
 
-    // ── Engines ──────────────────────────────────────────
-    for (const id of this.sk.discovered.engines) {
-      const e = this.sk.getEngine(id);
-      if (!e.running) continue;
+  _evaluateRule(rule) {
+    const trigger = rule.trigger;
+    const wildcardMatch = trigger.match(/^(\w+)\.(\*)\.(\w+)$/);
 
-      if (e.coolantTemp != null && e.coolantTemp > (engT.coolantTempMax ?? 95)) {
-        this._fire(`eng_heat_${id}`, 'critical', 60000,
-          `🚨 ENGINE OVERHEAT [${id}]: Coolant ${e.coolantTemp}°C — check raw water intake & impeller!`);
-      }
-      if (e.oilPressure != null && e.oilPressure < (engT.oilPressureMin ?? 25)) {
-        this._fire(`eng_oil_${id}`, 'critical', 60000,
-          `🚨 LOW OIL PRESSURE [${id}]: ${e.oilPressure} PSI at ${e.rpm} RPM — reduce power, check oil level!`);
-      }
-      if (e.exhaustTemp != null && e.exhaustTemp > (engT.exhaustTempMax ?? 500)) {
-        this._fire(`eng_exhaust_${id}`, 'warning', 120000,
-          `⚠️ High exhaust temp [${id}]: ${e.exhaustTemp}°C at ${e.rpm} RPM`);
-      }
-    }
-
-    // ── Depth ────────────────────────────────────────────
-    if (this.sk.discovered.hasDepth) {
-      const depth = this.sk.get('environment.depth.belowTransducer')
-                 ?? this.sk.get('environment.depth.belowKeel');
-      if (depth != null && depth > 0 && depth < (safeT.depthMinimum ?? 2.5)) {
-        this._fire('shallow', 'warning', 60000,
-          `⚠️ SHALLOW WATER: ${depth}m — proceed with caution`);
-      }
-    }
-
-    // ── Anchor drag ──────────────────────────────────────
-    if (this.sk.discovered.hasAnchor) {
-      const anchorPos = this.sk.raw['navigation.anchor.position'];
-      const maxRadius = this.sk.raw['navigation.anchor.maxRadius'] ?? (safeT.anchorAlarmRadius ?? 30);
-      const boatPos = this.sk.getPosition();
-      if (anchorPos && boatPos) {
-        const dist = haversineM(boatPos.lat, boatPos.lon, anchorPos.latitude, anchorPos.longitude);
-        if (dist > maxRadius) {
-          const wind = this.sk.get('environment.wind.speedApparent');
-          this._fire('anchor_drag', 'critical', 120000,
-            `🚨 ANCHOR DRAG: ${Math.round(dist)}m from set point (limit ${Math.round(maxRadius)}m)${wind ? ` | Wind ${wind} kts` : ''} — CHECK ANCHOR`);
+    if (wildcardMatch) {
+      // Wildcard: e.g. "batteries.*.soc" or "engines.*.coolantTemp"
+      const [, category, , field] = wildcardMatch;
+      const ids = this._getDiscoveredIds(category);
+      for (const id of ids) {
+        const value = this._getFieldValue(category, id, field);
+        if (value == null) continue;
+        if (this._evaluate(value, rule.condition)) {
+          const ruleId = `${rule.id}_${id}`;
+          const msg = this._formatMessage(rule, value, id);
+          this._fire(ruleId, rule.severity, rule.cooldownMs || 60000, msg);
         }
       }
+    } else if (trigger.match(/^tanks\.(\w+)\.\*\.(\w+)$/)) {
+      // Tank wildcard: "tanks.fuel.*.level"
+      const parts = trigger.split('.');
+      const tankType = parts[1];
+      const field = parts[3];
+      const tankIds = this.sk.discovered.tanks?.[tankType] || [];
+      for (const id of tankIds) {
+        const tank = this.sk.getTank(tankType, id);
+        const value = tank?.[field];
+        if (value == null || value <= 0) continue;
+        if (this._evaluate(value, rule.condition)) {
+          const ruleId = `${rule.id}_${id}`;
+          const msg = this._formatMessage(rule, value, id);
+          this._fire(ruleId, rule.severity, rule.cooldownMs || 3600000, msg);
+        }
+      }
+    } else {
+      // Direct path: e.g. "environment.depth"
+      const value = this._resolveDirectPath(trigger);
+      if (value == null || value <= 0) return;
+      if (this._evaluate(value, rule.condition)) {
+        const msg = this._formatMessage(rule, value, null);
+        this._fire(rule.id, rule.severity, rule.cooldownMs || 60000, msg);
+      }
     }
+  }
 
-    // ── Bilge pump frequency ─────────────────────────────
+  _getDiscoveredIds(category) {
+    switch (category) {
+      case 'batteries': return this.sk.discovered.batteries || [];
+      case 'engines': return this.sk.discovered.engines || [];
+      default: return [];
+    }
+  }
+
+  _getFieldValue(category, id, field) {
+    if (category === 'batteries') {
+      const b = this.sk.getBattery(id);
+      return b?.[field] ?? null;
+    }
+    if (category === 'engines') {
+      const e = this.sk.getEngine(id);
+      if (!e?.running) return null; // Only check running engines
+      return e?.[field] ?? null;
+    }
+    return null;
+  }
+
+  _resolveDirectPath(trigger) {
+    // Map common trigger paths to SignalK data
+    if (trigger === 'environment.depth') {
+      if (!this.sk.discovered.hasDepth) return null;
+      return this.sk.get('environment.depth.belowTransducer')
+          ?? this.sk.get('environment.depth.belowKeel');
+    }
+    return this.sk.get(trigger);
+  }
+
+  _evaluate(value, condition) {
+    const { op, value: threshold } = condition;
+    switch (op) {
+      case '<':  return value < threshold;
+      case '>':  return value > threshold;
+      case '<=': return value <= threshold;
+      case '>=': return value >= threshold;
+      case '==': return value === threshold;
+      case '!=': return value !== threshold;
+      default:   return false;
+    }
+  }
+
+  _formatMessage(rule, value, id) {
+    if (rule.message) {
+      return rule.message
+        .replace(/\{\{value\}\}/g, typeof value === 'number' ? value.toFixed(1) : String(value))
+        .replace(/\{\{id\}\}/g, id || '')
+        .replace(/\{\{threshold\}\}/g, String(rule.condition.value))
+        .replace(/\{\{window\}\}/g, String(rule.params?.windowMinutes || ''));
+    }
+    return `${rule.severity === 'critical' ? '🚨' : '⚠️'} ${rule.name}: ${value} (threshold: ${rule.condition.op} ${rule.condition.value})`;
+  }
+
+  // ── Special handlers (stateful) ───────────────────────────
+
+  _checkAnchorDrag(rule) {
+    if (!this.sk.discovered.hasAnchor) return;
+    const anchorPos = this.sk.raw['navigation.anchor.position'];
+    const boatPos = this.sk.getPosition();
+    if (!anchorPos || !boatPos) return;
+
+    const dist = haversineM(boatPos.lat, boatPos.lon, anchorPos.latitude, anchorPos.longitude);
+    const maxRadius = this.sk.raw['navigation.anchor.maxRadius'] ?? rule.condition.value;
+
+    if (dist > maxRadius) {
+      const wind = this.sk.get('environment.wind.speedApparent');
+      const msg = rule.message
+        ? rule.message
+            .replace(/\{\{value\}\}/g, Math.round(dist))
+            .replace(/\{\{threshold\}\}/g, Math.round(maxRadius))
+        : `🚨 ANCHOR DRAG: ${Math.round(dist)}m from set point (limit ${Math.round(maxRadius)}m)`;
+      const fullMsg = wind ? `${msg} | Wind ${wind} kts` : msg;
+      this._fire('anchor_drag', rule.severity, rule.cooldownMs || 120000, fullMsg);
+    }
+  }
+
+  _checkBilge(rule) {
     const bilgeRunning = this.sk.raw['notifications.bilgePump.running'];
     if (bilgeRunning) this.bilgeCycles.push(Date.now());
-    const windowMs = (safeT.bilgeWindowMinutes ?? 30) * 60000;
-    this.bilgeCycles = this.bilgeCycles.filter(t => Date.now() - t < windowMs);
-    if (this.bilgeCycles.length > (safeT.bilgeCyclesMax ?? 6)) {
-      this._fire('bilge', 'critical', 300000,
-        `🚨 BILGE PUMP cycling: ${this.bilgeCycles.length}× in ${safeT.bilgeWindowMinutes ?? 30} min — POSSIBLE LEAK, inspect bilge!`);
-    }
 
-    // ── Tanks ────────────────────────────────────────────
-    for (const [type, ids] of Object.entries(this.sk.discovered.tanks)) {
-      for (const id of ids) {
-        const tank = this.sk.getTank(type, id);
-        if (tank.level == null) continue;
-        const threshold = type === 'fuel' ? (tankT.fuelLow ?? 15) : type === 'freshWater' ? (tankT.waterLow ?? 15) : null;
-        if (threshold && tank.level > 0 && tank.level < threshold) {
-          const emoji = type === 'fuel' ? '⛽' : '💧';
-          this._fire(`tank_${type}_${id}`, 'info', 3600000,
-            `${emoji} ${type} low [${id}]: ${tank.level}%`);
-        }
-      }
+    const windowMs = (rule.params?.windowMinutes ?? 30) * 60000;
+    this.bilgeCycles = this.bilgeCycles.filter(t => Date.now() - t < windowMs);
+
+    if (this.bilgeCycles.length > rule.condition.value) {
+      const msg = this._formatMessage(rule, this.bilgeCycles.length, null);
+      this._fire('bilge', rule.severity, rule.cooldownMs || 300000, msg);
     }
   }
 }

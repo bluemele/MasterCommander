@@ -36,7 +36,8 @@ export class SailingAdvisor extends EventEmitter {
     this._running = false;
 
     // Dedup: don't repeat same recommendation type within this window
-    this.dedupWindowMs = 15 * 60 * 1000; // 15 minutes
+    const dedupMin = config?.intelligence?.dedupWindowMin ?? 15;
+    this.dedupWindowMs = dedupMin * 60 * 1000;
   }
 
   // ── Register an intelligence module ───────────────────

@@ -57,5 +57,28 @@
     "quietHoursEnd": null,
     "criticalOverridesQuiet": true
   },
-  "dataDir": "./data"
+  "dataDir": "./data",
+  "rules": [],
+  "schedules": [],
+  "profiles": {
+    "presets": {
+      "captain": { "name": "Captain", "alerts": ["critical","warning","info"], "modules": ["tactical","weather","energy"], "panels": ["advisor","nav","engines","batt","tanks","wind","perf","energy"] },
+      "owner": { "name": "Owner", "alerts": ["critical","warning"], "modules": ["energy","weather"], "panels": ["advisor","batt","engines","tanks","energy"] },
+      "charter": { "name": "Charter Operator", "alerts": ["critical"], "modules": ["energy"], "panels": ["batt","engines","tanks"] },
+      "surveyor": { "name": "Surveyor", "alerts": ["critical","warning","info"], "modules": ["tactical","weather","energy"], "panels": ["advisor","nav","engines","batt","tanks","wind","perf","energy"] },
+      "crew": { "name": "Crew", "alerts": ["critical","warning"], "modules": ["tactical"], "panels": ["nav","wind","engines"] }
+    },
+    "active": null,
+    "custom": []
+  },
+  "templates": {
+    "alert": "{{severity}}: {{message}}",
+    "digest": "📊 Daily Report — {{boat.name}}\n🔋 Battery: {{battery.soc}}%\n⚙️ Engines: {{engine.status}}\n📍 Position: {{navigation.position}}",
+    "maintenance": "🔧 Maintenance Due: {{task.name}} at {{value}} hours",
+    "watchHandoff": "⌚ Watch handoff at {{time}}\nCourse: {{navigation.heading}}° | SOG: {{navigation.sog}}kts"
+  },
+  "intelligence": {
+    "intervals": { "tactical": 30, "weather": 60, "energy": 30 },
+    "dedupWindowMin": 15
+  }
 }
