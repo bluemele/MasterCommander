@@ -28,6 +28,11 @@ export class WeatherIntelligence {
     this._forecastCache = null;
     this._forecastFetchedAt = 0;
     this._forecastTtl = 30 * 60 * 1000; // 30 min
+
+    // TimesFM sensor forecast cache
+    this._sensorForecastCache = null;
+    this._sensorForecastAt = 0;
+    this._sensorForecastTtl = 15 * 60 * 1000; // 15 min (sensor data refreshes faster)
   }
 
   async analyze() {
@@ -230,6 +235,49 @@ export class WeatherIntelligence {
       this._forecastFetchedAt = now;
       return this._forecastCache;
     } catch {
+      return null;
+    }
+  }
+
+  // ── TimesFM sensor-based forecast ────────────────────
+  // Uses own sensor history (wind, baro, battery) for zero-shot
+  // predictions via TimesFM 2.5 on ElmoServer.
+  async getSensorForecast(horizon = 24) {
+    const now = Date.now();
+    if (this._sensorForecastCache && (now - this._sensorForecastAt) < this._sensorForecastTtl) {
+      return this._sensorForecastCache;
+    }
+
+    // Lazy-load the timesfm client
+    if (!this._timesfm) {
+      try {
+        this._timesfm = await import('../timesfm-client.js');
+      } catch {
+        return null;
+      }
+    }
+
+    const metrics = {};
+
+    // Use wind history if enough data (at least 10 points)
+    if (this.windHistory.length >= 10) {
+      metrics.wind_speed = this.windHistory.map(w => w.speed);
+    }
+
+    // Use baro history
+    if (this.baroHistory.length >= 10) {
+      metrics.pressure = this.baroHistory.map(b => b.value);
+    }
+
+    if (Object.keys(metrics).length === 0) return null;
+
+    try {
+      const result = await this._timesfm.forecastMultiMetric(metrics, horizon);
+      this._sensorForecastCache = result;
+      this._sensorForecastAt = now;
+      return result;
+    } catch (err) {
+      console.warn('[weather-intelligence] TimesFM forecast failed:', err.message);
       return null;
     }
   }

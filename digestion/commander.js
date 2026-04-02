@@ -97,12 +97,15 @@ try {
 }
 
 let wa = null;
-if (!noWhatsApp && config.whatsapp?.adminNumber) {
+const resolvedAdminNumber = config.whatsapp?.adminNumber || process.env.MC_ADMIN_NUMBER || '';
+if (!noWhatsApp && resolvedAdminNumber) {
   wa = new WhatsAppBot({
     mode: config.whatsapp.mode || 'dedicated',
     authDir: config.whatsapp.authDir || './auth',
-    adminNumber: config.whatsapp.adminNumber,
-    allowedNumbers: config.whatsapp.allowedNumbers || [],
+    adminNumber: resolvedAdminNumber,
+    allowedNumbers: config.whatsapp.allowedNumbers?.length
+      ? config.whatsapp.allowedNumbers
+      : (resolvedAdminNumber ? [resolvedAdminNumber] : []),
     respondToGroups: config.whatsapp.respondToGroups || false,
     triggerWord: config.whatsapp.triggerWord || 'commander',
   });
@@ -198,40 +201,52 @@ if (wa) {
 const pendingAlerts = [];
 
 alerts.on('alert', async (alert) => {
-  // Forward to advisor for contextual recommendation
-  if (advisor) advisor.processAlert(alert);
+  try {
+    // Forward to advisor for contextual recommendation
+    if (advisor) advisor.processAlert(alert);
 
-  // Check profile filter
-  if (!profileManager.shouldReceiveAlert(alert.severity)) return;
+    // Check profile filter
+    if (!profileManager.shouldReceiveAlert(alert.severity)) return;
 
-  if (wa?.connected) {
-    const sent = await wa.sendAlert(alert.message);
-    if (!sent) pendingAlerts.push(alert);
-  } else {
-    pendingAlerts.push(alert);
-    // Also write to file for headless mode
-    const file = `${dataDir}/alerts.jsonl`;
-    try { writeFileSync(file, JSON.stringify(alert) + '\n', { flag: 'a' }); } catch {}
+    if (wa?.connected) {
+      const sent = await wa.sendAlert(alert.message);
+      if (!sent) pendingAlerts.push(alert);
+    } else {
+      pendingAlerts.push(alert);
+      // Also write to file for headless mode
+      const file = `${dataDir}/alerts.jsonl`;
+      try { writeFileSync(file, JSON.stringify(alert) + '\n', { flag: 'a' }); } catch {}
+    }
+  } catch (err) {
+    console.error('[commander] Alert handler error:', err.message);
   }
 });
 
 // Retry pending alerts every 30s
 setInterval(async () => {
-  if (!wa?.connected || pendingAlerts.length === 0) return;
-  const batch = pendingAlerts.splice(0, 5);  // send up to 5 at once
-  for (const alert of batch) {
-    const sent = await wa.sendAlert(alert.message);
-    if (!sent) pendingAlerts.push(alert);
+  try {
+    if (!wa?.connected || pendingAlerts.length === 0) return;
+    const batch = pendingAlerts.splice(0, 5);  // send up to 5 at once
+    for (const alert of batch) {
+      const sent = await wa.sendAlert(alert.message);
+      if (!sent) pendingAlerts.push(alert);
+    }
+  } catch (err) {
+    console.error('[commander] Pending alert retry error:', err.message);
   }
 }, 30000);
 
 // ── Telemetry logging ────────────────────────────────────
 setInterval(() => {
-  if (!sk.connected) return;
-  const today = new Date().toISOString().split('T')[0];
-  const file = `${dataDir}/telemetry-${today}.jsonl`;
-  const entry = JSON.stringify({ t: new Date().toISOString(), ...sk.getSnapshot() });
-  try { writeFileSync(file, entry + '\n', { flag: 'a' }); } catch {}
+  try {
+    if (!sk.connected) return;
+    const today = new Date().toISOString().split('T')[0];
+    const file = `${dataDir}/telemetry-${today}.jsonl`;
+    const entry = JSON.stringify({ t: new Date().toISOString(), ...sk.getSnapshot() });
+    try { writeFileSync(file, entry + '\n', { flag: 'a' }); } catch {}
+  } catch (err) {
+    console.error('[commander] Telemetry logging error:', err.message);
+  }
 }, 60000);
 
 // ── Discovery logging ────────────────────────────────────
@@ -240,16 +255,43 @@ sk.on('discovered', (item) => {
   try { writeFileSync(file, JSON.stringify(sk.discovered, null, 2)); } catch {}
 });
 
+// ── Stale data warning ──────────────────────────────────
+sk.on('staleData', ({ lastUpdate, ageMs }) => {
+  console.warn(`[commander] SignalK data stale — last update ${Math.round(ageMs / 1000)}s ago (${lastUpdate})`);
+});
+
 // ── Start everything ─────────────────────────────────────
-sk.connect();
-alerts.start();
-scheduler.start();
+let telemetry = null;
+
+try {
+  sk.connect();
+} catch (err) {
+  console.error('[commander] Failed to connect SignalK:', err.message);
+  console.error('  Commander will continue — SignalK will retry on reconnect schedule');
+}
+
+try {
+  alerts.start();
+} catch (err) {
+  console.error('[commander] Failed to start alert engine:', err.message);
+}
+
+try {
+  scheduler.start();
+} catch (err) {
+  console.error('[commander] Failed to start scheduler:', err.message);
+}
 
 // Start telemetry API for dashboard gauges
-const telemetry = startTelemetryServer({
-  sk, alerts, advisor, config,
-  configManager, profileManager, templateEngine, scheduler,
-});
+try {
+  telemetry = startTelemetryServer({
+    sk, alerts, advisor, config,
+    configManager, profileManager, templateEngine, scheduler,
+  });
+} catch (err) {
+  console.error('[commander] Failed to start telemetry server:', err.message);
+  console.error('  Dashboard will be unavailable. Check port 3100 is free.');
+}
 
 // Start advisor after SignalK connects (needs live data)
 if (advisor) {
@@ -260,12 +302,16 @@ if (advisor) {
   });
   // Forward critical recommendations to WhatsApp
   advisor.on('critical', async (rec) => {
-    const msg = `🚨 *${rec.title}*\n${rec.reasoning}`;
-    if (wa?.connected) {
-      await wa.sendAlert(msg);
-    } else {
-      const file = `${dataDir}/alerts.jsonl`;
-      try { writeFileSync(file, JSON.stringify({ ...rec, timestamp: new Date().toISOString() }) + '\n', { flag: 'a' }); } catch {}
+    try {
+      const msg = `🚨 *${rec.title}*\n${rec.reasoning}`;
+      if (wa?.connected) {
+        await wa.sendAlert(msg);
+      } else {
+        const file = `${dataDir}/alerts.jsonl`;
+        try { writeFileSync(file, JSON.stringify({ ...rec, timestamp: new Date().toISOString() }) + '\n', { flag: 'a' }); } catch {}
+      }
+    } catch (err) {
+      console.error('[commander] Critical recommendation forward error:', err.message);
     }
   });
 }
@@ -279,12 +325,35 @@ if (wa) {
 }
 
 // ── Graceful shutdown ────────────────────────────────────
-process.on('SIGINT', () => {
-  console.log('\n⚓ Commander shutting down...');
-  alerts.stop();
-  scheduler.stop();
-  if (advisor) advisor.stop();
-  process.exit(0);
+let shuttingDown = false;
+
+function gracefulShutdown(signal) {
+  if (shuttingDown) return;
+  shuttingDown = true;
+  console.log(`\n⚓ Commander shutting down (${signal})...`);
+  try { alerts.stop(); } catch {}
+  try { scheduler.stop(); } catch {}
+  try { if (advisor) advisor.stop(); } catch {}
+  try { if (telemetry?.server) telemetry.server.close(); } catch {}
+  // Give in-flight requests 2s to complete
+  setTimeout(() => process.exit(0), 2000);
+}
+
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+
+// ── Process-level error handlers ────────────────────────
+process.on('unhandledRejection', (reason, promise) => {
+  const msg = reason instanceof Error ? reason.stack || reason.message : String(reason);
+  console.error('[commander] Unhandled rejection:', msg);
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('[commander] Uncaught exception:', err.message, err.stack);
+  // Route through gracefulShutdown so alerts/scheduler/telemetry get a chance to close
+  gracefulShutdown('uncaughtException');
+  // Force-exit after 3s in case gracefulShutdown hangs (it uses process.exit(0), override here)
+  setTimeout(() => process.exit(1), 3000);
 });
 
 // ── Export for testing / integration ─────────────────────

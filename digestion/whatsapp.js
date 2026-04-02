@@ -33,45 +33,60 @@ export class WhatsAppBot extends EventEmitter {
   }
 
   async start() {
-    const { state, saveCreds } = await useMultiFileAuthState(this.authDir);
-    const { version } = await fetchLatestBaileysVersion();
+    try {
+      const { state, saveCreds } = await useMultiFileAuthState(this.authDir);
+      const { version } = await fetchLatestBaileysVersion();
 
-    this.sock = makeWASocket({
-      version,
-      auth: state,
-      logger,
-      printQRInTerminal: true,
-      browser: ['Commander', 'Bot', '1.0'],
-    });
+      this.sock = makeWASocket({
+        version,
+        auth: state,
+        logger,
+        printQRInTerminal: true,
+        browser: ['Commander', 'Bot', '1.0'],
+        connectTimeoutMs: 30000,
+      });
 
-    this.sock.ev.on('creds.update', saveCreds);
+      this.sock.ev.on('creds.update', saveCreds);
 
-    this.sock.ev.on('connection.update', ({ connection, lastDisconnect }) => {
-      if (connection === 'close') {
-        const reason = lastDisconnect?.error?.output?.statusCode;
-        if (reason === DisconnectReason.loggedOut) {
-          console.log('❌ WhatsApp logged out. Delete auth dir and re-scan QR.');
-          this.connected = false;
-        } else {
-          console.log(`🔄 WhatsApp reconnecting... (${reason})`);
-          setTimeout(() => this.start(), 3000);
+      this.sock.ev.on('connection.update', ({ connection, lastDisconnect }) => {
+        if (connection === 'close') {
+          const reason = lastDisconnect?.error?.output?.statusCode;
+          if (reason === DisconnectReason.loggedOut) {
+            console.log('❌ WhatsApp logged out. Delete auth dir and re-scan QR.');
+            this.connected = false;
+            this.emit('loggedOut');
+          } else {
+            console.log(`🔄 WhatsApp reconnecting... (reason=${reason})`);
+            this.connected = false;
+            setTimeout(() => this.start(), 3000);
+          }
+        } else if (connection === 'open') {
+          console.log('✅ WhatsApp connected');
+          this.connected = true;
+          this.emit('connected');
         }
-      } else if (connection === 'open') {
-        console.log('✅ WhatsApp connected');
-        this.connected = true;
-        this.emit('connected');
-      }
-    });
+      });
 
-    this.sock.ev.on('messages.upsert', async ({ messages }) => {
-      for (const msg of messages) {
-        if (msg.key.fromMe) continue;
-        if (msg.key.remoteJid === 'status@broadcast') continue;
-        if (msg.message?.reactionMessage) continue;
+      this.sock.ev.on('messages.upsert', async ({ messages }) => {
+        for (const msg of messages) {
+          try {
+            if (msg.key.fromMe) continue;
+            if (msg.key.remoteJid === 'status@broadcast') continue;
+            if (msg.message?.reactionMessage) continue;
 
-        await this._handleMessage(msg);
-      }
-    });
+            await this._handleMessage(msg);
+          } catch (err) {
+            console.error('[whatsapp] Error processing message:', err.message);
+          }
+        }
+      });
+    } catch (err) {
+      console.error('[whatsapp] Failed to start:', err.message);
+      this.connected = false;
+      // Retry after delay
+      console.log('[whatsapp] Retrying in 10s...');
+      setTimeout(() => this.start(), 10000);
+    }
   }
 
   async _handleMessage(msg) {

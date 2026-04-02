@@ -245,3 +245,53 @@
   .ef-grid .ef-card:nth-child(5){grid-column:1/-1}
   .rec-actions{flex-wrap:wrap}
 }
+
+/* ── Rich engine gauge sections ── */
+.engine-gauge-section{margin:6px 0 8px;padding-bottom:6px;border-bottom:1px solid rgba(226,232,240,.3)}
+.engine-gauge-section:last-child{border-bottom:none}
+.engine-gauge-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.engine-gauge-header .telem-label{font-size:.85rem}
+.engine-gauge-header .telem-value{font-size:.95rem}
+.engine-status-tag{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:1px 6px;border-radius:3px;margin-left:4px;vertical-align:middle}
+.engine-status-tag.good{color:#059669;background:rgba(16,185,129,.12)}
+.engine-status-tag.warn{color:#D97706;background:rgba(245,158,11,.12)}
+.engine-status-tag.crit{color:#DC2626;background:rgba(239,68,68,.12)}
+.rpm-scale{display:flex;justify-content:space-between;font-size:.65rem;color:var(--slate);margin-top:1px;padding:0 1px}
+.telem-unit-sep{margin-left:2px}
+.engine-block-off{opacity:.75}
+.engine-block-off .engine-id{color:var(--slate)}
+
+/* ── Range bar (multi-zone with marker) ── */
+.range-bar{position:relative;height:8px;background:#E2E8F0;border-radius:4px;overflow:visible;margin-top:2px}
+.range-zone{position:absolute;top:0;height:100%;border-radius:0;opacity:.85}
+.range-zone:first-child{border-radius:4px 0 0 4px}
+.range-zone:last-of-type{border-radius:0 4px 4px 0}
+.range-marker{position:absolute;top:-3px;width:3px;height:14px;background:#fff;border:1.5px solid #0F172A;border-radius:2px;transform:translateX(-50%);z-index:2;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+
+/* ── Engine fuel summary ── */
+.engine-fuel-summary{margin-top:12px;padding:10px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);border-radius:8px}
+.engine-fuel-title{font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--amber);margin-bottom:6px}
+
+/* ── AIS vessel list ── */
+.ais-vessel-list{max-height:280px;overflow-y:auto}
+.ais-vessel{padding:8px 0;border-bottom:1px solid rgba(226,232,240,.5)}
+.ais-vessel:last-child{border-bottom:none}
+.ais-vessel-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:2px}
+.ais-name{font-size:.9rem;font-weight:600;color:var(--text)}
+.ais-dist{font-size:.88rem;font-weight:700;color:var(--ocean);font-variant-numeric:tabular-nums}
+.ais-vessel-details{display:flex;gap:10px;flex-wrap:wrap;font-size:.78rem;color:var(--slate);font-variant-numeric:tabular-nums}
+.ais-vessel.ais-danger{background:rgba(239,68,68,.06);border-left:3px solid var(--red);padding-left:8px;border-radius:4px}
+.ais-vessel.ais-danger .ais-name{color:var(--red)}
+.ais-vessel.ais-caution{background:rgba(245,158,11,.06);border-left:3px solid var(--amber);padding-left:8px;border-radius:4px}
+.ais-vessel.ais-caution .ais-name{color:var(--amber)}
+.ais-count{font-size:.75rem;font-weight:500;color:var(--slate);margin-left:4px}
+
+/* ── Dark mode additions ── */
+[data-theme="dark"] .range-bar{background:#1E293B}
+[data-theme="dark"] .range-marker{background:#E2E8F0;border-color:#F1F5F9}
+[data-theme="dark"] .engine-fuel-summary{background:rgba(245,158,11,.08);border-color:rgba(245,158,11,.25)}
+[data-theme="dark"] .engine-status-tag.good{background:rgba(16,185,129,.2)}
+[data-theme="dark"] .engine-status-tag.warn{background:rgba(245,158,11,.2)}
+[data-theme="dark"] .engine-status-tag.crit{background:rgba(239,68,68,.2)}
+[data-theme="dark"] .ais-vessel.ais-danger{background:rgba(239,68,68,.1)}
+[data-theme="dark"] .ais-vessel.ais-caution{background:rgba(245,158,11,.1)}

@@ -58,7 +58,13 @@ export class AlertEngine extends EventEmitter {
         // Standard rule evaluation with wildcard expansion
         this._evaluateRule(rule);
       } catch (e) {
-        // Skip broken rules silently
+        // Log broken rules for debugging, but don't flood — once per rule per 5 min
+        const errKey = `rule_err_${rule.id}`;
+        const now = Date.now();
+        if (now - (this.lastFired[errKey] || 0) > 300000) {
+          this.lastFired[errKey] = now;
+          console.warn(`[alert-engine] Rule "${rule.id}" evaluation error: ${e.message}`);
+        }
       }
     }
   }

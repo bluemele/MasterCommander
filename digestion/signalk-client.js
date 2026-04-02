@@ -81,6 +81,11 @@ export class SignalKClient extends EventEmitter {
     this.ws = null;
     this.connected = false;
     this.reconnectTimer = null;
+    this._reconnectAttempts = 0;
+    this._maxReconnectDelay = 60000; // cap backoff at 60s
+    this._staleDataMs = 30000;      // consider data stale after 30s of silence
+    this._staleCheckTimer = null;
+    this._maxPendingPuts = 50;       // prevent unbounded pending PUT accumulation
 
     this.raw = {};          // raw SignalK values
     this.state = {};        // converted human-readable values
@@ -117,13 +122,29 @@ export class SignalKClient extends EventEmitter {
     const url = `${proto}://${this.host}:${this.port}/signalk/v1/stream?subscribe=all`;
     console.log(`🔌 Connecting to SignalK: ${url}`);
 
-    this.ws = new WebSocket(url);
+    // Clean up any existing WebSocket before reconnecting
+    if (this.ws) {
+      try { this.ws.removeAllListeners(); this.ws.close(); } catch {}
+      this.ws = null;
+    }
+
+    try {
+      this.ws = new WebSocket(url);
+    } catch (err) {
+      console.error('[signalk-client] WebSocket creation failed:', err.message);
+      this.connected = false;
+      this._scheduleReconnect();
+      return;
+    }
 
     this.ws.on('open', () => {
       console.log('✅ SignalK connected');
       this.connected = true;
+      this._reconnectAttempts = 0; // reset backoff on success
       this.emit('connected');
       if (this.reconnectTimer) { clearTimeout(this.reconnectTimer); this.reconnectTimer = null; }
+      // Start stale data detection
+      this._startStaleCheck();
     });
 
     this.ws.on('message', (data) => {
@@ -146,20 +167,62 @@ export class SignalKClient extends EventEmitter {
         }
         // Self delta
         if (msg.updates) this._processDelta(msg);
-      } catch {}
+      } catch (err) {
+        // JSON parse errors or malformed delta — log sparingly to avoid flooding
+        if (err instanceof SyntaxError) return; // malformed JSON from SignalK, skip silently
+        console.error('[signalk-client] Message processing error:', err.message);
+      }
     });
 
-    this.ws.on('close', () => {
-      console.log('❌ SignalK disconnected — reconnecting in 5s');
+    this.ws.on('close', (code, reason) => {
+      const reasonStr = reason ? reason.toString() : '';
+      console.log(`❌ SignalK disconnected (code=${code}${reasonStr ? `, ${reasonStr}` : ''}) — scheduling reconnect`);
       this.connected = false;
+      this._stopStaleCheck();
       this.emit('disconnected');
-      this.reconnectTimer = setTimeout(() => this.connect(), 5000);
+      this._scheduleReconnect();
     });
 
     this.ws.on('error', (err) => {
-      if (err.code !== 'ECONNREFUSED') console.error('SignalK error:', err.message);
+      if (err.code !== 'ECONNREFUSED') console.error('[signalk-client] WebSocket error:', err.message);
       this.connected = false;
+      // 'close' event will fire after 'error', triggering reconnect
     });
+  }
+
+  // ── Reconnect with exponential backoff ───────────────────
+  _scheduleReconnect() {
+    if (this.reconnectTimer) return; // already scheduled
+    this._reconnectAttempts++;
+    const baseDelay = 2000;
+    const delay = Math.min(baseDelay * Math.pow(2, this._reconnectAttempts - 1), this._maxReconnectDelay);
+    // Add jitter to prevent thundering herd
+    const jitter = Math.floor(Math.random() * 1000);
+    console.log(`[signalk-client] Reconnecting in ${Math.round((delay + jitter) / 1000)}s (attempt ${this._reconnectAttempts})`);
+    this.reconnectTimer = setTimeout(() => {
+      this.reconnectTimer = null;
+      this.connect();
+    }, delay + jitter);
+  }
+
+  // ── Stale data detection ───────────────────────────────
+  _startStaleCheck() {
+    this._stopStaleCheck();
+    this._staleCheckTimer = setInterval(() => {
+      if (!this.connected || !this.lastUpdate) return;
+      const age = Date.now() - new Date(this.lastUpdate).getTime();
+      if (age > this._staleDataMs) {
+        this.emit('staleData', { lastUpdate: this.lastUpdate, ageMs: age });
+      }
+    }, 10000);
+    this._staleCheckTimer.unref?.();
+  }
+
+  _stopStaleCheck() {
+    if (this._staleCheckTimer) {
+      clearInterval(this._staleCheckTimer);
+      this._staleCheckTimer = null;
+    }
   }
 
   // ── Delta processing + auto-discovery ───────────────────
@@ -308,6 +371,10 @@ export class SignalKClient extends EventEmitter {
       if (!this.ws || !this.connected) {
         return reject(new Error('Not connected to SignalK'));
       }
+      // Prevent unbounded accumulation of pending PUTs
+      if (this._pendingPuts.size >= this._maxPendingPuts) {
+        return reject(new Error(`Too many pending PUT requests (${this._pendingPuts.size})`));
+      }
       const requestId = randomUUID();
       const msg = JSON.stringify({ requestId, put: { path, value } });
 
@@ -321,7 +388,13 @@ export class SignalKClient extends EventEmitter {
         reject: (err) => { clearTimeout(timer); reject(err); },
       });
 
-      this.ws.send(msg);
+      this.ws.send(msg, (err) => {
+        if (err) {
+          clearTimeout(timer);
+          this._pendingPuts.delete(requestId);
+          reject(new Error(`SignalK PUT send failed: ${err.message}`));
+        }
+      });
     });
   }
 

@@ -24,7 +24,7 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY digestion/package.json ./
 COPY digestion/commander.js digestion/test.js digestion/setup-wizard.js digestion/simulator.js ./
 COPY digestion/boat-config.json digestion/boat-config.template.json ./
-COPY digestion/signalk-client.js digestion/alert-engine.js digestion/llm-router.js digestion/status-builder.js digestion/whatsapp.js digestion/telemetry-server.js digestion/weather-service.js digestion/weather-providers.js digestion/config-manager.js digestion/template-engine.js digestion/profile-manager.js digestion/scheduler.js ./lib/
+COPY digestion/signalk-client.js digestion/alert-engine.js digestion/llm-router.js digestion/status-builder.js digestion/whatsapp.js digestion/telemetry-server.js digestion/weather-service.js digestion/weather-providers.js digestion/config-manager.js digestion/template-engine.js digestion/profile-manager.js digestion/scheduler.js digestion/boat-ingestion.js ./lib/
 
 # Intelligence layer
 COPY digestion/intelligence/ ./lib/intelligence/

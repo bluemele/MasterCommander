@@ -120,13 +120,36 @@ export class ConfigManager {
 
   load() {
     if (existsSync(this.configPath)) {
-      const raw = JSON.parse(readFileSync(this.configPath, 'utf8'));
-      // Deep merge defaults for new sections only (don't overwrite user values)
-      this.config = raw;
-      for (const [key, defaultVal] of Object.entries(DEFAULTS)) {
-        if (!(key in this.config)) {
-          this.config[key] = JSON.parse(JSON.stringify(defaultVal));
+      try {
+        const raw = JSON.parse(readFileSync(this.configPath, 'utf8'));
+        // Deep merge defaults for new sections only (don't overwrite user values)
+        this.config = raw;
+        for (const [key, defaultVal] of Object.entries(DEFAULTS)) {
+          if (!(key in this.config)) {
+            this.config[key] = JSON.parse(JSON.stringify(defaultVal));
+          }
         }
+      } catch (err) {
+        console.error(`[config-manager] Failed to parse ${this.configPath}: ${err.message}`);
+        // Try to load backup if available
+        const backupPath = this.configPath + '.bak';
+        if (existsSync(backupPath)) {
+          try {
+            console.log(`[config-manager] Attempting recovery from ${backupPath}`);
+            this.config = JSON.parse(readFileSync(backupPath, 'utf8'));
+            for (const [key, defaultVal] of Object.entries(DEFAULTS)) {
+              if (!(key in this.config)) {
+                this.config[key] = JSON.parse(JSON.stringify(defaultVal));
+              }
+            }
+            console.log('[config-manager] Recovered from backup');
+            return this.config;
+          } catch (backupErr) {
+            console.error(`[config-manager] Backup also corrupt: ${backupErr.message}`);
+          }
+        }
+        console.warn('[config-manager] Falling back to defaults');
+        this.config = JSON.parse(JSON.stringify(DEFAULTS));
       }
     } else {
       this.config = JSON.parse(JSON.stringify(DEFAULTS));
@@ -135,9 +158,21 @@ export class ConfigManager {
   }
 
   save() {
-    const tmp = this.configPath + '.tmp';
-    writeFileSync(tmp, JSON.stringify(this.config, null, 2));
-    renameSync(tmp, this.configPath);
+    try {
+      // Create backup of current config before overwriting
+      if (existsSync(this.configPath)) {
+        try {
+          const current = readFileSync(this.configPath, 'utf8');
+          writeFileSync(this.configPath + '.bak', current);
+        } catch {}
+      }
+      const tmp = this.configPath + '.tmp';
+      writeFileSync(tmp, JSON.stringify(this.config, null, 2));
+      renameSync(tmp, this.configPath);
+    } catch (err) {
+      console.error(`[config-manager] Failed to save config: ${err.message}`);
+      throw new Error(`Config save failed: ${err.message}`);
+    }
   }
 
   get(section) {

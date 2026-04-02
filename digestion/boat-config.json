@@ -13,7 +13,10 @@
   },
   "engines": {
     "count": 2,
-    "ids": ["port", "starboard"],
+    "ids": [
+      "port",
+      "starboard"
+    ],
     "type": "Yanmar 110hp",
     "thresholds": {
       "coolantTempMax": 95,
@@ -22,7 +25,9 @@
     }
   },
   "batteries": {
-    "ids": ["house"],
+    "ids": [
+      "house"
+    ],
     "type": "Happy Valley Lithium 1700Ah 24V",
     "nominalVoltage": 24,
     "thresholds": {
@@ -32,9 +37,18 @@
     }
   },
   "tanks": {
-    "fuel": ["port", "starboard"],
-    "freshWater": ["port", "starboard"],
-    "wasteWater": ["port", "starboard"],
+    "fuel": [
+      "port",
+      "starboard"
+    ],
+    "freshWater": [
+      "port",
+      "starboard"
+    ],
+    "wasteWater": [
+      "port",
+      "starboard"
+    ],
     "thresholds": {
       "fuelLow": 15,
       "waterLow": 15
@@ -49,8 +63,8 @@
   "whatsapp": {
     "mode": "bridge",
     "authDir": "./auth",
-    "adminNumber": "18681234567",
-    "allowedNumbers": ["18681234567"],
+    "adminNumber": "",
+    "allowedNumbers": [],
     "respondToGroups": false,
     "triggerWord": "commander"
   },
@@ -68,99 +82,255 @@
     "criticalOverridesQuiet": true
   },
   "dataDir": "./data",
-
   "rules": [
-    { "id": "batt_critical", "name": "Battery Critical", "enabled": true,
-      "trigger": "batteries.*.soc", "condition": { "op": "<", "value": 10 },
-      "severity": "critical", "cooldownMs": 300000,
-      "message": "🚨 BATTERY CRITICAL [{{id}}]: {{value}}% — SHED LOADS NOW" },
-    { "id": "batt_low", "name": "Battery Low", "enabled": true,
-      "trigger": "batteries.*.soc", "condition": { "op": "<", "value": 20 },
-      "severity": "warning", "cooldownMs": 600000,
-      "message": "⚠️ Battery low [{{id}}]: {{value}}%" },
-    { "id": "eng_overheat", "name": "Engine Overheat", "enabled": true,
-      "trigger": "engines.*.coolantTemp", "condition": { "op": ">", "value": 95 },
-      "severity": "critical", "cooldownMs": 60000,
-      "message": "🚨 ENGINE OVERHEAT [{{id}}]: Coolant {{value}}°C — check raw water intake & impeller!" },
-    { "id": "eng_oil", "name": "Low Oil Pressure", "enabled": true,
-      "trigger": "engines.*.oilPressure", "condition": { "op": "<", "value": 25 },
-      "severity": "critical", "cooldownMs": 60000,
-      "message": "🚨 LOW OIL PRESSURE [{{id}}]: {{value}} PSI — reduce power, check oil level!" },
-    { "id": "eng_exhaust", "name": "High Exhaust Temp", "enabled": true,
-      "trigger": "engines.*.exhaustTemp", "condition": { "op": ">", "value": 500 },
-      "severity": "warning", "cooldownMs": 120000,
-      "message": "⚠️ High exhaust temp [{{id}}]: {{value}}°C" },
-    { "id": "shallow", "name": "Shallow Water", "enabled": true,
-      "trigger": "environment.depth", "condition": { "op": "<", "value": 2.5 },
-      "severity": "warning", "cooldownMs": 60000,
-      "message": "⚠️ SHALLOW WATER: {{value}}m — proceed with caution" },
-    { "id": "anchor_drag", "name": "Anchor Drag", "enabled": true,
-      "trigger": "navigation.anchor.distance", "condition": { "op": ">", "value": 30 },
-      "severity": "critical", "cooldownMs": 120000, "special": "anchor_drag",
-      "message": "🚨 ANCHOR DRAG: {{value}}m from set point (limit {{threshold}}m) — CHECK ANCHOR" },
-    { "id": "bilge_cycles", "name": "Bilge Pump Cycling", "enabled": true,
-      "trigger": "safety.bilgeCycles", "condition": { "op": ">", "value": 6 },
-      "severity": "critical", "cooldownMs": 300000, "special": "bilge",
-      "params": { "windowMinutes": 30 },
-      "message": "🚨 BILGE PUMP cycling: {{value}}× in {{window}} min — POSSIBLE LEAK, inspect bilge!" },
-    { "id": "tank_fuel", "name": "Fuel Low", "enabled": true,
-      "trigger": "tanks.fuel.*.level", "condition": { "op": "<", "value": 15 },
-      "severity": "info", "cooldownMs": 3600000,
-      "message": "⛽ Fuel low [{{id}}]: {{value}}%" },
-    { "id": "tank_water", "name": "Fresh Water Low", "enabled": true,
-      "trigger": "tanks.freshWater.*.level", "condition": { "op": "<", "value": 15 },
-      "severity": "info", "cooldownMs": 3600000,
-      "message": "💧 Fresh water low [{{id}}]: {{value}}%" }
+    {
+      "id": "batt_critical",
+      "name": "Battery Critical",
+      "enabled": true,
+      "trigger": "batteries.*.soc",
+      "condition": {
+        "op": "<",
+        "value": 10
+      },
+      "severity": "critical",
+      "cooldownMs": 300000,
+      "message": "\ud83d\udea8 BATTERY CRITICAL [{{id}}]: {{value}}% \u2014 SHED LOADS NOW"
+    },
+    {
+      "id": "batt_low",
+      "name": "Battery Low",
+      "enabled": true,
+      "trigger": "batteries.*.soc",
+      "condition": {
+        "op": "<",
+        "value": 20
+      },
+      "severity": "warning",
+      "cooldownMs": 600000,
+      "message": "\u26a0\ufe0f Battery low [{{id}}]: {{value}}%"
+    },
+    {
+      "id": "eng_overheat",
+      "name": "Engine Overheat",
+      "enabled": true,
+      "trigger": "engines.*.coolantTemp",
+      "condition": {
+        "op": ">",
+        "value": 95
+      },
+      "severity": "critical",
+      "cooldownMs": 60000,
+      "message": "\ud83d\udea8 ENGINE OVERHEAT [{{id}}]: Coolant {{value}}\u00b0C \u2014 check raw water intake & impeller!"
+    },
+    {
+      "id": "eng_oil",
+      "name": "Low Oil Pressure",
+      "enabled": true,
+      "trigger": "engines.*.oilPressure",
+      "condition": {
+        "op": "<",
+        "value": 25
+      },
+      "severity": "critical",
+      "cooldownMs": 60000,
+      "message": "\ud83d\udea8 LOW OIL PRESSURE [{{id}}]: {{value}} PSI \u2014 reduce power, check oil level!"
+    },
+    {
+      "id": "eng_exhaust",
+      "name": "High Exhaust Temp",
+      "enabled": true,
+      "trigger": "engines.*.exhaustTemp",
+      "condition": {
+        "op": ">",
+        "value": 500
+      },
+      "severity": "warning",
+      "cooldownMs": 120000,
+      "message": "\u26a0\ufe0f High exhaust temp [{{id}}]: {{value}}\u00b0C"
+    },
+    {
+      "id": "shallow",
+      "name": "Shallow Water",
+      "enabled": true,
+      "trigger": "environment.depth",
+      "condition": {
+        "op": "<",
+        "value": 2.5
+      },
+      "severity": "warning",
+      "cooldownMs": 60000,
+      "message": "\u26a0\ufe0f SHALLOW WATER: {{value}}m \u2014 proceed with caution"
+    },
+    {
+      "id": "anchor_drag",
+      "name": "Anchor Drag",
+      "enabled": true,
+      "trigger": "navigation.anchor.distance",
+      "condition": {
+        "op": ">",
+        "value": 30
+      },
+      "severity": "critical",
+      "cooldownMs": 120000,
+      "special": "anchor_drag",
+      "message": "\ud83d\udea8 ANCHOR DRAG: {{value}}m from set point (limit {{threshold}}m) \u2014 CHECK ANCHOR"
+    },
+    {
+      "id": "bilge_cycles",
+      "name": "Bilge Pump Cycling",
+      "enabled": true,
+      "trigger": "safety.bilgeCycles",
+      "condition": {
+        "op": ">",
+        "value": 6
+      },
+      "severity": "critical",
+      "cooldownMs": 300000,
+      "special": "bilge",
+      "params": {
+        "windowMinutes": 30
+      },
+      "message": "\ud83d\udea8 BILGE PUMP cycling: {{value}}\u00d7 in {{window}} min \u2014 POSSIBLE LEAK, inspect bilge!"
+    },
+    {
+      "id": "tank_fuel",
+      "name": "Fuel Low",
+      "enabled": true,
+      "trigger": "tanks.fuel.*.level",
+      "condition": {
+        "op": "<",
+        "value": 15
+      },
+      "severity": "info",
+      "cooldownMs": 3600000,
+      "message": "\u26fd Fuel low [{{id}}]: {{value}}%"
+    },
+    {
+      "id": "tank_water",
+      "name": "Fresh Water Low",
+      "enabled": true,
+      "trigger": "tanks.freshWater.*.level",
+      "condition": {
+        "op": "<",
+        "value": 15
+      },
+      "severity": "info",
+      "cooldownMs": 3600000,
+      "message": "\ud83d\udca7 Fresh water low [{{id}}]: {{value}}%"
+    }
   ],
-
   "schedules": [],
-
   "profiles": {
     "presets": {
       "captain": {
         "name": "Captain",
-        "alerts": ["critical", "warning", "info"],
-        "modules": ["tactical", "weather", "energy"],
-        "panels": ["advisor", "nav", "engines", "batt", "tanks", "wind", "perf", "energy"]
+        "alerts": [
+          "critical",
+          "warning",
+          "info"
+        ],
+        "modules": [
+          "tactical",
+          "weather",
+          "energy"
+        ],
+        "panels": [
+          "advisor",
+          "nav",
+          "engines",
+          "batt",
+          "tanks",
+          "wind",
+          "perf",
+          "energy"
+        ]
       },
       "owner": {
         "name": "Owner",
-        "alerts": ["critical", "warning"],
-        "modules": ["energy", "weather"],
-        "panels": ["advisor", "batt", "engines", "tanks", "energy"]
+        "alerts": [
+          "critical",
+          "warning"
+        ],
+        "modules": [
+          "energy",
+          "weather"
+        ],
+        "panels": [
+          "advisor",
+          "batt",
+          "engines",
+          "tanks",
+          "energy"
+        ]
       },
       "charter": {
         "name": "Charter Operator",
-        "alerts": ["critical"],
-        "modules": ["energy"],
-        "panels": ["batt", "engines", "tanks"]
+        "alerts": [
+          "critical"
+        ],
+        "modules": [
+          "energy"
+        ],
+        "panels": [
+          "batt",
+          "engines",
+          "tanks"
+        ]
       },
       "surveyor": {
         "name": "Surveyor",
-        "alerts": ["critical", "warning", "info"],
-        "modules": ["tactical", "weather", "energy"],
-        "panels": ["advisor", "nav", "engines", "batt", "tanks", "wind", "perf", "energy"]
+        "alerts": [
+          "critical",
+          "warning",
+          "info"
+        ],
+        "modules": [
+          "tactical",
+          "weather",
+          "energy"
+        ],
+        "panels": [
+          "advisor",
+          "nav",
+          "engines",
+          "batt",
+          "tanks",
+          "wind",
+          "perf",
+          "energy"
+        ]
       },
       "crew": {
         "name": "Crew",
-        "alerts": ["critical", "warning"],
-        "modules": ["tactical"],
-        "panels": ["nav", "wind", "engines"]
+        "alerts": [
+          "critical",
+          "warning"
+        ],
+        "modules": [
+          "tactical"
+        ],
+        "panels": [
+          "nav",
+          "wind",
+          "engines"
+        ]
       }
     },
     "active": null,
     "custom": []
   },
-
   "templates": {
     "alert": "{{severity}}: {{message}}",
-    "digest": "📊 Daily Report — {{boat.name}}\n🔋 Battery: {{battery.soc}}%\n⚙️ Engines: {{engine.status}}\n📍 Position: {{navigation.position}}\n💨 Wind: {{environment.windSpeed}}kts",
-    "maintenance": "🔧 Maintenance Due: {{task.name}} at {{value}} hours",
-    "watchHandoff": "⌚ Watch handoff at {{time}}\nCourse: {{navigation.heading}}° | SOG: {{navigation.sog}}kts | Wind: {{environment.windSpeed}}kts"
+    "digest": "\ud83d\udcca Daily Report \u2014 {{boat.name}}\n\ud83d\udd0b Battery: {{battery.soc}}%\n\u2699\ufe0f Engines: {{engine.status}}\n\ud83d\udccd Position: {{navigation.position}}\n\ud83d\udca8 Wind: {{environment.windSpeed}}kts",
+    "maintenance": "\ud83d\udd27 Maintenance Due: {{task.name}} at {{value}} hours",
+    "watchHandoff": "\u231a Watch handoff at {{time}}\nCourse: {{navigation.heading}}\u00b0 | SOG: {{navigation.sog}}kts | Wind: {{environment.windSpeed}}kts"
   },
-
   "intelligence": {
-    "intervals": { "tactical": 30, "weather": 60, "energy": 30 },
+    "intervals": {
+      "tactical": 30,
+      "weather": 60,
+      "energy": 30
+    },
     "dedupWindowMin": 15
   }
 }

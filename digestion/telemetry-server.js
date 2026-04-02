@@ -18,6 +18,7 @@ import { readFileSync } from 'fs';
 import { createServer } from 'http';
 import pino from 'pino';
 import weatherRouter from './weather-service.js';
+import { createIngestion } from './boat-ingestion.js';
 
 const logger = pino({ level: process.env.LOG_LEVEL || 'info' });
 
@@ -103,43 +104,67 @@ export function startTelemetryServer({ sk, alerts, advisor, config, configManage
     res.write(':\n\n'); // SSE comment to establish connection
 
     const send = () => {
-      if (!sk.connected) {
-        res.write('event: status\ndata: {"connected":false}\n\n');
-        return;
+      try {
+        if (!sk.connected) {
+          res.write('event: status\ndata: {"connected":false}\n\n');
+          return;
+        }
+        const snapshot = sk.getSnapshot();
+        snapshot._alerts = alertBuffer.slice(-10);
+        if (advisor) snapshot._advisor = advisor.getActive();
+        res.write('data: ' + JSON.stringify(snapshot) + '\n\n');
+      } catch (err) {
+        console.error('[telemetry-server] SSE send error:', err.message);
       }
-      const snapshot = sk.getSnapshot();
-      snapshot._alerts = alertBuffer.slice(-10);
-      if (advisor) snapshot._advisor = advisor.getActive();
-      res.write('data: ' + JSON.stringify(snapshot) + '\n\n');
     };
 
     send(); // immediate first push
     const timer = setInterval(send, SSE_INTERVAL);
 
-    req.on('close', () => {
+    // Guard against double-decrement from both close + error firing
+    let cleaned = false;
+    const cleanup = () => {
+      if (cleaned) return;
+      cleaned = true;
       clearInterval(timer);
-      sseConnectionCount--;
+      sseConnectionCount = Math.max(0, sseConnectionCount - 1);
+    };
+
+    req.on('close', cleanup);
+
+    req.on('error', (err) => {
+      console.error('[telemetry-server] SSE request error:', err.message);
+      cleanup();
     });
   });
 
   // ── REST: latest snapshot ───────────────────────────────
   app.get('/api/telemetry/latest', rateLimit, (req, res) => {
-    if (!sk.connected) {
-      return res.json({ _meta: { connected: false }, _alerts: [] });
+    try {
+      if (!sk.connected) {
+        return res.json({ _meta: { connected: false }, _alerts: [] });
+      }
+      const snapshot = sk.getSnapshot();
+      snapshot._alerts = alertBuffer.slice(-10);
+      res.json(snapshot);
+    } catch (err) {
+      console.error('[telemetry-server] /api/telemetry/latest error:', err.message);
+      res.status(500).json({ error: 'Failed to build snapshot' });
     }
-    const snapshot = sk.getSnapshot();
-    snapshot._alerts = alertBuffer.slice(-10);
-    res.json(snapshot);
   });
 
   // ── REST: scenario list ─────────────────────────────────
   app.get('/api/telemetry/scenarios', rateLimit, async (req, res) => {
     try {
-      const resp = await fetch(`http://127.0.0.1:${simPort}/scenario`);
+      const resp = await fetch(`http://127.0.0.1:${simPort}/scenario`, {
+        signal: AbortSignal.timeout(5000),
+      });
+      if (!resp.ok) return res.status(resp.status).json({ error: `Simulator returned ${resp.status}` });
       const data = await resp.json();
       res.json(data);
     } catch (e) {
-      res.status(502).json({ error: 'Simulator not reachable', detail: e.message });
+      const detail = e.name === 'TimeoutError' ? 'Simulator request timed out' : e.message;
+      res.status(502).json({ error: 'Simulator not reachable', detail });
     }
   });
 
@@ -151,77 +176,122 @@ export function startTelemetryServer({ sk, alerts, advisor, config, configManage
       return res.status(400).json({ error: 'Invalid scenario', available: VALID_SCENARIOS });
     }
     try {
-      const resp = await fetch(`http://127.0.0.1:${simPort}/scenario/${name}`, { method: 'POST' });
+      const resp = await fetch(`http://127.0.0.1:${simPort}/scenario/${name}`, {
+        method: 'POST',
+        signal: AbortSignal.timeout(5000),
+      });
+      if (!resp.ok) return res.status(resp.status).json({ error: `Simulator returned ${resp.status}` });
       const data = await resp.json();
       res.json(data);
     } catch (e) {
-      res.status(502).json({ error: 'Simulator not reachable' });
+      const detail = e.name === 'TimeoutError' ? 'Simulator request timed out' : e.message;
+      res.status(502).json({ error: 'Simulator not reachable', detail });
     }
   });
 
   // ── REST: recent alerts ─────────────────────────────────
   app.get('/api/telemetry/alerts', rateLimit, (req, res) => {
-    res.json({ alerts: alertBuffer.slice().reverse() });
+    try {
+      res.json({ alerts: alertBuffer.slice().reverse() });
+    } catch (err) {
+      console.error('[telemetry-server] /api/telemetry/alerts error:', err.message);
+      res.status(500).json({ error: 'Failed to retrieve alerts' });
+    }
   });
 
   // ── ADVISOR: active recommendations ────────────────────
   app.get('/api/advisor/recommendations', rateLimit, (req, res) => {
-    if (!advisor) return res.json({ recommendations: [] });
-    res.json({ recommendations: advisor.getActive() });
+    try {
+      if (!advisor) return res.json({ recommendations: [] });
+      res.json({ recommendations: advisor.getActive() });
+    } catch (err) {
+      console.error('[telemetry-server] /api/advisor/recommendations error:', err.message);
+      res.status(500).json({ error: 'Failed to retrieve recommendations' });
+    }
   });
 
   app.post('/api/advisor/accept/:id', rateLimit, (req, res) => {
-    if (!advisor) return res.status(404).json({ error: 'Advisor not initialized' });
-    const rec = advisor.accept(req.params.id);
-    if (!rec) return res.status(404).json({ error: 'Recommendation not found or not active' });
-    res.json({ accepted: rec });
+    try {
+      if (!advisor) return res.status(404).json({ error: 'Advisor not initialized' });
+      const rec = advisor.accept(req.params.id);
+      if (!rec) return res.status(404).json({ error: 'Recommendation not found or not active' });
+      res.json({ accepted: rec });
+    } catch (err) {
+      console.error('[telemetry-server] /api/advisor/accept error:', err.message);
+      res.status(500).json({ error: 'Failed to accept recommendation' });
+    }
   });
 
   app.post('/api/advisor/dismiss/:id', rateLimit, (req, res) => {
-    if (!advisor) return res.status(404).json({ error: 'Advisor not initialized' });
-    const rec = advisor.dismiss(req.params.id);
-    if (!rec) return res.status(404).json({ error: 'Recommendation not found or not active' });
-    res.json({ dismissed: rec });
+    try {
+      if (!advisor) return res.status(404).json({ error: 'Advisor not initialized' });
+      const rec = advisor.dismiss(req.params.id);
+      if (!rec) return res.status(404).json({ error: 'Recommendation not found or not active' });
+      res.json({ dismissed: rec });
+    } catch (err) {
+      console.error('[telemetry-server] /api/advisor/dismiss error:', err.message);
+      res.status(500).json({ error: 'Failed to dismiss recommendation' });
+    }
   });
 
   app.get('/api/advisor/explain/:id', rateLimit, (req, res) => {
-    if (!advisor) return res.status(404).json({ error: 'Advisor not initialized' });
-    const explanation = advisor.explain(req.params.id);
-    if (!explanation) return res.status(404).json({ error: 'Recommendation not found' });
-    res.json(explanation);
+    try {
+      if (!advisor) return res.status(404).json({ error: 'Advisor not initialized' });
+      const explanation = advisor.explain(req.params.id);
+      if (!explanation) return res.status(404).json({ error: 'Recommendation not found' });
+      res.json(explanation);
+    } catch (err) {
+      console.error('[telemetry-server] /api/advisor/explain error:', err.message);
+      res.status(500).json({ error: 'Failed to explain recommendation' });
+    }
   });
 
   app.get('/api/advisor/history', rateLimit, (req, res) => {
-    if (!advisor) return res.json({ history: [] });
-    res.json({ history: advisor.getHistory() });
+    try {
+      if (!advisor) return res.json({ history: [] });
+      res.json({ history: advisor.getHistory() });
+    } catch (err) {
+      console.error('[telemetry-server] /api/advisor/history error:', err.message);
+      res.status(500).json({ error: 'Failed to retrieve history' });
+    }
   });
 
   // ── PERFORMANCE: polar data ───────────────────────────
   app.get('/api/performance', rateLimit, (req, res) => {
-    if (!sk.connected) return res.json({ connected: false });
-    const snap = sk.getSnapshot();
-    const tws = snap.environment?.windSpeedTrue;
-    const twa = snap.environment?.windAngleTrue;
-    const sog = snap.navigation?.sog;
-    const polar = advisor?.polar;
+    try {
+      if (!sk.connected) return res.json({ connected: false });
+      const snap = sk.getSnapshot();
+      const tws = snap.environment?.windSpeedTrue;
+      const twa = snap.environment?.windAngleTrue;
+      const sog = snap.navigation?.sog;
+      const polar = advisor?.polar;
 
-    const result = { tws, twa, sog };
-    if (polar && tws != null && twa != null && sog != null) {
-      result.targetSpeed = polar.getTargetSpeed(tws, twa);
-      result.performance = polar.getPerformance(tws, twa, sog);
-      result.optimalBeatAngle = polar.getOptimalBeatAngle(tws);
-      result.optimalRunAngle = polar.getOptimalRunAngle(tws);
+      const result = { tws, twa, sog };
+      if (polar && tws != null && twa != null && sog != null) {
+        result.targetSpeed = polar.getTargetSpeed(tws, twa);
+        result.performance = polar.getPerformance(tws, twa, sog);
+        result.optimalBeatAngle = polar.getOptimalBeatAngle(tws);
+        result.optimalRunAngle = polar.getOptimalRunAngle(tws);
+      }
+      res.json(result);
+    } catch (err) {
+      console.error('[telemetry-server] /api/performance error:', err.message);
+      res.status(500).json({ error: 'Failed to compute performance' });
     }
-    res.json(result);
   });
 
   // ── ENERGY: projection ────────────────────────────────
   app.get('/api/energy/projection', rateLimit, (req, res) => {
-    if (!advisor) return res.json({ error: 'Advisor not initialized' });
-    const energyModule = advisor.modules.get('energy');
-    if (!energyModule) return res.json({ error: 'Energy module not loaded' });
-    const summary = energyModule.module.getSummary();
-    res.json(summary || { error: 'No data' });
+    try {
+      if (!advisor) return res.json({ error: 'Advisor not initialized' });
+      const energyModule = advisor.modules.get('energy');
+      if (!energyModule) return res.json({ error: 'Energy module not loaded' });
+      const summary = energyModule.module.getSummary();
+      res.json(summary || { error: 'No data' });
+    } catch (err) {
+      console.error('[telemetry-server] /api/energy/projection error:', err.message);
+      res.status(500).json({ error: 'Failed to compute energy projection' });
+    }
   });
 
   // ── DEMO MODE ──────────────────────────────────────────
@@ -276,13 +346,22 @@ export function startTelemetryServer({ sk, alerts, advisor, config, configManage
     const boat = persona.boats.find(b => b.id === parseInt(req.params.id));
     if (!boat) return res.status(404).json({ error: 'Boat not found' });
     const scenario = boat.simScenario || 'atAnchor';
+    // Validate scenario name before forwarding
+    if (!VALID_SCENARIOS.includes(scenario)) {
+      return res.status(400).json({ error: 'Boat has invalid simScenario', scenario });
+    }
     try {
-      const simPort = process.env.SIM_PORT || 3858;
-      const resp = await fetch(`http://127.0.0.1:${simPort}/scenario/${scenario}`, { method: 'POST' });
+      const demoSimPort = process.env.SIM_PORT || 3858;
+      const resp = await fetch(`http://127.0.0.1:${demoSimPort}/scenario/${scenario}`, {
+        method: 'POST',
+        signal: AbortSignal.timeout(5000),
+      });
+      if (!resp.ok) return res.status(resp.status).json({ error: `Simulator returned ${resp.status}` });
       const data = await resp.json();
       res.json({ boat: boat.name, scenario: data.scenario, profile: boat.simProfile });
     } catch (e) {
-      res.status(502).json({ error: 'Simulator not reachable' });
+      const detail = e.name === 'TimeoutError' ? 'Simulator request timed out' : e.message;
+      res.status(502).json({ error: 'Simulator not reachable', detail });
     }
   });
 
@@ -292,19 +371,25 @@ export function startTelemetryServer({ sk, alerts, advisor, config, configManage
 
   if (configManager) {
     app.get('/api/config/:section', (req, res) => {
-      const data = configManager.get(req.params.section);
-      if (data === undefined) return res.status(404).json({ error: 'Section not found' });
-      res.json(data);
+      try {
+        const data = configManager.get(req.params.section);
+        if (data === undefined) return res.status(404).json({ error: 'Section not found' });
+        res.json(data);
+      } catch (err) {
+        console.error('[telemetry-server] GET /api/config error:', err.message);
+        res.status(500).json({ error: 'Failed to read config' });
+      }
     });
 
     app.put('/api/config/:section', (req, res) => {
-      if (req.body == null || typeof req.body !== 'object') return res.status(400).json({ error: 'Body must be a JSON object or array' });
-      // Block direct writes to rules/schedules (use dedicated endpoints)
-      if (['rules', 'schedules'].includes(req.params.section)) return res.status(400).json({ error: 'Use /api/' + req.params.section + ' endpoints instead' });
       try {
+        if (req.body == null || typeof req.body !== 'object') return res.status(400).json({ error: 'Body must be a JSON object or array' });
+        // Block direct writes to rules/schedules (use dedicated endpoints)
+        if (['rules', 'schedules'].includes(req.params.section)) return res.status(400).json({ error: 'Use /api/' + req.params.section + ' endpoints instead' });
         configManager.update(req.params.section, req.body);
         res.json({ ok: true, section: req.params.section });
       } catch (e) {
+        console.error('[telemetry-server] PUT /api/config error:', e.message);
         res.status(400).json({ error: e.message });
       }
     });
@@ -316,44 +401,64 @@ export function startTelemetryServer({ sk, alerts, advisor, config, configManage
 
   if (configManager) {
     app.get('/api/rules', (req, res) => {
-      res.json(configManager.get('rules') || []);
+      try {
+        res.json(configManager.get('rules') || []);
+      } catch (err) {
+        console.error('[telemetry-server] GET /api/rules error:', err.message);
+        res.status(500).json({ error: 'Failed to read rules' });
+      }
     });
 
     app.post('/api/rules', (req, res) => {
-      const rule = req.body;
-      if (!rule.id) rule.id = configManager.generateId();
-      if (rule.enabled === undefined) rule.enabled = true;
-      const errors = configManager.validateRule(rule);
-      if (errors.length) return res.status(400).json({ errors });
-      const rules = configManager.get('rules') || [];
-      if (rules.find(r => r.id === rule.id)) return res.status(409).json({ error: 'Rule ID already exists' });
-      rules.push(rule);
-      configManager.update('rules', rules);
-      if (alerts) alerts.setRules(rules);
-      res.status(201).json(rule);
+      try {
+        const rule = req.body;
+        if (!rule.id) rule.id = configManager.generateId();
+        if (rule.enabled === undefined) rule.enabled = true;
+        const errors = configManager.validateRule(rule);
+        if (errors.length) return res.status(400).json({ errors });
+        const rules = configManager.get('rules') || [];
+        if (rules.find(r => r.id === rule.id)) return res.status(409).json({ error: 'Rule ID already exists' });
+        rules.push(rule);
+        configManager.update('rules', rules);
+        if (alerts) alerts.setRules(rules);
+        res.status(201).json(rule);
+      } catch (err) {
+        console.error('[telemetry-server] POST /api/rules error:', err.message);
+        res.status(500).json({ error: 'Failed to create rule' });
+      }
     });
 
     app.put('/api/rules/:id', (req, res) => {
-      const rules = configManager.get('rules') || [];
-      const idx = rules.findIndex(r => r.id === req.params.id);
-      if (idx < 0) return res.status(404).json({ error: 'Rule not found' });
-      const updated = { ...rules[idx], ...req.body, id: req.params.id };
-      const errors = configManager.validateRule(updated);
-      if (errors.length) return res.status(400).json({ errors });
-      rules[idx] = updated;
-      configManager.update('rules', rules);
-      if (alerts) alerts.setRules(rules);
-      res.json(updated);
+      try {
+        const rules = configManager.get('rules') || [];
+        const idx = rules.findIndex(r => r.id === req.params.id);
+        if (idx < 0) return res.status(404).json({ error: 'Rule not found' });
+        const updated = { ...rules[idx], ...req.body, id: req.params.id };
+        const errors = configManager.validateRule(updated);
+        if (errors.length) return res.status(400).json({ errors });
+        rules[idx] = updated;
+        configManager.update('rules', rules);
+        if (alerts) alerts.setRules(rules);
+        res.json(updated);
+      } catch (err) {
+        console.error('[telemetry-server] PUT /api/rules error:', err.message);
+        res.status(500).json({ error: 'Failed to update rule' });
+      }
     });
 
     app.delete('/api/rules/:id', (req, res) => {
-      const rules = configManager.get('rules') || [];
-      const idx = rules.findIndex(r => r.id === req.params.id);
-      if (idx < 0) return res.status(404).json({ error: 'Rule not found' });
-      rules.splice(idx, 1);
-      configManager.update('rules', rules);
-      if (alerts) alerts.setRules(rules);
-      res.json({ ok: true });
+      try {
+        const rules = configManager.get('rules') || [];
+        const idx = rules.findIndex(r => r.id === req.params.id);
+        if (idx < 0) return res.status(404).json({ error: 'Rule not found' });
+        rules.splice(idx, 1);
+        configManager.update('rules', rules);
+        if (alerts) alerts.setRules(rules);
+        res.json({ ok: true });
+      } catch (err) {
+        console.error('[telemetry-server] DELETE /api/rules error:', err.message);
+        res.status(500).json({ error: 'Failed to delete rule' });
+      }
     });
   }
 
@@ -363,45 +468,65 @@ export function startTelemetryServer({ sk, alerts, advisor, config, configManage
 
   if (configManager) {
     app.get('/api/schedules', (req, res) => {
-      res.json(configManager.get('schedules') || []);
+      try {
+        res.json(configManager.get('schedules') || []);
+      } catch (err) {
+        console.error('[telemetry-server] GET /api/schedules error:', err.message);
+        res.status(500).json({ error: 'Failed to read schedules' });
+      }
     });
 
     app.post('/api/schedules', (req, res) => {
-      if (req.body == null || typeof req.body !== 'object') return res.status(400).json({ error: 'Body must be a JSON object' });
-      const sched = req.body;
-      if (!sched.id) sched.id = configManager.generateId();
-      if (sched.enabled === undefined) sched.enabled = true;
-      const errors = configManager.validateSchedule(sched);
-      if (errors.length) return res.status(400).json({ errors });
-      const schedules = configManager.get('schedules') || [];
-      if (schedules.find(s => s.id === sched.id)) return res.status(409).json({ error: 'Schedule ID already exists' });
-      schedules.push(sched);
-      configManager.update('schedules', schedules);
-      if (scheduler) scheduler.reload();
-      res.status(201).json(sched);
+      try {
+        if (req.body == null || typeof req.body !== 'object') return res.status(400).json({ error: 'Body must be a JSON object' });
+        const sched = req.body;
+        if (!sched.id) sched.id = configManager.generateId();
+        if (sched.enabled === undefined) sched.enabled = true;
+        const errors = configManager.validateSchedule(sched);
+        if (errors.length) return res.status(400).json({ errors });
+        const schedules = configManager.get('schedules') || [];
+        if (schedules.find(s => s.id === sched.id)) return res.status(409).json({ error: 'Schedule ID already exists' });
+        schedules.push(sched);
+        configManager.update('schedules', schedules);
+        if (scheduler) scheduler.reload();
+        res.status(201).json(sched);
+      } catch (err) {
+        console.error('[telemetry-server] POST /api/schedules error:', err.message);
+        res.status(500).json({ error: 'Failed to create schedule' });
+      }
     });
 
     app.put('/api/schedules/:id', (req, res) => {
-      const schedules = configManager.get('schedules') || [];
-      const idx = schedules.findIndex(s => s.id === req.params.id);
-      if (idx < 0) return res.status(404).json({ error: 'Schedule not found' });
-      const updated = { ...schedules[idx], ...req.body, id: req.params.id };
-      const errors = configManager.validateSchedule(updated);
-      if (errors.length) return res.status(400).json({ errors });
-      schedules[idx] = updated;
-      configManager.update('schedules', schedules);
-      if (scheduler) scheduler.reload();
-      res.json(updated);
+      try {
+        const schedules = configManager.get('schedules') || [];
+        const idx = schedules.findIndex(s => s.id === req.params.id);
+        if (idx < 0) return res.status(404).json({ error: 'Schedule not found' });
+        const updated = { ...schedules[idx], ...req.body, id: req.params.id };
+        const errors = configManager.validateSchedule(updated);
+        if (errors.length) return res.status(400).json({ errors });
+        schedules[idx] = updated;
+        configManager.update('schedules', schedules);
+        if (scheduler) scheduler.reload();
+        res.json(updated);
+      } catch (err) {
+        console.error('[telemetry-server] PUT /api/schedules error:', err.message);
+        res.status(500).json({ error: 'Failed to update schedule' });
+      }
     });
 
     app.delete('/api/schedules/:id', (req, res) => {
-      const schedules = configManager.get('schedules') || [];
-      const idx = schedules.findIndex(s => s.id === req.params.id);
-      if (idx < 0) return res.status(404).json({ error: 'Schedule not found' });
-      schedules.splice(idx, 1);
-      configManager.update('schedules', schedules);
-      if (scheduler) scheduler.reload();
-      res.json({ ok: true });
+      try {
+        const schedules = configManager.get('schedules') || [];
+        const idx = schedules.findIndex(s => s.id === req.params.id);
+        if (idx < 0) return res.status(404).json({ error: 'Schedule not found' });
+        schedules.splice(idx, 1);
+        configManager.update('schedules', schedules);
+        if (scheduler) scheduler.reload();
+        res.json({ ok: true });
+      } catch (err) {
+        console.error('[telemetry-server] DELETE /api/schedules error:', err.message);
+        res.status(500).json({ error: 'Failed to delete schedule' });
+      }
     });
   }
 
@@ -411,35 +536,60 @@ export function startTelemetryServer({ sk, alerts, advisor, config, configManage
 
   if (profileManager) {
     app.get('/api/profiles', (req, res) => {
-      res.json({
-        profiles: profileManager.getAllProfiles(),
-        active: profileManager.getActive(),
-      });
+      try {
+        res.json({
+          profiles: profileManager.getAllProfiles(),
+          active: profileManager.getActive(),
+        });
+      } catch (err) {
+        console.error('[telemetry-server] GET /api/profiles error:', err.message);
+        res.status(500).json({ error: 'Failed to read profiles' });
+      }
     });
 
     app.get('/api/profiles/active', (req, res) => {
-      const activeId = profileManager.getActive();
-      const profile = activeId ? profileManager.getProfile(activeId) : null;
-      res.json({ active: activeId, profile });
+      try {
+        const activeId = profileManager.getActive();
+        const profile = activeId ? profileManager.getProfile(activeId) : null;
+        res.json({ active: activeId, profile });
+      } catch (err) {
+        console.error('[telemetry-server] GET /api/profiles/active error:', err.message);
+        res.status(500).json({ error: 'Failed to read active profile' });
+      }
     });
 
     app.put('/api/profiles/active', (req, res) => {
-      if (req.body == null || typeof req.body !== 'object') return res.status(400).json({ error: 'Body must be a JSON object' });
-      const { profileId } = req.body;
-      if (profileId && !profileManager.getProfile(profileId)) return res.status(404).json({ error: 'Profile not found' });
-      const profile = profileManager.setActive(profileId || null);
-      res.json({ active: profileId, profile });
+      try {
+        if (req.body == null || typeof req.body !== 'object') return res.status(400).json({ error: 'Body must be a JSON object' });
+        const { profileId } = req.body;
+        if (profileId && !profileManager.getProfile(profileId)) return res.status(404).json({ error: 'Profile not found' });
+        const profile = profileManager.setActive(profileId || null);
+        res.json({ active: profileId, profile });
+      } catch (err) {
+        console.error('[telemetry-server] PUT /api/profiles/active error:', err.message);
+        res.status(500).json({ error: 'Failed to set active profile' });
+      }
     });
 
     app.post('/api/profiles', (req, res) => {
-      const profile = profileManager.createCustom(req.body);
-      res.status(201).json(profile);
+      try {
+        const profile = profileManager.createCustom(req.body);
+        res.status(201).json(profile);
+      } catch (err) {
+        console.error('[telemetry-server] POST /api/profiles error:', err.message);
+        res.status(500).json({ error: 'Failed to create profile' });
+      }
     });
 
     app.put('/api/profiles/:id', (req, res) => {
-      const updated = profileManager.updateProfile(req.params.id, req.body);
-      if (!updated) return res.status(404).json({ error: 'Profile not found' });
-      res.json(updated);
+      try {
+        const updated = profileManager.updateProfile(req.params.id, req.body);
+        if (!updated) return res.status(404).json({ error: 'Profile not found' });
+        res.json(updated);
+      } catch (err) {
+        console.error('[telemetry-server] PUT /api/profiles/:id error:', err.message);
+        res.status(500).json({ error: 'Failed to update profile' });
+      }
     });
   }
 
@@ -449,17 +599,27 @@ export function startTelemetryServer({ sk, alerts, advisor, config, configManage
 
   if (configManager) {
     app.get('/api/templates', (req, res) => {
-      res.json(configManager.get('templates') || {});
+      try {
+        res.json(configManager.get('templates') || {});
+      } catch (err) {
+        console.error('[telemetry-server] GET /api/templates error:', err.message);
+        res.status(500).json({ error: 'Failed to read templates' });
+      }
     });
 
     app.put('/api/templates', (req, res) => {
-      const templates = req.body;
-      for (const [key, val] of Object.entries(templates)) {
-        if (typeof val !== 'string') return res.status(400).json({ error: `Template "${key}" must be a string` });
-        if (val.length > 2000) return res.status(400).json({ error: `Template "${key}" exceeds 2000 chars` });
+      try {
+        const templates = req.body;
+        for (const [key, val] of Object.entries(templates)) {
+          if (typeof val !== 'string') return res.status(400).json({ error: `Template "${key}" must be a string` });
+          if (val.length > 2000) return res.status(400).json({ error: `Template "${key}" exceeds 2000 chars` });
+        }
+        configManager.update('templates', templates);
+        res.json({ ok: true });
+      } catch (err) {
+        console.error('[telemetry-server] PUT /api/templates error:', err.message);
+        res.status(500).json({ error: 'Failed to update templates' });
       }
-      configManager.update('templates', templates);
-      res.json({ ok: true });
     });
   }
 
@@ -475,8 +635,21 @@ export function startTelemetryServer({ sk, alerts, advisor, config, configManage
     });
   });
 
+  // ── Boat telemetry ingestion (PostgreSQL) ────────────────
+  createIngestion(app);
+
+  // ── Global error handler (must be last middleware) ──────
+  app.use((err, req, res, next) => {
+    console.error('[telemetry-server] Unhandled route error:', err.message);
+    if (res.headersSent) return next(err);
+    res.status(500).json({ error: 'Internal server error' });
+  });
+
   // ── Start server ────────────────────────────────────────
   const server = createServer(app);
+  server.on('error', (err) => {
+    console.error('[telemetry-server] Server error:', err.message);
+  });
   server.listen(port, '127.0.0.1', () => {
     logger.info({ port }, 'Telemetry API listening');
   });

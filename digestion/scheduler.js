@@ -42,15 +42,23 @@ export class Scheduler {
   }
 
   _tick() {
-    const now = new Date();
-    const schedules = this.configManager.get('schedules') || [];
-    for (const sched of schedules.filter(s => s.enabled)) {
-      if (sched.type === 'daily' && this._isDailyDue(sched, now)) {
-        this._executeOnce(sched);
+    try {
+      const now = new Date();
+      const schedules = this.configManager.get('schedules') || [];
+      for (const sched of schedules.filter(s => s.enabled)) {
+        try {
+          if (sched.type === 'daily' && this._isDailyDue(sched, now)) {
+            this._executeOnce(sched);
+          }
+          if (sched.type === 'weekly' && this._isWeeklyDue(sched, now)) {
+            this._executeOnce(sched);
+          }
+        } catch (e) {
+          console.error(`[scheduler] Schedule ${sched.id} tick error:`, e.message);
+        }
       }
-      if (sched.type === 'weekly' && this._isWeeklyDue(sched, now)) {
-        this._executeOnce(sched);
-      }
+    } catch (e) {
+      console.error('[scheduler] Tick error:', e.message);
     }
   }
 
@@ -157,24 +165,34 @@ export class Scheduler {
 
   async _deliver(message, recipients) {
     if (!message) return;
-    if (this.wa?.connected) {
-      if (recipients?.length) {
-        for (const num of recipients) {
-          await this.wa.sendTo(num, message);
+    try {
+      if (this.wa?.connected) {
+        if (recipients?.length) {
+          for (const num of recipients) {
+            try {
+              await this.wa.sendTo(num, message);
+            } catch (err) {
+              console.error(`[scheduler] Failed to deliver to ${num}:`, err.message);
+            }
+          }
+        } else {
+          await this.wa.sendAlert(message);
         }
       } else {
-        await this.wa.sendAlert(message);
+        // Log to file when WhatsApp unavailable
+        const config = this.configManager.getAll();
+        const dataDir = config.dataDir || './data';
+        const file = `${dataDir}/scheduled-messages.jsonl`;
+        try {
+          writeFileSync(file, JSON.stringify({
+            message, recipients, timestamp: new Date().toISOString()
+          }) + '\n', { flag: 'a' });
+        } catch (fileErr) {
+          console.error('[scheduler] Failed to write scheduled message to file:', fileErr.message);
+        }
       }
-    } else {
-      // Log to file when WhatsApp unavailable
-      const config = this.configManager.getAll();
-      const dataDir = config.dataDir || './data';
-      const file = `${dataDir}/scheduled-messages.jsonl`;
-      try {
-        writeFileSync(file, JSON.stringify({
-          message, recipients, timestamp: new Date().toISOString()
-        }) + '\n', { flag: 'a' });
-      } catch {}
+    } catch (err) {
+      console.error('[scheduler] Delivery error:', err.message);
     }
   }
 

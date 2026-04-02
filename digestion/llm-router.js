@@ -12,7 +12,7 @@ export class LLMRouter {
   constructor(config = {}) {
     // 'local' | 'cloud' | 'auto'
     this.mode = config.provider || 'local';
-    this.ollamaModel = config.ollamaModel || 'qwen2.5:14b';
+    this.ollamaModel = config.ollamaModel || 'qwen3:14b';
     this.ollamaUrl = config.ollamaUrl || 'http://localhost:11434';
     this.claudePath = config.claudePath || 'claude';
     this.timeout = config.timeout || 30000;
@@ -67,7 +67,16 @@ RULES:
         }),
         signal: AbortSignal.timeout(this.timeout),
       });
-      const data = await res.json();
+      if (!res.ok) {
+        const errText = await res.text().catch(() => '');
+        throw new Error(`Ollama HTTP ${res.status}${errText ? `: ${errText.slice(0, 200)}` : ''}`);
+      }
+      let data;
+      try {
+        data = await res.json();
+      } catch (parseErr) {
+        throw new Error(`Ollama returned invalid JSON: ${parseErr.message}`);
+      }
       return data.response?.trim() || '⚠️ No response from local LLM';
     } catch (e) {
       throw new Error(`Local LLM error: ${e.message}`);

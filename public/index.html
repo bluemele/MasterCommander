@@ -22,6 +22,57 @@ body{font-family:'Inter',sans-serif;background:#fff;color:#0F172A;line-height:1.
   --shadow-lg:0 12px 40px rgba(0,0,0,0.12);
 }
 
+/* ── DARK MODE ── */
+[data-theme="dark"]{
+  --sky:#38BDF8;--sky-dark:#0EA5E9;--sky-pale:#1e3a5f;--sky-mid:#164e73;
+  --ocean:#7DD3FC;--emerald:#34D399;--amber:#FBBF24;--violet:#A78BFA;
+  --indigo:#818CF8;--coral:#FB923C;--slate:#94A3B8;
+  --border:#1E293B;--surface:#111827;--text:#E2E8F0;
+  --shadow:0 1px 3px rgba(0,0,0,0.4),0 6px 20px rgba(0,0,0,0.3);
+  --shadow-lg:0 12px 40px rgba(0,0,0,0.5);
+}
+[data-theme="dark"] body{background-color:#0a0f1a;color:#E2E8F0}
+[data-theme="dark"] nav{background-color:rgba(10,15,26,0.92)}
+[data-theme="dark"] .hero{background-image:linear-gradient(160deg,#0C2D48 0%,#0a1929 45%,#0a0f1a 100%)}
+[data-theme="dark"] .panel{background-color:#111827;border-color:#1E293B}
+[data-theme="dark"] .chip{background-color:#111827;color:#94A3B8;border-color:#1E293B}
+[data-theme="dark"] .flow-node,[data-theme="dark"] .flow-node-sm{background-color:#111827}
+[data-theme="dark"] .flow-wrap{background-color:#0F172A}
+[data-theme="dark"] .persona{background-color:#111827}
+[data-theme="dark"] .price-card{background-color:#111827}
+[data-theme="dark"] .sol-tab{background-color:#111827}
+[data-theme="dark"] .user-channel-card{background-color:#111827}
+[data-theme="dark"] .demo-query-btn{background-color:#111827;color:#E2E8F0}
+[data-theme="dark"] .mockup-card{background-color:#111827}
+[data-theme="dark"] .wyg-toggle-btn{background-color:#111827;color:#94A3B8}
+[data-theme="dark"] .contact-modal{background-color:#111827}
+[data-theme="dark"] .dash-modal{background-color:#111827}
+[data-theme="dark"] .nav-login-dropdown{background-color:#111827}
+[data-theme="dark"] .auth-modal{background-color:#111827}
+[data-theme="dark"] .wa-mock-body{background-color:#0F172A}
+[data-theme="dark"] .wa-bubble.bot{background-color:#1E293B;color:#E2E8F0}
+[data-theme="dark"] .wa-bubble.user{background-color:#065F46;color:#D1FAE5}
+[data-theme="dark"] .demo-phone{background-color:#0F172A}
+[data-theme="dark"] .demo-bubble.bot{background-color:#1E293B;color:#E2E8F0}
+[data-theme="dark"] .demo-bubble.user{background-color:#065F46;color:#D1FAE5}
+[data-theme="dark"] .demo-input-row{background-color:#1E293B}
+[data-theme="dark"] .demo-input{background-color:#111827;border-color:#334155;color:#E2E8F0}
+[data-theme="dark"] .typing-bubble{background-color:#1E293B}
+[data-theme="dark"] .boat-form input,[data-theme="dark"] .boat-card{background-color:#0F172A}
+[data-theme="dark"] .price-trial{background-color:rgba(16,185,129,.12);color:#34D399}
+[data-theme="dark"] .price-trial.free-tag{background-color:rgba(251,146,60,.12);color:#FB923C}
+[data-theme="dark"] .tier-badge.essential{background-color:#0C2D48;border-color:rgba(56,189,248,.3)}
+[data-theme="dark"] .tier-badge.pro{background-color:#1e1b4b;border-color:rgba(129,140,248,.3)}
+[data-theme="dark"] .verify-banner{background-color:#92400E;color:#FDE68A}
+[data-theme="dark"] .node-expand{background-color:#0F172A}
+[data-theme="dark"] .btn-outline{color:#E2E8F0}
+[data-theme="dark"] .flow-fork-label{background-color:#0F172A}
+
+/* Theme toggle button */
+.theme-toggle{width:36px;height:36px;padding:0;background:none;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--slate);transition:border-color .2s,color .2s,background-color .2s,box-shadow .2s;flex-shrink:0}
+.theme-toggle svg{width:18px;height:18px;display:block;flex-shrink:0}
+.theme-toggle:hover{border-color:var(--sky);color:var(--sky)}
+
 a{color:inherit;text-decoration:none}
 ul{list-style:none}
 .container{max-width:1120px;margin:0 auto;padding:0 24px}
@@ -569,6 +620,11 @@ body.has-verify-banner nav{top:2rem}
         <a href="#demo">Demo</a>
       </div>
       <div style="display:flex;gap:8px;align-items:center;">
+        <button class="theme-toggle" id="theme-toggle" type="button" title="Toggle dark mode" aria-label="Toggle dark mode">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M20.8 14.7A9 9 0 1 1 9.3 3.2a7 7 0 1 0 11.5 11.5Z" fill="currentColor"></path>
+          </svg>
+        </button>
         <a href="https://wa.me/13055601031" target="_blank" class="btn btn-outline">WhatsApp Us</a>
         <div class="nav-login" id="nav-login">
           <button class="nav-login-btn" id="auth-toggle" onclick="this.parentElement.classList.toggle('open')">Login</button>
@@ -2143,6 +2199,38 @@ function runAutoPlay() {
 })();
 </script>
 
+<script>
+(function(){
+  var root = document.documentElement;
+  var btn = document.getElementById('theme-toggle');
+  var moonIcon = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20.8 14.7A9 9 0 1 1 9.3 3.2a7 7 0 1 0 11.5 11.5Z" fill="currentColor"></path></svg>';
+  var sunIcon = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2.5V5M12 19v2.5M4.93 4.93l1.77 1.77M17.3 17.3l1.77 1.77M2.5 12H5M19 12h2.5M4.93 19.07l1.77-1.77M17.3 6.7l1.77-1.77"></path></svg>';
+
+  function applyTheme(theme, persist) {
+    var isDark = theme === 'dark';
+    if (isDark) {
+      root.setAttribute('data-theme', 'dark');
+    } else {
+      root.removeAttribute('data-theme');
+    }
+    if (persist) localStorage.setItem('mc-theme', isDark ? 'dark' : 'light');
+    if (btn) btn.innerHTML = isDark ? sunIcon : moonIcon;
+  }
+
+  var saved = localStorage.getItem('mc-theme');
+  var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  applyTheme(saved === 'dark' || (!saved && prefersDark) ? 'dark' : 'light', false);
+
+  window.toggleTheme = function toggleTheme() {
+    var isDark = root.getAttribute('data-theme') === 'dark';
+    applyTheme(isDark ? 'light' : 'dark', true);
+  };
+
+  if (btn) {
+    btn.addEventListener('click', window.toggleTheme);
+  }
+})();
+</script>
 <script src="gate.js?v=3"></script>
 <script>
 SiteGate.init({

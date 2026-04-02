@@ -328,7 +328,7 @@
   }
 
   function buildTelemetryShell(id) {
-    var defaultPanelOrder = ['advisor', 'perf', 'batt', 'nav', 'engines', 'tanks', 'wind'];
+    var defaultPanelOrder = ['advisor', 'perf', 'batt', 'nav', 'engines', 'tanks', 'wind', 'ais'];
     var panelOrder = defaultPanelOrder;
     try {
       var savedPanels = JSON.parse(localStorage.getItem('mc_telem_' + id));
@@ -706,6 +706,7 @@
       el = document.getElementById('telem-engines'); if (el) T.renderEnginePanel(el, snap);
       el = document.getElementById('telem-tanks');   if (el) T.renderTanksPanel(el, snap);
       el = document.getElementById('telem-wind');    if (el) T.renderWindPanel(el, snap);
+      el = document.getElementById('telem-ais');     if (el && T.renderAisPanel) T.renderAisPanel(el, snap);
 
       // Alerts
       el = document.getElementById('telem-alerts');

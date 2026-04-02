@@ -28,23 +28,56 @@
     this._statusCb = null;
     this.connected = false;
     this.lastSnapshot = null;
+    this._reconnectTimer = null;
+    this._reconnectAttempts = 0;
+    this._maxReconnectDelay = 30000;
+    this._destroyed = false; // true after explicit disconnect()
+    this._currentUrl = null;
+    this._currentMode = null; // 'live' or 'boat'
+    this._currentBoatId = null;
   }
+
+  TelemetryClient.prototype._scheduleReconnect = function() {
+    var self = this;
+    if (self._destroyed || self._reconnectTimer) return;
+    self._reconnectAttempts++;
+    var delay = Math.min(2000 * Math.pow(2, self._reconnectAttempts - 1), self._maxReconnectDelay);
+    console.log('[telemetry] Reconnecting in ' + Math.round(delay / 1000) + 's (attempt ' + self._reconnectAttempts + ')');
+    self._reconnectTimer = setTimeout(function() {
+      self._reconnectTimer = null;
+      if (self._destroyed) return;
+      if (self._currentMode === 'boat' && self._currentBoatId != null) {
+        self.connectToBoat(self._currentBoatId);
+      } else {
+        self.connect();
+      }
+    }, delay);
+  };
 
   TelemetryClient.prototype.connect = function() {
     var self = this;
-    this.es = new EventSource('/api/telemetry/live');
+    self._destroyed = false;
+    self._currentMode = 'live';
+    self._currentUrl = '/api/telemetry/live';
+    // Clean up any existing connection
+    if (self.es) { try { self.es.close(); } catch(e) {} self.es = null; }
 
-    this.es.onmessage = function(e) {
+    self.es = new EventSource('/api/telemetry/live');
+
+    self.es.onmessage = function(e) {
       try {
         var data = JSON.parse(e.data);
         self.connected = true;
+        self._reconnectAttempts = 0;
         self.lastSnapshot = data;
         if (self._cb) self._cb(data);
         if (self._statusCb) self._statusCb(true);
-      } catch(err) {}
+      } catch(err) {
+        console.warn('[telemetry] Parse error:', err.message);
+      }
     };
 
-    this.es.addEventListener('status', function(e) {
+    self.es.addEventListener('status', function(e) {
       try {
         var data = JSON.parse(e.data);
         if (!data.connected) {
@@ -54,9 +87,14 @@
       } catch(err) {}
     });
 
-    this.es.onerror = function() {
+    self.es.onerror = function() {
       self.connected = false;
       if (self._statusCb) self._statusCb(false);
+      // EventSource auto-reconnects, but if it closes fully, handle it
+      if (self.es && self.es.readyState === EventSource.CLOSED) {
+        self.es = null;
+        self._scheduleReconnect();
+      }
     };
   };
 
@@ -64,32 +102,48 @@
   TelemetryClient.prototype.onStatus = function(cb) { this._statusCb = cb; };
 
   TelemetryClient.prototype.disconnect = function() {
+    this._destroyed = true;
+    if (this._reconnectTimer) { clearTimeout(this._reconnectTimer); this._reconnectTimer = null; }
     if (this.es) { this.es.close(); this.es = null; }
     this.connected = false;
+    this._reconnectAttempts = 0;
   };
 
   // Connect to real boat telemetry via boat-specific SSE endpoint
   TelemetryClient.prototype.connectToBoat = function(boatId) {
     var self = this;
-    this.boatId = boatId;
-    var url = '/api/telemetry/boat/' + boatId + '/live';
-    this.es = new EventSource(url);
+    self._destroyed = false;
+    self._currentMode = 'boat';
+    self._currentBoatId = boatId;
+    self.boatId = boatId;
+    // Clean up any existing connection
+    if (self.es) { try { self.es.close(); } catch(e) {} self.es = null; }
 
-    this.es.onmessage = function(e) {
+    var url = '/api/telemetry/boat/' + boatId + '/live';
+    self.es = new EventSource(url);
+
+    self.es.onmessage = function(e) {
       try {
         var data = JSON.parse(e.data);
         // The boat SSE sends { boat_id, ts, snapshot } where snapshot is translated
         var snap = data.snapshot || data;
         self.connected = true;
+        self._reconnectAttempts = 0;
         self.lastSnapshot = snap;
         if (self._cb) self._cb(snap);
         if (self._statusCb) self._statusCb(true);
-      } catch(err) {}
+      } catch(err) {
+        console.warn('[telemetry] Boat SSE parse error:', err.message);
+      }
     };
 
-    this.es.onerror = function() {
+    self.es.onerror = function() {
       self.connected = false;
       if (self._statusCb) self._statusCb(false);
+      if (self.es && self.es.readyState === EventSource.CLOSED) {
+        self.es = null;
+        self._scheduleReconnect();
+      }
     };
   };
 
@@ -242,7 +296,7 @@
 
     // Solar + net power (from electrical data)
     var solarW = elec.solar ? Math.round(elec.solar.power) : 0;
-    var netW = power + solarW;
+    var netW = solarW + power; // battery power: pos=charging, neg=discharging. This shows energy balance
     if (solarW > 0 || elec.solar) {
       var hour = new Date().getHours();
       var solarNote = hour < 6 || hour > 18 ? ' (night)' : solarW < 50 && solarW > 0 ? ' (cloudy?)' : '';
@@ -263,7 +317,52 @@
     }
   }
 
-  // ── Engine panel (RPM bars + temps) ──
+  // ── Engine panel (rich gauges + fuel economy) ──
+  var ENGINE_RPM_GAUGE_MAX = 3600;
+  var ENGINE_SERVICE_INTERVAL = 900;
+
+  function engineOilStatus(psi) {
+    if (psi == null) return { text: '--', cls: '', zone: 0 };
+    if (psi < 15) return { text: 'ALARM', cls: 'crit', zone: 0 };
+    if (psi < 25) return { text: 'LOW', cls: 'warn', zone: 1 };
+    if (psi <= 70) return { text: 'NORMAL', cls: 'good', zone: 2 };
+    return { text: 'HIGH', cls: 'warn', zone: 3 };
+  }
+
+  function engineCoolantStatus(c) {
+    if (c == null) return { text: '--', cls: '', zone: 0 };
+    if (c < 50) return { text: 'COLD', cls: '', zone: 0 };
+    if (c < 75) return { text: 'WARMING', cls: '', zone: 1 };
+    if (c <= 90) return { text: 'NORMAL', cls: 'good', zone: 2 };
+    if (c <= 95) return { text: 'WATCH', cls: 'warn', zone: 3 };
+    return { text: 'OVERHEAT', cls: 'crit', zone: 4 };
+  }
+
+  function altVoltageStatus(v) {
+    if (v == null) return { text: '--', cls: '' };
+    if (v < 12) return { text: 'NOT CHARGING', cls: 'crit' };
+    if (v < 13.2) return { text: 'LOW', cls: 'warn' };
+    if (v <= 14.8) return { text: 'CHARGING', cls: 'good' };
+    return { text: 'HIGH', cls: 'warn' };
+  }
+
+  function cToF(c) { return c != null ? (c * 9 / 5 + 32) : null; }
+  function lToGal(l) { return l != null ? l * 0.264172 : null; }
+
+  function rangeBar(zones, value, max) {
+    var pct = Math.min(100, Math.max(0, (value / max) * 100));
+    var html = '<div class="range-bar">';
+    for (var i = 0; i < zones.length; i++) {
+      var z = zones[i];
+      var left = (z.from / max) * 100;
+      var width = ((z.to - z.from) / max) * 100;
+      html += '<div class="range-zone" style="left:' + left.toFixed(1) + '%;width:' + width.toFixed(1) + '%;background:' + z.color + '"></div>';
+    }
+    html += '<div class="range-marker" style="left:' + pct.toFixed(1) + '%"></div>';
+    html += '</div>';
+    return html;
+  }
+
   function renderEnginePanel(el, snap) {
     var engines = snap.engines || {};
     var keys = Object.keys(engines);
@@ -272,38 +371,140 @@
       return;
     }
 
+    var sog = (snap.navigation || {}).sog || 0;
+    var totalFuelRate = 0;
+    var runningCount = 0;
     var blocks = '';
+
     for (var i = 0; i < keys.length; i++) {
       var e = engines[keys[i]];
       var rpm = e.rpm || 0;
-      var pct = Math.min(100, (rpm / ENGINE_RPM_MAX) * 100);
-      var barCls = rpm > ENGINE_RPM_REDLINE ? 'redline' : rpm > ENGINE_RPM_HIGH ? 'high' : '';
+      var running = e.running;
 
-      // Temperature bar helpers: coolant 0-120°C, exhaust 0-700°C
-      var coolant = e.coolantTemp || 0;
-      var exhaust = e.exhaustTemp || 0;
-      var coolPct = Math.min(100, (coolant / 120) * 100);
-      var exhPct = Math.min(100, (exhaust / 700) * 100);
-      var coolCls = coolant > COOLANT_CRIT ? 'temp-red' : coolant > COOLANT_WARN ? 'temp-amber' : coolant > 40 ? 'temp-green' : '';
-      var exhCls = exhaust > EXHAUST_CRIT ? 'temp-red' : exhaust > EXHAUST_WARN ? 'temp-amber' : exhaust > 100 ? 'temp-green' : '';
+      if (running) {
+        runningCount++;
+        totalFuelRate += (e.fuelRate || 0);
+      }
 
-      blocks +=
-        '<div class="engine-block">' +
-        '<div class="engine-id">' + esc(keys[i]) + (e.running ? ' <span class="engine-running">Running</span>' : ' <span class="engine-off">Off</span>') + '</div>' +
-        '<div class="rpm-bar-wrap"><div class="rpm-bar"><div class="rpm-bar-fill ' + barCls + '" style="width:' + pct.toFixed(0) + '%"></div></div></div>' +
-        '<div class="telem-row"><span class="telem-label">RPM</span><span class="telem-value">' + fmt(rpm) + '</span></div>' +
-        '<div class="engine-temps">' +
-        '<div class="engine-temp-gauge"><div class="engine-temp-header"><span class="telem-label">Coolant</span><span class="telem-value ' + (coolant > COOLANT_CRIT ? 'crit' : '') + '">' + fmt(coolant) + '<span class="telem-unit">&deg;C</span></span></div>' +
-        '<div class="temp-bar"><div class="temp-bar-fill ' + coolCls + '" style="width:' + coolPct.toFixed(0) + '%"></div></div></div>' +
-        '<div class="engine-temp-gauge"><div class="engine-temp-header"><span class="telem-label">Exhaust</span><span class="telem-value ' + (exhaust > EXHAUST_CRIT ? 'crit' : '') + '">' + fmt(exhaust) + '<span class="telem-unit">&deg;C</span></span></div>' +
-        '<div class="temp-bar"><div class="temp-bar-fill ' + exhCls + '" style="width:' + exhPct.toFixed(0) + '%"></div></div></div>' +
-        '</div>' +
-        '<div class="telem-row"><span class="telem-label">Oil Pressure</span><span class="telem-value' + (e.oilPressure != null && e.running && e.oilPressure < 25 ? ' crit' : '') + '">' + fmt(e.oilPressure) + '<span class="telem-unit">PSI</span></span></div>' +
-        '<div class="telem-row"><span class="telem-label">Hours</span><span class="telem-value">' + fmt(e.hours) + '<span class="telem-unit">hrs</span></span></div>' +
+      var rpmPct = Math.min(100, (rpm / ENGINE_RPM_GAUGE_MAX) * 100);
+      var rpmBarCls = rpmPct > 85 ? 'redline' : rpmPct > 65 ? 'high' : '';
+
+      var oilPsi = e.oilPressure;
+      var oilSt = engineOilStatus(oilPsi);
+      var oilBar = rangeBar([
+        { from: 0, to: 15, color: '#EF4444' },
+        { from: 15, to: 25, color: '#F59E0B' },
+        { from: 25, to: 70, color: '#10B981' },
+        { from: 70, to: 100, color: '#F59E0B' }
+      ], oilPsi || 0, 100);
+
+      var coolC = e.coolantTemp;
+      var coolF = cToF(coolC);
+      var coolSt = engineCoolantStatus(coolC);
+      var coolBar = rangeBar([
+        { from: 0, to: 50, color: '#3B82F6' },
+        { from: 50, to: 75, color: '#64748B' },
+        { from: 75, to: 90, color: '#10B981' },
+        { from: 90, to: 95, color: '#F59E0B' },
+        { from: 95, to: 120, color: '#EF4444' }
+      ], coolC || 0, 120);
+
+      var altV = e.alternatorVoltage;
+      var altSt = altVoltageStatus(altV);
+
+      var fuelLhr = e.fuelRate || 0;
+      var fuelGhr = lToGal(fuelLhr);
+      var fuelLnm = sog > 0.5 ? fuelLhr / sog : null;
+      var fuelGnm = fuelLnm != null ? lToGal(fuelLnm) : null;
+
+      var hours = e.hours || 0;
+      var nextService = Math.ceil(hours / ENGINE_SERVICE_INTERVAL) * ENGINE_SERVICE_INTERVAL;
+      if (nextService === hours) nextService += ENGINE_SERVICE_INTERVAL;
+      var hoursToService = nextService - hours;
+
+      var load = e.load;
+
+      if (running) {
+        blocks +=
+          '<div class="engine-block">' +
+          '<div class="engine-id">' + esc(keys[i]) + ' <span class="engine-running">Running</span></div>' +
+          '<div class="engine-gauge-section">' +
+          '<div class="engine-gauge-header"><span class="telem-label">RPM</span><span class="telem-value" style="font-size:1.15rem">' + fmt(rpm) + '</span></div>' +
+          '<div class="rpm-bar-wrap"><div class="rpm-bar"><div class="rpm-bar-fill ' + rpmBarCls + '" style="width:' + rpmPct.toFixed(0) + '%"></div></div></div>' +
+          '<div class="rpm-scale"><span>0</span><span>1800</span><span>3600</span></div>' +
+          '</div>' +
+          '<div class="engine-gauge-section">' +
+          '<div class="engine-gauge-header"><span class="telem-label">Oil Pressure</span><span class="telem-value ' + oilSt.cls + '">' + fmt(oilPsi) + ' <span class="telem-unit">PSI</span> <span class="engine-status-tag ' + oilSt.cls + '">' + oilSt.text + '</span></span></div>' +
+          oilBar +
+          '</div>' +
+          '<div class="engine-gauge-section">' +
+          '<div class="engine-gauge-header"><span class="telem-label">Coolant</span><span class="telem-value ' + coolSt.cls + '">' + fmt(coolC) + '&deg;C <span class="telem-unit">(' + fmt(coolF) + '&deg;F)</span> <span class="engine-status-tag ' + coolSt.cls + '">' + coolSt.text + '</span></span></div>' +
+          coolBar +
+          '</div>' +
+          '<div class="engine-gauge-section">' +
+          '<div class="engine-gauge-header"><span class="telem-label">Fuel Rate</span><span class="telem-value">' + fmt(fuelLhr, 1) + ' <span class="telem-unit">L/hr</span> <span class="telem-unit telem-unit-sep">(' + fmt(fuelGhr, 1) + ' gal/hr)</span></span></div>' +
+          (fuelLnm != null ? '<div class="engine-gauge-header" style="margin-top:2px"><span class="telem-label">Efficiency</span><span class="telem-value">' + fmt(fuelLnm, 2) + ' <span class="telem-unit">L/nm</span> <span class="telem-unit telem-unit-sep">(' + fmt(fuelGnm, 2) + ' gal/nm)</span></span></div>' : '') +
+          '</div>' +
+          '<div class="telem-row"><span class="telem-label">Alternator</span><span class="telem-value ' + altSt.cls + '">' + fmt(altV, 1) + ' <span class="telem-unit">V</span> <span class="engine-status-tag ' + altSt.cls + '">' + altSt.text + '</span></span></div>' +
+          (load != null ? '<div class="telem-row"><span class="telem-label">Load</span><span class="telem-value">' + fmt(load) + '<span class="telem-unit">%</span></span></div>' : '') +
+          '<div class="telem-row"><span class="telem-label">Hours</span><span class="telem-value">' + fmt(hours) + ' <span class="telem-unit">hrs</span></span></div>' +
+          '<div class="telem-row"><span class="telem-label">Next Service</span><span class="telem-value' + (hoursToService < 50 ? ' warn' : '') + '">' + fmt(hoursToService) + ' <span class="telem-unit">hrs (' + nextService + 'h)</span></span></div>' +
+          '</div>';
+      } else {
+        blocks +=
+          '<div class="engine-block engine-block-off">' +
+          '<div class="engine-id">' + esc(keys[i]) + ' <span class="engine-off">Off</span></div>' +
+          '<div class="telem-row"><span class="telem-label">Hours</span><span class="telem-value">' + fmt(hours) + ' <span class="telem-unit">hrs</span></span></div>' +
+          '<div class="telem-row"><span class="telem-label">Next Service</span><span class="telem-value' + (hoursToService < 50 ? ' warn' : '') + '">' + fmt(hoursToService) + ' <span class="telem-unit">hrs (' + nextService + 'h)</span></span></div>' +
+          (coolC != null && coolC > 40 ?
+            '<div class="telem-row"><span class="telem-label">Coolant (cooling)</span><span class="telem-value warn">' + fmt(coolC) + '&deg;C <span class="telem-unit">(' + fmt(coolF) + '&deg;F)</span></span></div>' : '') +
+          (altV != null ?
+            '<div class="telem-row"><span class="telem-label">Alternator</span><span class="telem-value ' + altSt.cls + '">' + fmt(altV, 1) + ' <span class="telem-unit">V</span></span></div>' : '') +
+          '</div>';
+      }
+    }
+
+    var fuelSummary = '';
+    if (runningCount > 0 && totalFuelRate > 0) {
+      var totalGhr = lToGal(totalFuelRate);
+      var totalLnm = sog > 0.5 ? totalFuelRate / sog : null;
+      var totalGnm = totalLnm != null ? lToGal(totalLnm) : null;
+
+      var tankRange = '';
+      if (snap.tanks) {
+        var fuelKeys = Object.keys(snap.tanks).filter(function(k) {
+          var t = snap.tanks[k];
+          return (t.type || k.split('_')[0]) === 'fuel';
+        });
+        if (fuelKeys.length > 0) {
+          var totalRemaining = 0;
+          for (var fi = 0; fi < fuelKeys.length; fi++) {
+            var ft = snap.tanks[fuelKeys[fi]];
+            var cap = ft.capacity || 200;
+            totalRemaining += (ft.level || 0) / 100 * cap;
+          }
+          if (totalRemaining > 0 && totalFuelRate > 0) {
+            var rangeHrs = totalRemaining / totalFuelRate;
+            var rangeNm = sog > 0.5 ? rangeHrs * sog : null;
+            tankRange =
+              '<div class="telem-row"><span class="telem-label">Est. Range</span><span class="telem-value">' +
+              fmt(rangeHrs, 1) + ' <span class="telem-unit">hrs</span>' +
+              (rangeNm != null ? ' <span class="telem-unit telem-unit-sep">(' + fmt(rangeNm, 0) + ' nm)</span>' : '') +
+              '</span></div>';
+          }
+        }
+      }
+
+      fuelSummary =
+        '<div class="engine-fuel-summary">' +
+        '<div class="engine-fuel-title">' + runningCount + ' Engine' + (runningCount > 1 ? 's' : '') + ' \u2014 Total Fuel</div>' +
+        '<div class="telem-row"><span class="telem-label">Consumption</span><span class="telem-value">' + fmt(totalFuelRate, 1) + ' <span class="telem-unit">L/hr</span> <span class="telem-unit telem-unit-sep">(' + fmt(totalGhr, 1) + ' gal/hr)</span></span></div>' +
+        (totalLnm != null ? '<div class="telem-row"><span class="telem-label">Efficiency</span><span class="telem-value">' + fmt(totalLnm, 2) + ' <span class="telem-unit">L/nm</span> <span class="telem-unit telem-unit-sep">(' + fmt(totalGnm, 2) + ' gal/nm)</span></span></div>' : '') +
+        tankRange +
         '</div>';
     }
 
-    el.innerHTML = '<div class="telem-panel-title"><span>&#9881;</span> Engines</div>' + blocks;
+    el.innerHTML = '<div class="telem-panel-title"><span>&#9881;</span> Engines</div>' + blocks + fuelSummary;
   }
 
   // ── Tanks panel (horizontal bars) ──
@@ -796,6 +997,50 @@
       '</div>';
   }
 
+  // ── AIS panel (nearby vessels) ──
+  function renderAisPanel(el, snap) {
+    var ais = snap._ais;
+    if (!ais || !Array.isArray(ais) || ais.length === 0) {
+      el.innerHTML = '<div class="telem-panel-title"><span>&#128674;</span> AIS Traffic</div><div style="color:var(--slate);font-size:.82rem;text-align:center;padding:12px">No vessels nearby</div>';
+      return;
+    }
+
+    var sorted = ais.slice().sort(function(a, b) {
+      return (a.distance || Infinity) - (b.distance || Infinity);
+    });
+    sorted = sorted.slice(0, 10);
+
+    var rows = '';
+    for (var i = 0; i < sorted.length; i++) {
+      var v = sorted[i];
+      var name = v.name || v.mmsi || 'Unknown';
+      var dist = v.distance != null ? fmt(v.distance, 1) + ' nm' : '--';
+      var spd = v.sog != null ? fmt(v.sog, 1) + ' kts' : '--';
+      var bearing = v.bearing != null ? fmt(v.bearing) + '\u00B0' : '--';
+      var cpa = v.cpa != null ? fmt(v.cpa, 2) + ' nm' : '';
+      var tcpa = v.tcpa != null ? fmt(v.tcpa, 0) + ' min' : '';
+      var dangerCls = v.cpa != null && v.cpa < 0.5 ? ' ais-danger' : v.cpa != null && v.cpa < 1.0 ? ' ais-caution' : '';
+
+      rows +=
+        '<div class="ais-vessel' + dangerCls + '">' +
+        '<div class="ais-vessel-header">' +
+        '<span class="ais-name">' + esc(name) + '</span>' +
+        '<span class="ais-dist">' + dist + '</span>' +
+        '</div>' +
+        '<div class="ais-vessel-details">' +
+        '<span>SOG ' + spd + '</span>' +
+        '<span>BRG ' + bearing + '</span>' +
+        (cpa ? '<span>CPA ' + cpa + '</span>' : '') +
+        (tcpa ? '<span>TCPA ' + tcpa + '</span>' : '') +
+        '</div>' +
+        '</div>';
+    }
+
+    el.innerHTML =
+      '<div class="telem-panel-title"><span>&#128674;</span> AIS Traffic <span class="ais-count">' + sorted.length + (ais.length > 10 ? '+' : '') + '</span></div>' +
+      '<div class="ais-vessel-list">' + rows + '</div>';
+  }
+
   // ============================================================
   // PUBLIC API — used by dashboard.js
   // ============================================================
@@ -814,6 +1059,7 @@
     renderAdvisorPanel: renderAdvisorPanel,
     renderPerformancePanel: renderPerformancePanel,
     renderEnergyPanel: renderEnergyPanel,
+    renderAisPanel: renderAisPanel,
   };
 
 })();

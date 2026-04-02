@@ -201,6 +201,11 @@ function createPool() {
   p.on('error', (err) => {
     console.error('[boat-ingestion] Pool error:', err.message);
     dbReady = false;
+    // On fatal pool errors (connection terminated unexpectedly), recreate the pool
+    if (err.message?.includes('terminated') || err.message?.includes('Connection terminated')) {
+      console.warn('[boat-ingestion] Fatal pool error — will recreate pool on next connection attempt');
+      pool = null;
+    }
   });
 
   return p;
@@ -253,13 +258,30 @@ async function warmCache() {
 }
 
 // ── Translate raw collector snapshot to dashboard SignalK format ──
+// Wrapped in a safe accessor to prevent crashes from malformed collector data.
 function translateSnapshot(raw) {
+  try {
+    return _translateSnapshotInner(raw);
+  } catch (err) {
+    console.error('[boat-ingestion] translateSnapshot error:', err.message);
+    // Return a minimal valid snapshot structure so callers don't crash
+    return {
+      _meta: { connected: false, lastUpdate: raw?.ts || null, source: 'real', error: err.message },
+      navigation: {}, environment: {}, engines: {}, batteries: {},
+      tanks: {}, electrical: {}, autopilot: {}, _ais: null, _alerts: []
+    };
+  }
+}
+
+function _translateSnapshotInner(raw) {
   const v = raw.victron || {};
   const n = raw.nmea || {};
   const bat = v.battery || {};
   const sol = v.solar || {};
   const sys = v.system || {};
   const inv = v.inverters || [];
+  const gf = raw.gofree || {};
+  const gfEng = gf.engines || {};
 
   // Position as string "lat, lon"
   const pos = n.position
@@ -270,6 +292,15 @@ function translateSnapshot(raw) {
   const headingTrue = (n.heading_magnetic != null && n.mag_variation != null)
     ? Math.round(n.heading_magnetic + n.mag_variation) : null;
 
+  // GoFree tanks
+  const gfTanks = gf.tanks || {};
+  const tanks = {};
+  for (const [key, t] of Object.entries(gfTanks)) {
+    if (!key.includes('_vol')) {
+      tanks[key] = { type: t.type, id: key, level: Math.round(t.level) };
+    }
+  }
+
   return {
     _meta: { connected: true, lastUpdate: raw.ts, source: 'real' },
     navigation: {
@@ -279,12 +310,13 @@ function translateSnapshot(raw) {
       heading: n.heading_magnetic != null ? Math.round(n.heading_magnetic) : null,
       headingTrue: headingTrue,
       magneticVariation: n.mag_variation,
-      rateOfTurn: null,
-      tripLog: null,
-      totalLog: null
+      rateOfTurn: gf.rate_of_turn ?? null,
+      tripLog: gf.trip_distance ?? null,
+      totalLog: gf.log_total ?? null
     },
     environment: {
       depth: n.depth_m,
+      aftDepth: gf.aft_depth ?? null,
       waterTemp: n.water_temp_c,
       windSpeed: n.wind_speed_apparent ?? n.wind_speed_kts,
       windAngle: n.wind_angle_apparent,
@@ -296,8 +328,28 @@ function translateSnapshot(raw) {
       trim: n.trim
     },
     engines: {
-      port: { id: 'port', rpm: n.engine_0_rpm || 0, running: (n.engine_0_rpm || 0) > 0 },
-      starboard: { id: 'starboard', rpm: n.engine_1_rpm || 0, running: (n.engine_1_rpm || 0) > 0 }
+      port: {
+        id: 'port',
+        rpm: gfEng.port?.rpm ?? n.engine_0_rpm ?? 0,
+        oilPressure: gfEng.port?.oil_pressure ? Math.round(gfEng.port.oil_pressure * 14.5) : 0,
+        coolantTemp: gfEng.port?.coolant_temp || 0,
+        fuelRate: gfEng.port?.fuel_rate || 0,
+        hours: gfEng.port?.hours ? Math.round(gfEng.port.hours / 3600) : 0,
+        running: gfEng.port?.running || false,
+        alternatorVoltage: gfEng.port?.alternator_v,
+        load: gfEng.port?.load_pct,
+      },
+      starboard: {
+        id: 'starboard',
+        rpm: gfEng.starboard?.rpm ?? n.engine_1_rpm ?? 0,
+        oilPressure: gfEng.starboard?.oil_pressure ? Math.round(gfEng.starboard.oil_pressure * 14.5) : 0,
+        coolantTemp: gfEng.starboard?.coolant_temp || 0,
+        fuelRate: gfEng.starboard?.fuel_rate || 0,
+        hours: gfEng.starboard?.hours ? Math.round(gfEng.starboard.hours / 3600) : 0,
+        running: gfEng.starboard?.running || false,
+        alternatorVoltage: gfEng.starboard?.alternator_v,
+        load: gfEng.starboard?.load_pct,
+      }
     },
     batteries: {
       house: {
@@ -308,16 +360,18 @@ function translateSnapshot(raw) {
         power: bat.power
       }
     },
-    tanks: {},
+    tanks: tanks,
     electrical: {
       solar: { power: sol.total_power || 0, chargers: sol.chargers },
       shore: { connected: sys.shore_connected || false },
-      inverters: inv
+      inverters: inv,
+      supplyVoltage: gf.supply_voltage ?? null
     },
     autopilot: {
       state: 'standby',
       rudderAngle: n.rudder
     },
+    _ais: gf.ais || null,
     _alerts: []  // populated by evaluateAlerts() after translation
   };
 }
@@ -331,10 +385,14 @@ export function createIngestion(app) {
   app.post('/api/telemetry/ingest', async (req, res) => {
     const { boat_id, snapshot, api_key } = req.body;
 
-    // Validate API key
+    // Validate API key (timingSafeEqual requires equal-length buffers)
     const expectedKey = process.env.MC_BOAT_API_KEY;
-    if (!expectedKey || typeof api_key !== 'string' ||
-        !crypto.timingSafeEqual(Buffer.from(api_key), Buffer.from(expectedKey))) {
+    if (!expectedKey || typeof api_key !== 'string') {
+      return res.status(401).json({ error: 'Invalid API key' });
+    }
+    const keyBuf = Buffer.from(api_key);
+    const expectedBuf = Buffer.from(expectedKey);
+    if (keyBuf.length !== expectedBuf.length || !crypto.timingSafeEqual(keyBuf, expectedBuf)) {
       return res.status(401).json({ error: 'Invalid API key' });
     }
 
@@ -468,21 +526,33 @@ export function createIngestion(app) {
     }
 
     const onData = (record) => {
-      const snap = translateSnapshot(record.snapshot);
-      snap._alerts = evaluateAlerts(snap, boatId);
-      snap._advisor = evaluateAdvisor(snap);
-      const translated = { boat_id: record.boat_id, ts: record.ts, snapshot: snap };
-      res.write('data: ' + JSON.stringify(translated) + '\n\n');
+      try {
+        const snap = translateSnapshot(record.snapshot);
+        snap._alerts = evaluateAlerts(snap, boatId);
+        snap._advisor = evaluateAdvisor(snap);
+        const translated = { boat_id: record.boat_id, ts: record.ts, snapshot: snap };
+        res.write('data: ' + JSON.stringify(translated) + '\n\n');
+      } catch (err) {
+        console.error(`[boat-ingestion] SSE boat:${boatId} write error:`, err.message);
+      }
     };
 
     ingestionEvents.on(`boat:${boatId}`, onData);
 
     // SSE keepalive to prevent proxy idle timeout
-    const heartbeat = setInterval(() => res.write(':keepalive\n\n'), 30000);
+    const heartbeat = setInterval(() => {
+      try { res.write(':keepalive\n\n'); } catch {}
+    }, 30000);
 
-    req.on('close', () => {
+    const cleanup = () => {
       clearInterval(heartbeat);
       ingestionEvents.off(`boat:${boatId}`, onData);
+    };
+
+    req.on('close', cleanup);
+    req.on('error', (err) => {
+      console.error(`[boat-ingestion] SSE boat:${boatId} request error:`, err.message);
+      cleanup();
     });
   });
 

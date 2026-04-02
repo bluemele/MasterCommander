@@ -5,9 +5,23 @@ services:
     restart: unless-stopped
     ports:
       - "127.0.0.1:3010:80"
+    volumes:
+      - ./auth:/app/auth
     depends_on:
       mastercommander-db:
         condition: service_healthy
+    environment:
+      MC_DB_HOST: mastercommander-db
+      MC_DB_USER: mastercommander
+      MC_DB_NAME: mastercommander
+      MC_DB_PASS: ${MC_DB_PASS}
+      MC_BOAT_API_KEY: ${MC_BOAT_API_KEY}
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:80/api/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     networks:
       - coolify
 
