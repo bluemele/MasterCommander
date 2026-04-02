@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Dashboard — Master&Commander</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="dashboard.css?v=5">
+<link rel="stylesheet" href="dashboard.css?v=6">
 <link rel="stylesheet" href="telemetry.css">
 <link rel="stylesheet" href="weather.css">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
@@ -24,6 +24,11 @@
         <a href="#/settings" class="nav-tab" data-route="settings">Settings</a>
       </div>
       <div class="nav-right">
+        <button class="theme-toggle" id="theme-toggle" type="button" title="Toggle dark mode" aria-label="Toggle dark mode">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M20.8 14.7A9 9 0 1 1 9.3 3.2a7 7 0 1 0 11.5 11.5Z" fill="currentColor"></path>
+          </svg>
+        </button>
         <select id="nav-profile-select" class="nav-profile-select" title="Active Profile">
           <option value="">All (no profile)</option>
         </select>
@@ -39,10 +44,42 @@
   <div id="app"></div>
 </main>
 
+<script>
+(function(){
+  var root = document.documentElement;
+  var btn = document.getElementById('theme-toggle');
+  var moonIcon = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20.8 14.7A9 9 0 1 1 9.3 3.2a7 7 0 1 0 11.5 11.5Z" fill="currentColor"></path></svg>';
+  var sunIcon = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2.5V5M12 19v2.5M4.93 4.93l1.77 1.77M17.3 17.3l1.77 1.77M2.5 12H5M19 12h2.5M4.93 19.07l1.77-1.77M17.3 6.7l1.77-1.77"></path></svg>';
+
+  function applyTheme(theme, persist) {
+    var isDark = theme === 'dark';
+    if (isDark) {
+      root.setAttribute('data-theme', 'dark');
+    } else {
+      root.removeAttribute('data-theme');
+    }
+    if (persist) localStorage.setItem('mc-theme', isDark ? 'dark' : 'light');
+    if (btn) btn.innerHTML = isDark ? sunIcon : moonIcon;
+  }
+
+  var saved = localStorage.getItem('mc-theme');
+  // Default to dark for marine readability (night vision, glare reduction)
+  applyTheme(saved === 'light' ? 'light' : 'dark', false);
+
+  window.toggleTheme = function toggleTheme() {
+    var isDark = root.getAttribute('data-theme') === 'dark';
+    applyTheme(isDark ? 'light' : 'dark', true);
+  };
+
+  if (btn) {
+    btn.addEventListener('click', window.toggleTheme);
+  }
+})();
+</script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
-<script src="telemetry.js?v=5"></script>
-<script src="weather-engine.js?v=5"></script>
-<script src="weather.js?v=5"></script>
-<script src="dashboard.js?v=5"></script>
+<script src="telemetry.js?v=6"></script>
+<script src="weather-engine.js?v=6"></script>
+<script src="weather.js?v=6"></script>
+<script src="dashboard.js?v=6"></script>
 </body>
 </html>

@@ -68,47 +68,153 @@
     this.connected = false;
   };
 
+  // Connect to real boat telemetry via boat-specific SSE endpoint
+  TelemetryClient.prototype.connectToBoat = function(boatId) {
+    var self = this;
+    this.boatId = boatId;
+    var url = '/api/telemetry/boat/' + boatId + '/live';
+    this.es = new EventSource(url);
+
+    this.es.onmessage = function(e) {
+      try {
+        var data = JSON.parse(e.data);
+        // The boat SSE sends { boat_id, ts, snapshot } where snapshot is translated
+        var snap = data.snapshot || data;
+        self.connected = true;
+        self.lastSnapshot = snap;
+        if (self._cb) self._cb(snap);
+        if (self._statusCb) self._statusCb(true);
+      } catch(err) {}
+    };
+
+    this.es.onerror = function() {
+      self.connected = false;
+      if (self._statusCb) self._statusCb(false);
+    };
+  };
+
   // ============================================================
-  // GAUGE RENDERERS
+  // GAUGE RENDERERS (persistent DOM — init once, patch values)
   // ============================================================
 
-  // ── Navigation panel (SOG, heading, depth, water temp, position) ──
+  // Helper: create a row with label + value, returning a ref to the value span
+  function makeRow(label, unit) {
+    var row = document.createElement('div'); row.className = 'telem-row';
+    var lbl = document.createElement('span'); lbl.className = 'telem-label'; lbl.textContent = label;
+    var val = document.createElement('span'); val.className = 'telem-value';
+    var unitEl = null;
+    if (unit) { unitEl = document.createElement('span'); unitEl.className = 'telem-unit'; unitEl.innerHTML = unit; val.appendChild(document.createTextNode('')); val.appendChild(unitEl); }
+    row.appendChild(lbl); row.appendChild(val);
+    return { row: row, val: val, setText: function(t) { val.firstChild ? val.firstChild.textContent = t : val.textContent = t; } };
+  }
+
+  function makeTitle(icon, text) {
+    var d = document.createElement('div'); d.className = 'telem-panel-title';
+    var sp = document.createElement('span'); sp.innerHTML = icon; d.appendChild(sp);
+    d.appendChild(document.createTextNode(' ' + text)); return d;
+  }
+
+  // Helper: update value and toggle warn/crit class
+  function setValClass(valEl, text, cls) {
+    if (valEl.firstChild && valEl.firstChild.nodeType === 3) valEl.firstChild.textContent = text;
+    else { var tn = valEl.querySelector('.telem-unit'); if (tn) { if (!valEl.firstChild || valEl.firstChild === tn) valEl.insertBefore(document.createTextNode(text), tn); else valEl.firstChild.textContent = text; } else valEl.textContent = text; }
+    valEl.className = 'telem-value' + (cls ? ' ' + cls : '');
+  }
+
+  // ── Navigation panel (persistent DOM) ──
   function renderNavPanel(el, snap) {
     var nav = snap.navigation || {};
     var env = snap.environment || {};
+
+    if (!el._refs) {
+      el.innerHTML = '';
+      el.appendChild(makeTitle('&#9881;', 'Navigation'));
+      var r = {};
+      r.sog = makeRow('SOG', ' kts'); el.appendChild(r.sog.row);
+      r.hdg = makeRow('Heading (M)', '&deg;'); el.appendChild(r.hdg.row);
+      r.cog = makeRow('COG', '&deg;'); el.appendChild(r.cog.row);
+      r.depth = makeRow('Depth', ' m'); el.appendChild(r.depth.row);
+      r.wtemp = makeRow('Water Temp', '&deg;C'); el.appendChild(r.wtemp.row);
+      r.baro = makeRow('Baro', ' hPa'); el.appendChild(r.baro.row); r.baro.row.style.display = 'none';
+      r.atemp = makeRow('Air Temp', '&deg;C'); el.appendChild(r.atemp.row); r.atemp.row.style.display = 'none';
+      r.lat = makeRow('Lat', ''); el.appendChild(r.lat.row); r.lat.row.style.display = 'none';
+      r.lon = makeRow('Lon', ''); el.appendChild(r.lon.row); r.lon.row.style.display = 'none';
+      var link = document.createElement('a'); link.className = 'pos-link'; link.target = '_blank'; link.rel = 'noopener'; link.innerHTML = 'Google Maps &#8599;'; link.style.display = 'none';
+      el.appendChild(link); r.mapLink = link;
+      el._refs = r;
+    }
+
+    var r = el._refs;
+    r.sog.setText(fmt(nav.sog, 1));
+    r.hdg.setText(fmt(nav.heading));
+    r.cog.setText(fmt(nav.cog));
+    setValClass(r.depth.val, fmt(env.depth, 1), env.depth != null && env.depth < DEPTH_WARN ? 'warn' : '');
+    r.wtemp.setText(fmt(env.waterTemp, 1));
+    r.baro.row.style.display = env.baroPressure != null ? '' : 'none';
+    if (env.baroPressure != null) r.baro.setText(fmt(env.baroPressure));
+    r.atemp.row.style.display = env.airTemp != null ? '' : 'none';
+    if (env.airTemp != null) r.atemp.setText(fmt(env.airTemp, 1));
+
     var pos = nav.position;
-    var posHtml = '';
     if (pos) {
       var parts = pos.split(',');
-      var lat = parts[0] ? parts[0].trim() : '--';
-      var lon = parts[1] ? parts[1].trim() : '--';
-      var mapUrl = 'https://www.google.com/maps?q=' + lat + ',' + lon;
-      posHtml =
-        '<div class="telem-row"><span class="telem-label">Lat</span><span class="telem-value">' + esc(lat) + '</span></div>' +
-        '<div class="telem-row"><span class="telem-label">Lon</span><span class="telem-value">' + esc(lon) + '</span></div>' +
-        '<a class="pos-link" href="' + esc(mapUrl) + '" target="_blank" rel="noopener">Google Maps &#8599;</a>';
+      r.lat.setText(parts[0] ? parts[0].trim() : '--'); r.lat.row.style.display = '';
+      r.lon.setText(parts[1] ? parts[1].trim() : '--'); r.lon.row.style.display = '';
+      r.mapLink.href = 'https://www.google.com/maps?q=' + (parts[0]||'').trim() + ',' + (parts[1]||'').trim();
+      r.mapLink.style.display = '';
+    } else {
+      r.lat.row.style.display = 'none'; r.lon.row.style.display = 'none'; r.mapLink.style.display = 'none';
     }
-    el.innerHTML =
-      '<div class="telem-panel-title"><span>&#9881;</span> Navigation</div>' +
-      '<div class="telem-row"><span class="telem-label">SOG</span><span class="telem-value">' + fmt(nav.sog, 1) + '<span class="telem-unit">kts</span></span></div>' +
-      '<div class="telem-row"><span class="telem-label">Heading</span><span class="telem-value">' + fmt(nav.heading) + '<span class="telem-unit">&deg;</span></span></div>' +
-      '<div class="telem-row"><span class="telem-label">COG</span><span class="telem-value">' + fmt(nav.cog) + '<span class="telem-unit">&deg;</span></span></div>' +
-      '<div class="telem-row"><span class="telem-label">Depth</span><span class="telem-value' + (env.depth != null && env.depth < 3 ? ' warn' : '') + '">' + fmt(env.depth, 1) + '<span class="telem-unit">m</span></span></div>' +
-      '<div class="telem-row"><span class="telem-label">Water Temp</span><span class="telem-value">' + fmt(env.waterTemp, 1) + '<span class="telem-unit">&deg;C</span></span></div>' +
-      (env.baroPressure != null ? '<div class="telem-row"><span class="telem-label">Baro</span><span class="telem-value">' + fmt(env.baroPressure) + '<span class="telem-unit">hPa</span></span></div>' : '') +
-      (env.airTemp != null ? '<div class="telem-row"><span class="telem-label">Air Temp</span><span class="telem-value">' + fmt(env.airTemp, 1) + '<span class="telem-unit">&deg;C</span></span></div>' : '') +
-      posHtml;
   }
 
-  // ── House Battery panel (Victron VRM style) ──
+  // ── House Battery panel (persistent DOM, VRM style) ──
+  // ── Configurable thresholds (extract from inline magic numbers) ──
+  var BATT_CAPACITY_AH = 1700;
+  var BATT_VOLTAGE_NOM = 24;
+  var ENGINE_RPM_MAX = 3500;
+  var ENGINE_RPM_HIGH = 2500;
+  var ENGINE_RPM_REDLINE = 3000;
+  var COOLANT_WARN = 85;
+  var COOLANT_CRIT = 95;
+  var EXHAUST_WARN = 400;
+  var EXHAUST_CRIT = 500;
+  var DEPTH_WARN = 3;
+
   function renderBatteryPanel(el, snap) {
     var batts = snap.batteries || {};
     var b = batts.house;
     if (!b) {
-      el.innerHTML = '<div class="telem-panel-title"><span>&#128267;</span> House Battery</div><div style="color:var(--slate);font-size:.82rem;text-align:center;padding:12px">No house battery detected</div>';
+      el._refs = null;
+      el.innerHTML = '<div class="telem-panel-title"><span>&#128267;</span> House Battery</div><div style="color:var(--slate);font-size:.9rem;text-align:center;padding:12px">No house battery detected</div>';
       return;
     }
 
+    if (!el._refs) {
+      el.innerHTML = '';
+      el.appendChild(makeTitle('&#128267;', 'House Battery'));
+      var card = document.createElement('div'); card.className = 'vrm-card';
+      var hdr = document.createElement('div'); hdr.className = 'vrm-header';
+      var badge = document.createElement('span'); badge.className = 'vrm-state-badge';
+      var pwrEl = document.createElement('span'); pwrEl.className = 'vrm-power';
+      hdr.appendChild(badge); hdr.appendChild(pwrEl); card.appendChild(hdr);
+      var socEl = document.createElement('div'); socEl.className = 'vrm-soc';
+      var socNum = document.createTextNode(''); socEl.appendChild(socNum);
+      var socPct = document.createElement('span'); socPct.textContent = ' %'; socEl.appendChild(socPct);
+      card.appendChild(socEl);
+      var barWrap = document.createElement('div'); barWrap.className = 'vrm-soc-bar';
+      var barFill = document.createElement('div'); barFill.className = 'vrm-soc-fill';
+      barWrap.appendChild(barFill); card.appendChild(barWrap);
+      var details = document.createElement('div'); details.className = 'vrm-details';
+      var vRow = document.createElement('div'); vRow.className = 'vrm-row'; vRow.innerHTML = '<span class="vrm-label">Voltage</span><span class="vrm-val"></span>';
+      var cRow = document.createElement('div'); cRow.className = 'vrm-row'; cRow.innerHTML = '<span class="vrm-label">Current</span><span class="vrm-val"></span>';
+      var pRow = document.createElement('div'); pRow.className = 'vrm-row'; pRow.innerHTML = '<span class="vrm-label">Power</span><span class="vrm-val"></span>';
+      var tRow = document.createElement('div'); tRow.className = 'vrm-row'; tRow.innerHTML = '<span class="vrm-label">Time to go</span><span class="vrm-val"></span>'; tRow.style.display = 'none';
+      details.appendChild(vRow); details.appendChild(cRow); details.appendChild(pRow); details.appendChild(tRow);
+      card.appendChild(details); el.appendChild(card);
+      el._refs = { badge: badge, pwr: pwrEl, socNum: socNum, barFill: barFill, vVal: vRow.querySelector('.vrm-val'), cVal: cRow.querySelector('.vrm-val'), pVal: pRow.querySelector('.vrm-val'), tRow: tRow, tVal: tRow.querySelector('.vrm-val') };
+    }
+
+    var r = el._refs;
     var soc = b.soc != null ? b.soc : 0;
     var voltage = b.voltage != null ? b.voltage : 0;
     var current = b.current != null ? b.current : 0;
@@ -116,33 +222,27 @@
     var absPower = Math.abs(power);
     var charging = current > 0.5;
     var discharging = current < -0.5;
-    var stateText = charging ? 'Charging' : discharging ? 'Discharging' : 'Idle';
-    var stateIcon = charging ? '&#9889;' : discharging ? '&#128267;' : '&#128267;';
     var stateClass = charging ? 'vrm-charging' : discharging ? 'vrm-discharging' : 'vrm-idle';
+    var stateText = charging ? 'Charging' : discharging ? 'Discharging' : 'Idle';
+    var stateIcon = charging ? '\u26A1' : '\uD83D\uDD0B';
 
-    // Time to go estimate (rough: capacity_Ah * voltage * soc / load_watts)
-    // Using 1700Ah 24V nominal as default
-    var ttg = '';
+    r.badge.className = 'vrm-state-badge ' + stateClass;
+    r.badge.textContent = stateIcon + ' ' + stateText;
+    r.pwr.textContent = (power > 0 ? '+' : '') + power + ' W';
+    r.socNum.textContent = fmt(soc);
+    r.barFill.className = 'vrm-soc-fill ' + stateClass;
+    r.barFill.style.width = Math.max(0, soc) + '%';
+    r.vVal.textContent = fmt(voltage, 2) + ' V';
+    r.cVal.textContent = fmt(current, 1) + ' A';
+    r.pVal.textContent = (power > 0 ? '+' : '') + power + ' W';
+
     if (discharging && absPower > 5) {
-      var hoursLeft = Math.round((1700 * 24 * (soc / 100)) / absPower);
-      ttg = hoursLeft > 200 ? '200+ h' : hoursLeft + ' h';
+      var hoursLeft = Math.round((BATT_CAPACITY_AH * BATT_VOLTAGE_NOM * (soc / 100)) / absPower);
+      r.tVal.textContent = hoursLeft > 200 ? '200+ h' : hoursLeft + ' h';
+      r.tRow.style.display = '';
+    } else {
+      r.tRow.style.display = 'none';
     }
-
-    el.innerHTML =
-      '<div class="telem-panel-title"><span>&#128267;</span> House Battery</div>' +
-      '<div class="vrm-card">' +
-      '<div class="vrm-header">' +
-      '<span class="vrm-state-badge ' + stateClass + '">' + stateIcon + ' ' + stateText + '</span>' +
-      '<span class="vrm-power">' + (power > 0 ? '+' : '') + power + ' W</span>' +
-      '</div>' +
-      '<div class="vrm-soc">' + fmt(soc) + ' <span>%</span></div>' +
-      '<div class="vrm-soc-bar"><div class="vrm-soc-fill ' + stateClass + '" style="width:' + Math.max(1, soc) + '%"></div></div>' +
-      '<div class="vrm-details">' +
-      '<div class="vrm-row"><span class="vrm-label">Voltage</span><span class="vrm-val">' + fmt(voltage, 2) + ' V</span></div>' +
-      '<div class="vrm-row"><span class="vrm-label">Current</span><span class="vrm-val">' + fmt(current, 1) + ' A</span></div>' +
-      '<div class="vrm-row"><span class="vrm-label">Power</span><span class="vrm-val">' + (power > 0 ? '+' : '') + power + ' W</span></div>' +
-      (ttg ? '<div class="vrm-row"><span class="vrm-label">Time to go</span><span class="vrm-val">' + ttg + '</span></div>' : '') +
-      '</div></div>';
   }
 
   // ── Engine panel (RPM bars + temps) ──
@@ -158,16 +258,16 @@
     for (var i = 0; i < keys.length; i++) {
       var e = engines[keys[i]];
       var rpm = e.rpm || 0;
-      var pct = Math.min(100, (rpm / 3500) * 100);
-      var barCls = rpm > 3000 ? 'redline' : rpm > 2500 ? 'high' : '';
+      var pct = Math.min(100, (rpm / ENGINE_RPM_MAX) * 100);
+      var barCls = rpm > ENGINE_RPM_REDLINE ? 'redline' : rpm > ENGINE_RPM_HIGH ? 'high' : '';
 
       // Temperature bar helpers: coolant 0-120°C, exhaust 0-700°C
       var coolant = e.coolantTemp || 0;
       var exhaust = e.exhaustTemp || 0;
       var coolPct = Math.min(100, (coolant / 120) * 100);
       var exhPct = Math.min(100, (exhaust / 700) * 100);
-      var coolCls = coolant > 95 ? 'temp-red' : coolant > 85 ? 'temp-amber' : coolant > 40 ? 'temp-green' : '';
-      var exhCls = exhaust > 500 ? 'temp-red' : exhaust > 400 ? 'temp-amber' : exhaust > 100 ? 'temp-green' : '';
+      var coolCls = coolant > COOLANT_CRIT ? 'temp-red' : coolant > COOLANT_WARN ? 'temp-amber' : coolant > 40 ? 'temp-green' : '';
+      var exhCls = exhaust > EXHAUST_CRIT ? 'temp-red' : exhaust > EXHAUST_WARN ? 'temp-amber' : exhaust > 100 ? 'temp-green' : '';
 
       blocks +=
         '<div class="engine-block">' +
@@ -209,7 +309,7 @@
       bars +=
         '<div class="tank-bar-wrap">' +
         '<div class="tank-bar-header"><span class="tank-bar-name">' + esc(name) + '</span><span class="tank-bar-pct' + pctColor + '">' + fmt(level) + '%</span></div>' +
-        '<div class="tank-bar"><div class="tank-bar-fill ' + fillClass + '" style="width:' + Math.max(1, level).toFixed(0) + '%"></div></div>' +
+        '<div class="tank-bar"><div class="tank-bar-fill ' + fillClass + '" style="width:' + Math.max(0, level).toFixed(0) + '%"></div></div>' +
         '</div>';
     }
 
@@ -234,58 +334,74 @@
     el.innerHTML = '<div class="telem-panel-title"><span>&#9981;</span> Tanks</div>' + bars + starters;
   }
 
-  // ── Wind panel (apparent + true) ──
+  // ── Wind panel (persistent DOM — compass arrow updates via transform) ──
+  function updateArrow(line, poly, angleDeg) {
+    var rad = angleDeg * Math.PI / 180;
+    var ax = 40 + 25 * Math.sin(rad), ay = 40 - 25 * Math.cos(rad);
+    var headLen = 6, headAng = 0.4;
+    var h1x = ax - headLen * Math.sin(rad - headAng), h1y = ay + headLen * Math.cos(rad - headAng);
+    var h2x = ax - headLen * Math.sin(rad + headAng), h2y = ay + headLen * Math.cos(rad + headAng);
+    line.setAttribute('x2', ax.toFixed(1)); line.setAttribute('y2', ay.toFixed(1));
+    poly.setAttribute('points', ax.toFixed(1)+','+ay.toFixed(1)+' '+h1x.toFixed(1)+','+h1y.toFixed(1)+' '+h2x.toFixed(1)+','+h2y.toFixed(1));
+  }
+
   function renderWindPanel(el, snap) {
     var env = snap.environment || {};
     if (env.windSpeed == null) {
-      el.innerHTML = '<div class="telem-panel-title"><span>&#127788;</span> Wind</div><div style="color:var(--slate);font-size:.82rem;text-align:center;padding:12px">No wind instruments</div>';
+      el._refs = null;
+      el.innerHTML = '<div class="telem-panel-title"><span>&#127788;</span> Wind</div><div style="color:var(--slate);font-size:.9rem;text-align:center;padding:12px">No wind instruments</div>';
       return;
     }
 
-    var aws = env.windSpeed;
-    var awa = env.windAngle || 0;
-    var tws = env.windSpeedTrue;
-    var twa = env.windAngleTrue;
-
-    // Compass with both apparent (sky) and true (emerald) arrows
-    function windArrow(angleDeg, color, label) {
-      var rad = angleDeg * Math.PI / 180;
-      var ax = 40 + 25 * Math.sin(rad);
-      var ay = 40 - 25 * Math.cos(rad);
-      // Arrowhead
-      var headLen = 6;
-      var headAng = 0.4;
-      var h1x = ax - headLen * Math.sin(rad - headAng);
-      var h1y = ay + headLen * Math.cos(rad - headAng);
-      var h2x = ax - headLen * Math.sin(rad + headAng);
-      var h2y = ay + headLen * Math.cos(rad + headAng);
-      return '<line x1="40" y1="40" x2="' + ax.toFixed(1) + '" y2="' + ay.toFixed(1) + '" stroke="' + color + '" stroke-width="2.5" stroke-linecap="round"/>' +
-        '<polygon points="' + ax.toFixed(1) + ',' + ay.toFixed(1) + ' ' + h1x.toFixed(1) + ',' + h1y.toFixed(1) + ' ' + h2x.toFixed(1) + ',' + h2y.toFixed(1) + '" fill="' + color + '"/>';
+    if (!el._refs) {
+      el.innerHTML = '';
+      el.appendChild(makeTitle('&#127788;', 'Wind'));
+      // Build SVG compass
+      var compassDiv = document.createElement('div'); compassDiv.className = 'wind-compass';
+      var ns = 'http://www.w3.org/2000/svg';
+      var svg = document.createElementNS(ns, 'svg'); svg.setAttribute('viewBox', '0 0 80 80');
+      var circle = document.createElementNS(ns, 'circle'); circle.setAttribute('cx','40'); circle.setAttribute('cy','40'); circle.setAttribute('r','35'); circle.setAttribute('fill','none'); circle.setAttribute('stroke',C.border); circle.setAttribute('stroke-width','1.5'); svg.appendChild(circle);
+      var dirs = [['40','12','N'],['40','76','S'],['8','43','W'],['72','43','E']];
+      for (var d = 0; d < dirs.length; d++) { var t = document.createElementNS(ns,'text'); t.setAttribute('x',dirs[d][0]); t.setAttribute('y',dirs[d][1]); t.setAttribute('text-anchor','middle'); t.setAttribute('font-size','7'); t.setAttribute('font-weight','700'); t.setAttribute('fill',C.slate); t.textContent = dirs[d][2]; svg.appendChild(t); }
+      // Apparent arrow
+      var aLine = document.createElementNS(ns,'line'); aLine.setAttribute('x1','40'); aLine.setAttribute('y1','40'); aLine.setAttribute('stroke',C.sky); aLine.setAttribute('stroke-width','2.5'); aLine.setAttribute('stroke-linecap','round'); svg.appendChild(aLine);
+      var aPoly = document.createElementNS(ns,'polygon'); aPoly.setAttribute('fill',C.sky); svg.appendChild(aPoly);
+      // True arrow
+      var tLine = document.createElementNS(ns,'line'); tLine.setAttribute('x1','40'); tLine.setAttribute('y1','40'); tLine.setAttribute('stroke',C.emerald); tLine.setAttribute('stroke-width','2.5'); tLine.setAttribute('stroke-linecap','round'); svg.appendChild(tLine);
+      var tPoly = document.createElementNS(ns,'polygon'); tPoly.setAttribute('fill',C.emerald); svg.appendChild(tPoly);
+      var center = document.createElementNS(ns,'circle'); center.setAttribute('cx','40'); center.setAttribute('cy','40'); center.setAttribute('r','2.5'); center.setAttribute('fill',C.text); svg.appendChild(center);
+      compassDiv.appendChild(svg); el.appendChild(compassDiv);
+      // Legend
+      var legend = document.createElement('div'); legend.className = 'wind-legend';
+      legend.innerHTML = '<span class="wind-legend-item"><span style="background:'+C.sky+'"></span>Apparent</span><span class="wind-legend-item" id="wind-true-legend"><span style="background:'+C.emerald+'"></span>True</span>';
+      el.appendChild(legend);
+      // Value rows
+      var r = {};
+      r.tws = makeRow('TWS', ' kts'); el.appendChild(r.tws.row); r.tws.row.style.display = 'none';
+      r.twa = makeRow('TWA', '&deg;'); el.appendChild(r.twa.row); r.twa.row.style.display = 'none';
+      r.aws = makeRow('AWS', ' kts'); el.appendChild(r.aws.row);
+      r.awa = makeRow('AWA', '&deg;'); el.appendChild(r.awa.row);
+      r.aLine = aLine; r.aPoly = aPoly; r.tLine = tLine; r.tPoly = tPoly; r.trueLegend = legend.querySelector('#wind-true-legend');
+      el._refs = r;
     }
 
-    var compass =
-      '<div class="wind-compass"><svg viewBox="0 0 80 80">' +
-      '<circle cx="40" cy="40" r="35" fill="none" stroke="' + C.border + '" stroke-width="1.5"/>' +
-      '<text x="40" y="12" text-anchor="middle" font-size="7" font-weight="700" fill="' + C.slate + '">N</text>' +
-      '<text x="40" y="76" text-anchor="middle" font-size="7" font-weight="700" fill="' + C.slate + '">S</text>' +
-      '<text x="8" y="43" text-anchor="middle" font-size="7" font-weight="700" fill="' + C.slate + '">W</text>' +
-      '<text x="72" y="43" text-anchor="middle" font-size="7" font-weight="700" fill="' + C.slate + '">E</text>' +
-      windArrow(awa, C.sky, 'A') +
-      (twa != null ? windArrow(twa, C.emerald, 'T') : '') +
-      '<circle cx="40" cy="40" r="2.5" fill="' + C.text + '"/>' +
-      '</svg></div>' +
-      '<div class="wind-legend">' +
-      '<span class="wind-legend-item"><span style="background:' + C.sky + '"></span>Apparent</span>' +
-      (twa != null ? '<span class="wind-legend-item"><span style="background:' + C.emerald + '"></span>True</span>' : '') +
-      '</div>';
-
-    el.innerHTML =
-      '<div class="telem-panel-title"><span>&#127788;</span> Wind</div>' +
-      compass +
-      (tws != null ? '<div class="telem-row"><span class="telem-label">True Wind Speed (TWS)</span><span class="telem-value">' + fmt(tws, 1) + '<span class="telem-unit">kts</span></span></div>' : '') +
-      (twa != null ? '<div class="telem-row"><span class="telem-label">True Wind Angle (TWA)</span><span class="telem-value">' + fmt(twa) + '<span class="telem-unit">&deg;</span></span></div>' : '') +
-      '<div class="telem-row"><span class="telem-label">Apparent Wind Speed (AWS)</span><span class="telem-value">' + fmt(aws, 1) + '<span class="telem-unit">kts</span></span></div>' +
-      '<div class="telem-row"><span class="telem-label">Apparent Wind Angle (AWA)</span><span class="telem-value">' + fmt(awa) + '<span class="telem-unit">&deg;</span></span></div>';
+    var r = el._refs;
+    var aws = env.windSpeed, awa = env.windAngle || 0;
+    var tws = env.windSpeedTrue, twa = env.windAngleTrue;
+    updateArrow(r.aLine, r.aPoly, awa);
+    if (twa != null) {
+      updateArrow(r.tLine, r.tPoly, twa);
+      r.tLine.style.display = ''; r.tPoly.style.display = '';
+      r.trueLegend.style.display = '';
+      r.tws.setText(fmt(tws, 1)); r.tws.row.style.display = '';
+      r.twa.setText(fmt(twa)); r.twa.row.style.display = '';
+    } else {
+      r.tLine.style.display = 'none'; r.tPoly.style.display = 'none';
+      r.trueLegend.style.display = 'none';
+      r.tws.row.style.display = 'none'; r.twa.row.style.display = 'none';
+    }
+    r.aws.setText(fmt(aws, 1));
+    r.awa.setText(fmt(awa));
   }
 
   // ── Position panel (lat/lon + map link) ──
@@ -486,12 +602,13 @@
       '<div class="telem-row"><span class="telem-label">Actual Speed</span><span class="telem-value">' + fmt(sog, 1) + '<span class="telem-unit">kts</span></span></div>' +
       '</div>';
 
-    // Async fetch performance data
-    if (!el._perfTimer || Date.now() - el._perfTimer > 5000) {
+    // Async fetch performance data (single-flight guard)
+    if (!el._perfInFlight && (!el._perfTimer || Date.now() - el._perfTimer > 5000)) {
       el._perfTimer = Date.now();
+      el._perfInFlight = true;
       fetch('/api/performance').then(function(r) { return r.json(); }).then(function(d) {
         el._perfData = d;
-      }).catch(function() {});
+      }).catch(function() {}).then(function() { el._perfInFlight = false; });
     }
   }
 
@@ -521,7 +638,7 @@
     // Time estimate
     var timeStr = '';
     if (!charging && draw > 0.5) {
-      var ahTo20 = ((soc - 20) / 100) * 1700;
+      var ahTo20 = ((soc - 20) / 100) * BATT_CAPACITY_AH;
       if (ahTo20 > 0) {
         var hrs = ahTo20 / draw;
         var targetTime = new Date(Date.now() + hrs * 3600000);
@@ -534,20 +651,21 @@
     var hour = new Date().getHours();
     var solarNote = hour < 6 || hour > 18 ? ' (night)' : solarW < 50 ? ' (cloudy?)' : '';
 
-    // Fetch energy projection
+    // Fetch energy projection (single-flight guard)
     var proj = el._energyData || {};
-    if (!el._energyTimer || Date.now() - el._energyTimer > 10000) {
+    if (!el._energyInFlight && (!el._energyTimer || Date.now() - el._energyTimer > 10000)) {
       el._energyTimer = Date.now();
+      el._energyInFlight = true;
       fetch('/api/energy/projection').then(function(r) { return r.json(); }).then(function(d) {
         el._energyData = d;
-      }).catch(function() {});
+      }).catch(function() {}).then(function() { el._energyInFlight = false; });
     }
 
     el.innerHTML =
       '<div class="telem-panel-title"><span>&#9889;</span> Energy</div>' +
       '<div class="energy-soc">' +
         '<span class="energy-soc-num">' + fmt(soc) + '%</span>' +
-        '<div class="vrm-soc-bar"><div class="vrm-soc-fill ' + barCls + '" style="width:' + Math.max(1, soc) + '%"></div></div>' +
+        '<div class="vrm-soc-bar"><div class="vrm-soc-fill ' + barCls + '" style="width:' + Math.max(0, soc) + '%"></div></div>' +
       '</div>' +
       '<div class="energy-rows">' +
       '<div class="telem-row"><span class="telem-label">Draw</span><span class="telem-value">' + draw + '<span class="telem-unit">A (' + Math.abs(power) + 'W)</span></span></div>' +

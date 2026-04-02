@@ -10,32 +10,32 @@
 @keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:.3}}
 
 /* ── Telemetry grid ── */
-.telem-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;align-items:stretch}
-.telem-grid-wide{grid-template-columns:repeat(3,1fr)}
-.telem-panel{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px}
-.telem-panel-title{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--slate);margin-bottom:8px;display:flex;align-items:center;gap:6px}
-.telem-panel-title span{font-size:.9rem}
+.telem-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:12px;align-items:stretch}
+.telem-grid-wide{grid-template-columns:repeat(2,1fr)}
+.telem-panel{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px}
+.telem-panel-title{font-size:.82rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--slate);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.telem-panel-title span{font-size:1rem}
 
 /* ── Gauge row (label + value) ── */
-.telem-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid rgba(226,232,240,.5)}
+.telem-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(226,232,240,.5)}
 .telem-row:last-child{border-bottom:none}
-.telem-label{font-size:.78rem;color:var(--slate);font-weight:500}
-.telem-value{font-size:.88rem;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums}
+.telem-label{font-size:.9rem;color:var(--slate);font-weight:500}
+.telem-value{font-size:1.05rem;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums}
 .telem-value.warn{color:var(--amber)}
 .telem-value.crit{color:var(--red)}
 .telem-value.good{color:var(--emerald)}
 
 /* ── Unit suffix ── */
-.telem-unit{font-size:.7rem;font-weight:500;color:var(--slate);margin-left:2px}
+.telem-unit{font-size:.8rem;font-weight:500;color:var(--slate);margin-left:2px}
 
 /* ── Victron VRM house battery (light theme — matches dashboard) ── */
 .vrm-card{background:#fff;border-radius:8px;padding:10px;color:var(--text)}
 .vrm-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
-.vrm-state-badge{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.vrm-state-badge{font-size:.82rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
 .vrm-state-badge.vrm-idle{color:var(--slate)}
 .vrm-state-badge.vrm-charging{color:#059669}
 .vrm-state-badge.vrm-discharging{color:#D97706}
-.vrm-power{font-size:.82rem;font-weight:700;color:var(--slate);font-variant-numeric:tabular-nums}
+.vrm-power{font-size:.92rem;font-weight:700;color:var(--slate);font-variant-numeric:tabular-nums}
 .vrm-soc{font-size:2rem;font-weight:900;font-variant-numeric:tabular-nums;color:var(--text);line-height:1;margin-bottom:8px;padding-top:2px;text-align:center;width:100%;display:block}
 .vrm-soc span{font-size:1.2rem;font-weight:600;color:var(--slate)}
 .vrm-soc-bar{height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-bottom:14px}
@@ -46,15 +46,17 @@
 .vrm-details{border-top:1px solid var(--border);padding-top:10px}
 .vrm-row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(226,232,240,.5)}
 .vrm-row:last-child{border-bottom:none}
-.vrm-label{font-size:.78rem;color:var(--slate);font-weight:500}
-.vrm-val{font-size:.85rem;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums}
+.vrm-label{font-size:.88rem;color:var(--slate);font-weight:500}
+.vrm-val{font-size:.95rem;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums}
 
 /* ── Tank bars ── */
 .tank-bar-wrap{margin-bottom:10px}
 .tank-bar-wrap:last-child{margin-bottom:0}
 .tank-bar-header{display:flex;justify-content:space-between;margin-bottom:3px}
-.tank-bar-name{font-size:.75rem;font-weight:600;color:var(--slate)}
-.tank-bar-pct{font-size:.75rem;font-weight:700;font-variant-numeric:tabular-nums}
+.tank-bar-name{font-size:.88rem;font-weight:600;color:var(--slate)}
+.tank-bar-pct{font-size:.88rem;font-weight:700;font-variant-numeric:tabular-nums}
+.tank-bar-pct.warn{color:var(--amber)}
+.tank-bar-pct.crit{color:var(--red)}
 .tank-bar{height:10px;background:#E2E8F0;border-radius:5px;overflow:hidden}
 .tank-bar-fill{height:100%;border-radius:5px;transition:width .6s ease}
 .tank-bar-fill.fuel{background:var(--amber)}
@@ -64,9 +66,9 @@
 /* ── Engine RPM bars ── */
 .engine-block{margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)}
 .engine-block:last-child{margin-bottom:0;padding-bottom:0;border-bottom:none}
-.engine-id{font-size:.78rem;font-weight:700;color:var(--ocean);text-transform:capitalize;margin-bottom:6px;display:flex;align-items:center;gap:6px}
-.engine-running{font-size:.65rem;font-weight:600;color:var(--emerald);background:#D1FAE5;padding:1px 6px;border-radius:4px}
-.engine-off{font-size:.65rem;font-weight:600;color:var(--slate);background:var(--surface);padding:1px 6px;border-radius:4px}
+.engine-id{font-size:.9rem;font-weight:700;color:var(--ocean);text-transform:capitalize;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.engine-running{font-size:.75rem;font-weight:600;color:var(--emerald);background:#D1FAE5;padding:2px 8px;border-radius:4px}
+.engine-off{font-size:.75rem;font-weight:600;color:var(--slate);background:var(--surface);padding:2px 8px;border-radius:4px}
 .engine-temps{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0}
 .engine-temp-gauge{}
 .engine-temp-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:3px}
@@ -82,10 +84,10 @@
 .rpm-bar-fill.redline{background:var(--red)}
 
 /* ── Wind compass ── */
-.wind-compass{width:90px;height:90px;margin:0 auto 4px}
+.wind-compass{width:160px;height:160px;margin:0 auto 8px}
 .wind-compass svg{width:100%;height:100%}
-.wind-legend{display:flex;justify-content:center;gap:12px;margin-bottom:8px}
-.wind-legend-item{display:flex;align-items:center;gap:4px;font-size:.65rem;font-weight:600;color:var(--slate)}
+.wind-legend{display:flex;justify-content:center;gap:14px;margin-bottom:10px}
+.wind-legend-item{display:flex;align-items:center;gap:5px;font-size:.82rem;font-weight:600;color:var(--slate)}
 .wind-legend-item span:first-child{width:10px;height:3px;border-radius:2px;display:inline-block}
 
 /* ── Position link ── */
@@ -100,22 +102,22 @@
 
 /* ── Alert ticker ── */
 .alert-ticker{max-height:160px;overflow-y:auto;display:flex;flex-direction:column;gap:4px}
-.alert-item{padding:8px 12px;border-radius:8px;font-size:.8rem;line-height:1.4;border-left:3px solid var(--border)}
+.alert-item{padding:10px 14px;border-radius:8px;font-size:.9rem;line-height:1.4;border-left:3px solid var(--border)}
 .alert-item.critical{background:#FEF2F2;border-left-color:var(--red);color:#991B1B}
 .alert-item.warning{background:#FFFBEB;border-left-color:var(--amber);color:#92400E}
 .alert-item.info{background:#F0F9FF;border-left-color:var(--sky);color:#0C4A6E}
-.alert-time{font-size:.68rem;color:var(--slate);margin-top:2px}
-.alert-empty{text-align:center;padding:16px;color:var(--slate);font-size:.82rem}
+.alert-time{font-size:.78rem;color:var(--slate);margin-top:2px}
+.alert-empty{text-align:center;padding:16px;color:var(--slate);font-size:.9rem}
 .alert-item{position:relative}
-.alert-actions{position:absolute;top:6px;right:6px;display:flex;gap:2px;opacity:0;transition:opacity .15s}
-.alert-item:hover .alert-actions{opacity:1}
-.alert-btn{background:none;border:none;cursor:pointer;font-size:.82rem;line-height:1;padding:2px 4px;border-radius:4px;color:var(--slate)}
+.alert-actions{position:absolute;top:6px;right:6px;display:flex;gap:4px;opacity:1}
+.alert-btn{background:none;border:none;cursor:pointer;font-size:.95rem;line-height:1;padding:6px 8px;border-radius:6px;color:var(--slate);min-width:36px;min-height:36px;display:flex;align-items:center;justify-content:center}
 .alert-btn:hover{background:rgba(0,0,0,.08);color:var(--text)}
 .alert-item.silenced{opacity:.45}
 
-/* ── Full-width telemetry section ── */
-.telem-section{grid-column:1/-1}
-.telem-section .card h2{display:flex;align-items:center;gap:10px}
+/* ── Staleness states ── */
+.telem-status.stale{background:#FEF3C7;color:#D97706}
+.telem-status.stale::before{content:'';width:7px;height:7px;border-radius:50%;background:#F59E0B;animation:pulse-dot 1s infinite}
+.telem-panel.stale{opacity:.6;border-color:var(--amber)}
 
 /* ── Telem panel drag ── */
 .telem-drag-box{display:flex;flex-direction:column}
@@ -123,7 +125,7 @@
 .telem-drag-box.dragging{opacity:.4}
 #telem-panels .telem-panel-title{cursor:grab;user-select:none}
 #telem-panels .telem-panel-title:active{cursor:grabbing}
-#telem-panels .telem-panel-title::before{content:'\283F';opacity:.3;font-size:.8rem}
+#telem-panels .telem-panel-title::before{content:'\283F';opacity:.3;font-size:.9rem}
 
 /* ══════════════════════════════════════════════════════════
    ENERGY FLOW MODAL (VRM-style dark theme)
@@ -148,10 +150,10 @@
 .ef-card.active{border-left-color:var(--ef-accent);box-shadow:0 0 20px rgba(var(--ef-accent),.15)}
 .ef-icon{font-size:1.4rem;margin-bottom:4px;opacity:.7}
 .ef-card.active .ef-icon{opacity:1}
-.ef-label{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#94A3B8;margin-bottom:6px}
+.ef-label{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#94A3B8;margin-bottom:6px}
 .ef-val{font-size:1.1rem;font-weight:800;color:#F1F5F9;font-variant-numeric:tabular-nums;line-height:1.2}
 .ef-card.active .ef-val{color:var(--ef-accent)}
-.ef-val2{font-size:.68rem;color:#64748B;margin-top:3px}
+.ef-val2{font-size:.78rem;color:#64748B;margin-top:3px}
 .ef-card.active .ef-val2{color:#94A3B8}
 
 /* ── Flow connectors ── */
@@ -169,7 +171,7 @@
 /* ── Battery bar (full width below grid) ── */
 .ef-batt-bar{height:6px;background:#1E293B;border-radius:3px;overflow:hidden;margin:16px 0 6px}
 .ef-batt-fill{height:100%;border-radius:3px;transition:width .6s ease}
-.ef-batt-meta{display:flex;justify-content:space-between;font-size:.72rem;color:#94A3B8;margin-bottom:16px}
+.ef-batt-meta{display:flex;justify-content:space-between;font-size:.82rem;color:#94A3B8;margin-bottom:16px}
 
 /* ── Generator row ── */
 .ef-gen-row{display:flex;justify-content:center;margin-top:4px}
@@ -190,41 +192,41 @@
 
 /* ── Scenario control groups ── */
 .scenario-group{display:flex;gap:4px;flex-wrap:wrap}
-.scenario-divider{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--amber);padding:4px 8px;align-self:center}
+.scenario-divider{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--amber);padding:4px 8px;align-self:center}
 .scenario-btn.intel{border-color:var(--amber);color:var(--amber)}
 .scenario-btn.intel.active{background:var(--amber);color:#fff;border-color:var(--amber)}
 
 /* ── Advisor recommendation cards ── */
-.rec-count{font-size:.7rem;font-weight:500;color:var(--slate);margin-left:6px}
+.rec-count{font-size:.8rem;font-weight:500;color:var(--slate);margin-left:6px}
 .rec-card{border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-top:8px;transition:opacity .3s}
 .rec-card.rec-critical{border-left:3px solid var(--red);background:rgba(239,68,68,.04)}
 .rec-card.rec-advisory{border-left:3px solid var(--amber);background:rgba(245,158,11,.04)}
 .rec-card.rec-suggestion{border-left:3px solid var(--sky);background:rgba(14,165,233,.04)}
 .rec-card.rec-info{border-left:3px solid var(--slate);background:rgba(100,116,139,.04)}
 .rec-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
-.rec-badge{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:2px 6px;border-radius:4px}
+.rec-badge{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:3px 8px;border-radius:4px}
 .rec-badge.rec-critical{color:var(--red);background:rgba(239,68,68,.1)}
 .rec-badge.rec-advisory{color:var(--amber);background:rgba(245,158,11,.1)}
 .rec-badge.rec-suggestion{color:var(--sky);background:rgba(14,165,233,.1)}
 .rec-badge.rec-info{color:var(--slate);background:rgba(100,116,139,.1)}
 .rec-time{font-size:.7rem;color:var(--slate)}
-.rec-title{font-size:.88rem;font-weight:600;color:var(--text);margin:4px 0 2px}
-.rec-reasoning{font-size:.78rem;color:var(--slate);line-height:1.4;margin-bottom:4px}
-.rec-impact{font-size:.75rem;color:var(--ocean);font-style:italic;margin-bottom:6px}
+.rec-title{font-size:.95rem;font-weight:600;color:var(--text);margin:4px 0 2px}
+.rec-reasoning{font-size:.88rem;color:var(--slate);line-height:1.4;margin-bottom:4px}
+.rec-impact{font-size:.85rem;color:var(--ocean);font-style:italic;margin-bottom:6px}
 .rec-actions{display:flex;gap:6px}
-.rec-btn{padding:4px 12px;border-radius:6px;border:1px solid var(--border);background:#fff;cursor:pointer;font-size:.75rem;font-weight:600;transition:all .15s}
+.rec-btn{padding:8px 16px;border-radius:6px;border:1px solid var(--border);background:#fff;cursor:pointer;font-size:.85rem;font-weight:600;transition:all .15s;min-height:36px}
 .rec-btn.rec-accept{color:var(--emerald);border-color:var(--emerald)}
 .rec-btn.rec-accept:hover{background:var(--emerald);color:#fff}
 .rec-btn.rec-dismiss{color:var(--slate)}
 .rec-btn.rec-dismiss:hover{background:var(--slate);color:#fff}
 .rec-btn.rec-why{color:var(--sky)}
 .rec-btn.rec-why:hover{background:var(--sky);color:#fff}
-.rec-explain{font-size:.75rem;color:var(--slate);padding:8px;margin-top:8px;background:rgba(14,165,233,.04);border-radius:6px;line-height:1.5}
+.rec-explain{font-size:.85rem;color:var(--slate);padding:10px;margin-top:8px;background:rgba(14,165,233,.04);border-radius:6px;line-height:1.5}
 
 /* ── Performance panel ── */
 .perf-big{font-size:2.5rem;font-weight:800;text-align:center;line-height:1}
 .perf-unit{font-size:1rem;font-weight:600;opacity:.7}
-.perf-label{text-align:center;font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--slate);margin-bottom:10px}
+.perf-label{text-align:center;font-size:.82rem;text-transform:uppercase;letter-spacing:.08em;color:var(--slate);margin-bottom:10px}
 .perf-details{border-top:1px solid var(--border);padding-top:8px}
 
 /* ── Energy panel ── */

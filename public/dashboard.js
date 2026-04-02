@@ -276,103 +276,156 @@
     });
   }
 
-  // ── Boat Page ──
+  // ── Boat Page (split into builders) ──
+
+  function buildBoatChips(b) {
+    var statusLabel = b.status || 'inactive';
+    var chips = '';
+    var chipData = [
+      ['Status', '<span class="status-dot ' + esc(statusLabel) + '" style="display:inline-block;margin-right:3px"></span>' + esc(statusLabel), true],
+      ['Model', b.model], ['Year', b.year], ['Type', b.boat_type],
+      ['Length', b.length_ft ? b.length_ft + ' ft' : null],
+      ['Beam', b.beam_ft ? b.beam_ft + ' ft' : null],
+      ['Draft', b.draft_ft ? b.draft_ft + ' ft' : null],
+      ['MMSI', b.mmsi], ['Home Port', b.home_port],
+      ['Engines', (b.engine_type || '') + (b.engine_count > 1 ? ' x' + b.engine_count : '')],
+      ['Fuel', b.fuel_capacity ? b.fuel_capacity + 'L' : null],
+      ['Water', b.water_capacity ? b.water_capacity + 'L' : null],
+    ];
+    for (var ci = 0; ci < chipData.length; ci++) {
+      var cd = chipData[ci];
+      var cv = cd[2] ? cd[1] : (cd[1] != null && cd[1] !== '' ? esc(String(cd[1])) : null);
+      if (!cv) continue;
+      chips += '<div class="boat-chip"><span class="boat-chip-label">' + esc(cd[0]) + '</span>' + (cd[2] ? cv : '<span class="boat-chip-val">' + cv + '</span>') + '</div>';
+    }
+    return chips;
+  }
+
+  function buildBoatSections(b, id) {
+    var sections = {};
+    sections.info =
+      '<div class="boat-info-bar">' +
+      (b.photo_url ? '<div class="boat-thumb"><img src="' + esc(b.photo_url) + '" alt="' + esc(b.name) + '"></div>' : '') +
+      '<div class="boat-chips">' + buildBoatChips(b) + '</div>' +
+      (b.notes ? '<div class="boat-notes-line">' + esc(b.notes) + '</div>' : '') +
+      '</div>';
+    sections.alerts =
+      '<div class="alert-ticker" id="telem-alerts"><div class="alert-empty">Connecting...</div></div>';
+    sections.telemetry = buildTelemetryShell(id);
+    sections.logbook =
+      '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px">' +
+      '<div class="log-filters" id="log-filters">' +
+      '<button class="log-filter active" data-type="">All</button>' +
+      '<button class="log-filter" data-type="note">Notes</button>' +
+      '<button class="log-filter" data-type="maintenance">Maintenance</button>' +
+      '<button class="log-filter" data-type="alert">Alerts</button>' +
+      '</div>' +
+      '<button class="btn btn-sky btn-sm" id="add-log-btn">+ Add Entry</button>' +
+      '</div>' +
+      '<div id="log-feed" class="log-feed"><p style="color:var(--slate)">Loading...</p></div>' +
+      '<div id="log-form-area"></div>';
+    return sections;
+  }
+
+  function buildTelemetryShell(id) {
+    var defaultPanelOrder = ['advisor', 'perf', 'energy', 'batt', 'nav', 'engines', 'tanks', 'wind'];
+    var panelOrder = defaultPanelOrder;
+    try {
+      var savedPanels = JSON.parse(localStorage.getItem('mc_telem_' + id));
+      if (Array.isArray(savedPanels) && savedPanels.length === defaultPanelOrder.length) {
+        var validP = true;
+        for (var pi = 0; pi < defaultPanelOrder.length; pi++) {
+          if (savedPanels.indexOf(defaultPanelOrder[pi]) === -1) { validP = false; break; }
+        }
+        if (validP) panelOrder = savedPanels;
+      }
+    } catch(e) {}
+    var panelHtml = '';
+    for (var pi = 0; pi < panelOrder.length; pi++) {
+      var pk = panelOrder[pi];
+      panelHtml += '<div class="telem-drag-box" data-panel="' + pk + '"><div class="telem-panel" id="telem-' + pk + '"></div></div>';
+    }
+    return '<div class="telem-grid telem-grid-wide" id="telem-panels">' + panelHtml + '</div>' +
+      '<div class="scenario-bar" id="telem-scenarios"></div>';
+  }
+
+  function buildBoatHeader(b) {
+    var statusLabel = b.status || 'inactive';
+    return '<div class="boat-page-header">' +
+      '<button class="back-btn" onclick="window.location.hash=\'#/\'">&larr; Fleet</button>' +
+      '<div class="boat-header-info">' +
+      '<h1>' + esc(b.name) + ' <span class="boat-header-model">' + esc(b.model || '') + '</span></h1>' +
+      '<div class="boat-header-meta">' +
+      '<span class="status-dot ' + esc(statusLabel) + '"></span><span class="boat-header-status">' + esc(statusLabel) + '</span>' +
+      (b.home_port ? '<span class="boat-header-sep">&bull;</span><span>' + esc(b.home_port) + '</span>' : '') +
+      '</div></div>' +
+      '<div class="boat-page-actions">' +
+      '<button class="boat-header-btn" id="fullscreen-btn" title="Fullscreen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/></svg></button>' +
+      '<button class="btn btn-outline btn-sm" id="edit-boat-btn">Edit</button>' +
+      '<button class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red)" id="delete-boat-btn">Delete</button>' +
+      '</div></div>';
+  }
+
+  function restoreLayout(id) {
+    var defaultOrder = ['info', 'alerts', 'telemetry', 'logbook'];
+    var order = defaultOrder;
+    try {
+      var saved = JSON.parse(localStorage.getItem('mc_layout_' + id));
+      if (Array.isArray(saved) && saved.length === defaultOrder.length) {
+        var valid = true;
+        for (var oi = 0; oi < defaultOrder.length; oi++) {
+          if (saved.indexOf(defaultOrder[oi]) === -1) { valid = false; break; }
+        }
+        if (valid) order = saved;
+      }
+    } catch(e) {}
+    return order;
+  }
+
+  function bindBoatEvents(b, id) {
+    document.getElementById('edit-boat-btn').addEventListener('click', function() { showBoatModal(b); });
+    document.getElementById('delete-boat-btn').addEventListener('click', async function() {
+      if (!confirm('Delete "' + b.name + '"? This cannot be undone.')) return;
+      try { await apiDelete('/api/boats/' + b.id); navigate('#/'); } catch (e) { alert(e.message); }
+    });
+    document.getElementById('add-log-btn').addEventListener('click', function() { showLogForm(b.id); });
+    document.getElementById('fullscreen-btn').addEventListener('click', function() {
+      var el = document.documentElement;
+      if (document.fullscreenElement) { document.exitFullscreen(); }
+      else if (el.requestFullscreen) { el.requestFullscreen(); }
+    });
+    document.getElementById('log-filters').addEventListener('click', function(e) {
+      var btn = e.target.closest('.log-filter');
+      if (!btn) return;
+      document.querySelectorAll('.log-filter').forEach(function(f) { f.classList.remove('active'); });
+      btn.classList.add('active');
+      loadLogs(b.id, btn.getAttribute('data-type'));
+    });
+
+    loadLogs(b.id, '');
+    setupDragDrop({
+      containerId: 'boat-sections', boxClass: 'drag-box',
+      handleSel: '.drag-handle', dataAttr: 'data-section',
+      storageKey: 'mc_layout_' + id
+    });
+    setupDragDrop({
+      containerId: 'telem-panels', boxClass: 'telem-drag-box',
+      handleSel: '.telem-panel-title', dataAttr: 'data-panel',
+      storageKey: 'mc_telem_' + id, grid: true
+    });
+    initTelemetry(id);
+  }
+
   async function renderBoat(id) {
     app.innerHTML = '<p style="color:var(--slate);padding:40px 0">Loading...</p>';
     try {
       var data = await api('/api/boats/' + id);
       var b = data.boat;
-      var statusLabel = b.status || 'inactive';
-
-      // Build compact detail chips (only non-empty values)
-      var chips = '';
-      var chipData = [
-        ['Status', '<span class="status-dot ' + esc(statusLabel) + '" style="display:inline-block;margin-right:3px"></span>' + esc(statusLabel), true],
-        ['Model', b.model], ['Year', b.year], ['Type', b.boat_type],
-        ['Length', b.length_ft ? b.length_ft + ' ft' : null],
-        ['Beam', b.beam_ft ? b.beam_ft + ' ft' : null],
-        ['Draft', b.draft_ft ? b.draft_ft + ' ft' : null],
-        ['MMSI', b.mmsi], ['Home Port', b.home_port],
-        ['Engines', (b.engine_type || '') + (b.engine_count > 1 ? ' x' + b.engine_count : '')],
-        ['Fuel', b.fuel_capacity ? b.fuel_capacity + 'L' : null],
-        ['Water', b.water_capacity ? b.water_capacity + 'L' : null],
-      ];
-      for (var ci = 0; ci < chipData.length; ci++) {
-        var cd = chipData[ci];
-        var cv = cd[2] ? cd[1] : (cd[1] != null && cd[1] !== '' ? esc(String(cd[1])) : null);
-        if (!cv) continue;
-        chips += '<div class="boat-chip"><span class="boat-chip-label">' + esc(cd[0]) + '</span>' + (cd[2] ? cv : '<span class="boat-chip-val">' + cv + '</span>') + '</div>';
-      }
-
-      // ── Section content ──
-      var sections = {};
-
-      sections.info =
-        '<div class="boat-info-bar">' +
-        (b.photo_url ? '<div class="boat-thumb"><img src="' + esc(b.photo_url) + '" alt="' + esc(b.name) + '"></div>' : '') +
-        '<div class="boat-chips">' + chips + '</div>' +
-        (b.notes ? '<div class="boat-notes-line">' + esc(b.notes) + '</div>' : '') +
-        '</div>';
-
-      sections.alerts =
-        '<div class="alert-ticker" id="telem-alerts"><div class="alert-empty">Connecting...</div></div>';
-
-      // ── Telem panel order ──
-      var defaultPanelOrder = ['advisor', 'perf', 'energy', 'batt', 'nav', 'engines', 'tanks', 'wind'];
-      var panelOrder = defaultPanelOrder;
-      try {
-        var savedPanels = JSON.parse(localStorage.getItem('mc_telem_' + id));
-        if (Array.isArray(savedPanels) && savedPanels.length === defaultPanelOrder.length) {
-          var validP = true;
-          for (var pi = 0; pi < defaultPanelOrder.length; pi++) {
-            if (savedPanels.indexOf(defaultPanelOrder[pi]) === -1) { validP = false; break; }
-          }
-          if (validP) panelOrder = savedPanels;
-        }
-      } catch(e) {}
-      var panelHtml = '';
-      for (var pi = 0; pi < panelOrder.length; pi++) {
-        var pk = panelOrder[pi];
-        panelHtml += '<div class="telem-drag-box" data-panel="' + pk + '"><div class="telem-panel" id="telem-' + pk + '"></div></div>';
-      }
-
-      sections.telemetry =
-        '<div class="telem-grid telem-grid-wide" id="telem-panels">' + panelHtml + '</div>' +
-        '<div class="scenario-bar" id="telem-scenarios"></div>';
-
-      sections.logbook =
-        '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px">' +
-        '<div class="log-filters" id="log-filters">' +
-        '<button class="log-filter active" data-type="">All</button>' +
-        '<button class="log-filter" data-type="note">Notes</button>' +
-        '<button class="log-filter" data-type="maintenance">Maintenance</button>' +
-        '<button class="log-filter" data-type="alert">Alerts</button>' +
-        '</div>' +
-        '<button class="btn btn-sky btn-sm" id="add-log-btn">+ Add Entry</button>' +
-        '</div>' +
-        '<div id="log-feed" class="log-feed"><p style="color:var(--slate)">Loading...</p></div>' +
-        '<div id="log-form-area"></div>';
-
+      var sections = buildBoatSections(b, id);
       var sectionLabels = { info: 'Boat Info', alerts: 'Alerts', telemetry: 'Commander Unit', logbook: 'Logbook' };
-      var sectionHandleExtra = {
-        telemetry: ' <span class="telem-status disconnected" id="telem-badge">CONNECTING</span>'
-      };
+      var sectionHandleExtra = { telemetry: ' <span class="telem-status disconnected" id="telem-badge">CONNECTING</span>' };
+      var order = restoreLayout(id);
 
-      // ── Saved layout order ──
-      var defaultOrder = ['info', 'alerts', 'telemetry', 'logbook'];
-      var order = defaultOrder;
-      try {
-        var saved = JSON.parse(localStorage.getItem('mc_layout_' + id));
-        if (Array.isArray(saved) && saved.length === defaultOrder.length) {
-          var valid = true;
-          for (var oi = 0; oi < defaultOrder.length; oi++) {
-            if (saved.indexOf(defaultOrder[oi]) === -1) { valid = false; break; }
-          }
-          if (valid) order = saved;
-        }
-      } catch(e) {}
-
-      // ── Build drag boxes ──
       var boxesHtml = '';
       for (var si = 0; si < order.length; si++) {
         var key = order[si];
@@ -382,50 +435,10 @@
           '<div class="drag-content">' + sections[key] + '</div></div>';
       }
 
-      app.innerHTML =
-        '<div class="boat-page-header">' +
-        '<button class="back-btn" onclick="window.location.hash=\'#/\'">&larr; Fleet</button>' +
-        '<div class="boat-header-info">' +
-        '<h1>' + esc(b.name) + ' <span class="boat-header-model">' + esc(b.model || '') + '</span></h1>' +
-        '<div class="boat-header-meta">' +
-        '<span class="status-dot ' + esc(statusLabel) + '"></span><span class="boat-header-status">' + esc(statusLabel) + '</span>' +
-        (b.home_port ? '<span class="boat-header-sep">&bull;</span><span>' + esc(b.home_port) + '</span>' : '') +
-        '</div></div>' +
-        '<div class="boat-page-actions">' +
-        '<button class="btn btn-outline btn-sm" id="edit-boat-btn">Edit</button>' +
-        '<button class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red)" id="delete-boat-btn">Delete</button>' +
-        '</div></div>' +
+      app.innerHTML = buildBoatHeader(b) +
         '<div id="boat-sections" class="boat-sections">' + boxesHtml + '</div>';
 
-      // Event listeners
-      document.getElementById('edit-boat-btn').addEventListener('click', function() { showBoatModal(b); });
-      document.getElementById('delete-boat-btn').addEventListener('click', async function() {
-        if (!confirm('Delete "' + b.name + '"? This cannot be undone.')) return;
-        try { await apiDelete('/api/boats/' + b.id); navigate('#/'); } catch (e) { alert(e.message); }
-      });
-      document.getElementById('add-log-btn').addEventListener('click', function() { showLogForm(b.id); });
-
-      // Log filters
-      document.getElementById('log-filters').addEventListener('click', function(e) {
-        var btn = e.target.closest('.log-filter');
-        if (!btn) return;
-        document.querySelectorAll('.log-filter').forEach(function(f) { f.classList.remove('active'); });
-        btn.classList.add('active');
-        loadLogs(b.id, btn.getAttribute('data-type'));
-      });
-
-      loadLogs(b.id, '');
-      setupDragDrop({
-        containerId: 'boat-sections', boxClass: 'drag-box',
-        handleSel: '.drag-handle', dataAttr: 'data-section',
-        storageKey: 'mc_layout_' + id
-      });
-      setupDragDrop({
-        containerId: 'telem-panels', boxClass: 'telem-drag-box',
-        handleSel: '.telem-panel-title', dataAttr: 'data-panel',
-        storageKey: 'mc_telem_' + id, grid: true
-      });
-      initTelemetry(id);
+      bindBoatEvents(b, id);
     } catch (e) {
       app.innerHTML = '<p style="color:var(--red);padding:40px 0">' + esc(e.message) + '</p>';
     }
@@ -628,6 +641,8 @@
   // ── Telemetry lifecycle ──
   var _telemClient = null;
   var _scenarioLoaded = false;
+  var _battBindTimer = null;
+  var _lastUpdateTime = 0;
 
   function initTelemetry(boatId) {
     cleanupTelemetry();
@@ -637,18 +652,39 @@
     _scenarioLoaded = false;
 
     _telemClient.onStatus(function(connected) {
-      var badge = document.getElementById('telem-badge');
-      if (!badge) return;
       if (connected) {
-        badge.className = 'telem-status live';
-        badge.textContent = 'LIVE';
+        _lastUpdateTime = Date.now();
+        updateStaleBadge();
       } else {
-        badge.className = 'telem-status disconnected';
-        badge.textContent = 'DISCONNECTED';
+        updateStaleBadge();
       }
     });
 
+    // Staleness check — runs every 5s to update badge
+    var _staleInterval = setInterval(updateStaleBadge, 5000);
+    var _origCleanup = cleanupTelemetry;
+    cleanupTelemetry = function() { clearInterval(_staleInterval); _origCleanup(); };
+
+    function updateStaleBadge() {
+      var badge = document.getElementById('telem-badge');
+      if (!badge) return;
+      var connected = _telemClient && _telemClient.connected;
+      var age = _lastUpdateTime ? Date.now() - _lastUpdateTime : Infinity;
+      if (!connected) {
+        badge.className = 'telem-status disconnected';
+        badge.textContent = 'DISCONNECTED';
+      } else if (age > 30000) {
+        badge.className = 'telem-status stale';
+        badge.textContent = 'STALE (' + Math.round(age / 1000) + 's)';
+      } else {
+        badge.className = 'telem-status live';
+        badge.textContent = 'LIVE';
+      }
+    }
+
     _telemClient.onUpdate(function(snap) {
+      _lastUpdateTime = Date.now();
+      updateStaleBadge();
       var T = window.MCTelemetry;
       var el;
       el = document.getElementById('telem-advisor');  if (el && T.renderAdvisorPanel) T.renderAdvisorPanel(el, snap);
@@ -678,10 +714,16 @@
       }
     });
 
-    _telemClient.connect();
+    // Real boats (id > 0) use boat-specific SSE; simulator uses generic SSE
+    if (boatId > 0 && _telemClient.connectToBoat) {
+      _telemClient.connectToBoat(boatId);
+    } else {
+      _telemClient.connect();
+    }
 
     // ── Battery panel click → energy flow modal ──
-    setTimeout(function() {
+    _battBindTimer = setTimeout(function() {
+      _battBindTimer = null;
       var battPanel = document.getElementById('telem-batt');
       if (battPanel) {
         battPanel.style.cursor = 'pointer';
@@ -744,11 +786,14 @@
   }
 
   function cleanupTelemetry() {
+    if (_battBindTimer) { clearTimeout(_battBindTimer); _battBindTimer = null; }
+    closeEnergyFlow();
     if (_telemClient) {
       _telemClient.disconnect();
       _telemClient = null;
     }
     _scenarioLoaded = false;
+    _lastUpdateTime = 0;
   }
 
   function detailRow(label, value, raw) {
@@ -1544,6 +1589,7 @@
 
   // ── PROFILE SELECTOR (nav) ─────────────────────────────
 
+  var _profileListenerBound = false;
   async function loadProfileSelector() {
     try {
       var data = await api('/api/profiles');
@@ -1554,9 +1600,12 @@
         var p = data.profiles[i];
         sel.innerHTML += '<option value="' + esc(p.id) + '"' + (p.id === data.active ? ' selected' : '') + '>' + esc(p.name || p.id) + '</option>';
       }
-      sel.addEventListener('change', async function() {
-        await apiPut('/api/profiles/active', { profileId: sel.value || null });
-      });
+      if (!_profileListenerBound) {
+        _profileListenerBound = true;
+        sel.addEventListener('change', async function() {
+          await apiPut('/api/profiles/active', { profileId: sel.value || null });
+        });
+      }
     } catch (e) {
       // Profile API not available — hide selector
       var sel = document.getElementById('nav-profile-select');
