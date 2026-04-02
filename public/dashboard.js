@@ -328,7 +328,7 @@
   }
 
   function buildTelemetryShell(id) {
-    var defaultPanelOrder = ['advisor', 'perf', 'energy', 'batt', 'nav', 'engines', 'tanks', 'wind'];
+    var defaultPanelOrder = ['advisor', 'perf', 'batt', 'nav', 'engines', 'tanks', 'wind'];
     var panelOrder = defaultPanelOrder;
     try {
       var savedPanels = JSON.parse(localStorage.getItem('mc_telem_' + id));
@@ -683,7 +683,10 @@
     }
 
     _telemClient.onUpdate(function(snap) {
-      _lastUpdateTime = Date.now();
+      // Use snapshot's own timestamp for staleness (not receipt time)
+      // so stale upstream data isn't masked by frequent SSE frames
+      var meta = snap._meta || {};
+      _lastUpdateTime = meta.lastUpdate || snap.ts || Date.now();
       updateStaleBadge();
       var T = window.MCTelemetry;
       var el;

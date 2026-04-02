@@ -183,15 +183,16 @@
   function renderBatteryPanel(el, snap) {
     var batts = snap.batteries || {};
     var b = batts.house;
+    var elec = snap.electrical || {};
     if (!b) {
       el._refs = null;
-      el.innerHTML = '<div class="telem-panel-title"><span>&#128267;</span> House Battery</div><div style="color:var(--slate);font-size:.9rem;text-align:center;padding:12px">No house battery detected</div>';
+      el.innerHTML = '<div class="telem-panel-title"><span>&#9889;</span> Energy</div><div style="color:var(--slate);font-size:.9rem;text-align:center;padding:12px">No battery detected</div>';
       return;
     }
 
     if (!el._refs) {
       el.innerHTML = '';
-      el.appendChild(makeTitle('&#128267;', 'House Battery'));
+      el.appendChild(makeTitle('&#9889;', 'Energy'));
       var card = document.createElement('div'); card.className = 'vrm-card';
       var hdr = document.createElement('div'); hdr.className = 'vrm-header';
       var badge = document.createElement('span'); badge.className = 'vrm-state-badge';
@@ -208,10 +209,13 @@
       var vRow = document.createElement('div'); vRow.className = 'vrm-row'; vRow.innerHTML = '<span class="vrm-label">Voltage</span><span class="vrm-val"></span>';
       var cRow = document.createElement('div'); cRow.className = 'vrm-row'; cRow.innerHTML = '<span class="vrm-label">Current</span><span class="vrm-val"></span>';
       var pRow = document.createElement('div'); pRow.className = 'vrm-row'; pRow.innerHTML = '<span class="vrm-label">Power</span><span class="vrm-val"></span>';
+      var solarRow = document.createElement('div'); solarRow.className = 'vrm-row'; solarRow.innerHTML = '<span class="vrm-label">Solar</span><span class="vrm-val"></span>';
+      var netRow = document.createElement('div'); netRow.className = 'vrm-row'; netRow.innerHTML = '<span class="vrm-label">Net</span><span class="vrm-val"></span>';
       var tRow = document.createElement('div'); tRow.className = 'vrm-row'; tRow.innerHTML = '<span class="vrm-label">Time to go</span><span class="vrm-val"></span>'; tRow.style.display = 'none';
-      details.appendChild(vRow); details.appendChild(cRow); details.appendChild(pRow); details.appendChild(tRow);
+      details.appendChild(vRow); details.appendChild(cRow); details.appendChild(pRow);
+      details.appendChild(solarRow); details.appendChild(netRow); details.appendChild(tRow);
       card.appendChild(details); el.appendChild(card);
-      el._refs = { badge: badge, pwr: pwrEl, socNum: socNum, barFill: barFill, vVal: vRow.querySelector('.vrm-val'), cVal: cRow.querySelector('.vrm-val'), pVal: pRow.querySelector('.vrm-val'), tRow: tRow, tVal: tRow.querySelector('.vrm-val') };
+      el._refs = { badge: badge, pwr: pwrEl, socNum: socNum, barFill: barFill, vVal: vRow.querySelector('.vrm-val'), cVal: cRow.querySelector('.vrm-val'), pVal: pRow.querySelector('.vrm-val'), solarVal: solarRow.querySelector('.vrm-val'), solarRow: solarRow, netVal: netRow.querySelector('.vrm-val'), tRow: tRow, tVal: tRow.querySelector('.vrm-val') };
     }
 
     var r = el._refs;
@@ -235,6 +239,20 @@
     r.vVal.textContent = fmt(voltage, 2) + ' V';
     r.cVal.textContent = fmt(current, 1) + ' A';
     r.pVal.textContent = (power > 0 ? '+' : '') + power + ' W';
+
+    // Solar + net power (from electrical data)
+    var solarW = elec.solar ? Math.round(elec.solar.power) : 0;
+    var netW = power + solarW;
+    if (solarW > 0 || elec.solar) {
+      var hour = new Date().getHours();
+      var solarNote = hour < 6 || hour > 18 ? ' (night)' : solarW < 50 && solarW > 0 ? ' (cloudy?)' : '';
+      r.solarVal.textContent = solarW > 10 ? solarW + 'W' + solarNote : 'None' + solarNote;
+      r.solarRow.style.display = '';
+      r.netVal.textContent = (netW > 0 ? '+' : '') + netW + ' W';
+      r.netVal.style.color = netW > 0 ? 'var(--emerald)' : 'var(--amber)';
+    } else {
+      r.solarRow.style.display = 'none';
+    }
 
     if (discharging && absPower > 5) {
       var hoursLeft = Math.round((BATT_CAPACITY_AH * BATT_VOLTAGE_NOM * (soc / 100)) / absPower);
@@ -275,9 +293,9 @@
         '<div class="rpm-bar-wrap"><div class="rpm-bar"><div class="rpm-bar-fill ' + barCls + '" style="width:' + pct.toFixed(0) + '%"></div></div></div>' +
         '<div class="telem-row"><span class="telem-label">RPM</span><span class="telem-value">' + fmt(rpm) + '</span></div>' +
         '<div class="engine-temps">' +
-        '<div class="engine-temp-gauge"><div class="engine-temp-header"><span class="telem-label">Coolant</span><span class="telem-value ' + (coolant > 95 ? 'crit' : '') + '">' + fmt(coolant) + '<span class="telem-unit">&deg;C</span></span></div>' +
+        '<div class="engine-temp-gauge"><div class="engine-temp-header"><span class="telem-label">Coolant</span><span class="telem-value ' + (coolant > COOLANT_CRIT ? 'crit' : '') + '">' + fmt(coolant) + '<span class="telem-unit">&deg;C</span></span></div>' +
         '<div class="temp-bar"><div class="temp-bar-fill ' + coolCls + '" style="width:' + coolPct.toFixed(0) + '%"></div></div></div>' +
-        '<div class="engine-temp-gauge"><div class="engine-temp-header"><span class="telem-label">Exhaust</span><span class="telem-value ' + (exhaust > 500 ? 'crit' : '') + '">' + fmt(exhaust) + '<span class="telem-unit">&deg;C</span></span></div>' +
+        '<div class="engine-temp-gauge"><div class="engine-temp-header"><span class="telem-label">Exhaust</span><span class="telem-value ' + (exhaust > EXHAUST_CRIT ? 'crit' : '') + '">' + fmt(exhaust) + '<span class="telem-unit">&deg;C</span></span></div>' +
         '<div class="temp-bar"><div class="temp-bar-fill ' + exhCls + '" style="width:' + exhPct.toFixed(0) + '%"></div></div></div>' +
         '</div>' +
         '<div class="telem-row"><span class="telem-label">Oil Pressure</span><span class="telem-value' + (e.oilPressure != null && e.running && e.oilPressure < 25 ? ' crit' : '') + '">' + fmt(e.oilPressure) + '<span class="telem-unit">PSI</span></span></div>' +
@@ -612,67 +630,12 @@
     }
   }
 
-  // ── Energy projection panel ──
+  // Energy panel removed — merged into Battery panel above.
+  // renderEnergyPanel kept as no-op for backwards compat with existing localStorage panel orders.
   function renderEnergyPanel(el, snap) {
-    var batts = snap.batteries || {};
-    var b = batts.house;
-    var elec = snap.electrical || {};
-
-    if (!b) {
-      el.innerHTML = '<div class="telem-panel-title"><span>&#9889;</span> Energy</div><div style="color:var(--slate);font-size:.82rem;text-align:center;padding:12px">No battery data</div>';
-      return;
-    }
-
-    var soc = b.soc != null ? b.soc : 0;
-    var current = b.current != null ? b.current : 0;
-    var voltage = b.voltage != null ? b.voltage : 0;
-    var power = Math.round(voltage * current);
-    var solarW = elec.solar ? Math.round(elec.solar.power) : 0;
-    var netW = power + solarW;
-    var charging = current > 0.5;
-    var draw = Math.abs(Math.round(current * 10) / 10);
-
-    // Bar color
-    var barCls = charging ? 'vrm-charging' : soc > 40 ? 'vrm-discharging' : 'vrm-critical';
-
-    // Time estimate
-    var timeStr = '';
-    if (!charging && draw > 0.5) {
-      var ahTo20 = ((soc - 20) / 100) * BATT_CAPACITY_AH;
-      if (ahTo20 > 0) {
-        var hrs = ahTo20 / draw;
-        var targetTime = new Date(Date.now() + hrs * 3600000);
-        timeStr = targetTime.toTimeString().slice(0, 5);
-      }
-    }
-
-    // Solar status
-    var solarStr = solarW > 10 ? solarW + 'W' : 'None';
-    var hour = new Date().getHours();
-    var solarNote = hour < 6 || hour > 18 ? ' (night)' : solarW < 50 ? ' (cloudy?)' : '';
-
-    // Fetch energy projection (single-flight guard)
-    var proj = el._energyData || {};
-    if (!el._energyInFlight && (!el._energyTimer || Date.now() - el._energyTimer > 10000)) {
-      el._energyTimer = Date.now();
-      el._energyInFlight = true;
-      fetch('/api/energy/projection').then(function(r) { return r.json(); }).then(function(d) {
-        el._energyData = d;
-      }).catch(function() {}).then(function() { el._energyInFlight = false; });
-    }
-
-    el.innerHTML =
-      '<div class="telem-panel-title"><span>&#9889;</span> Energy</div>' +
-      '<div class="energy-soc">' +
-        '<span class="energy-soc-num">' + fmt(soc) + '%</span>' +
-        '<div class="vrm-soc-bar"><div class="vrm-soc-fill ' + barCls + '" style="width:' + Math.max(0, soc) + '%"></div></div>' +
-      '</div>' +
-      '<div class="energy-rows">' +
-      '<div class="telem-row"><span class="telem-label">Draw</span><span class="telem-value">' + draw + '<span class="telem-unit">A (' + Math.abs(power) + 'W)</span></span></div>' +
-      '<div class="telem-row"><span class="telem-label">Solar</span><span class="telem-value">' + esc(solarStr + solarNote) + '</span></div>' +
-      '<div class="telem-row"><span class="telem-label">Net</span><span class="telem-value" style="color:' + (netW > 0 ? 'var(--emerald)' : 'var(--amber)') + '">' + (netW > 0 ? '+' : '') + netW + '<span class="telem-unit">W</span></span></div>' +
-      (timeStr ? '<div class="telem-row"><span class="telem-label">Hits 20% at</span><span class="telem-value" style="color:var(--amber)">' + esc(timeStr) + '</span></div>' : '') +
-      '</div>';
+    if (el) el.style.display = 'none';
+    var wrap = el && el.closest('.telem-drag-box');
+    if (wrap) wrap.style.display = 'none';
   }
 
   // ── Alert ticker ──
