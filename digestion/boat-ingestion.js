@@ -12,6 +12,7 @@
 // ============================================================
 
 import pg from 'pg';
+import crypto from 'crypto';
 import { EventEmitter } from 'events';
 
 const { Pool } = pg;
@@ -32,7 +33,7 @@ function getAlertState(boatId) {
     boatAlertState.set(boatId, {
       alerts: [],         // active alerts [{id, severity, message, timestamp}]
       lastFired: {},      // id -> timestamp (cooldown tracking)
-      anchorSet: null,    // {lat, lon, radius} when anchor is detected
+      // anchorSet reserved for future anchor watch
       prevSnapshot: null, // for delta/trend detection
     });
   }
@@ -50,7 +51,6 @@ function evaluateAlerts(translated, boatId) {
     alerts.push({ id, severity, message, timestamp: new Date().toISOString() });
   }
 
-  const nav = translated.navigation || {};
   const env = translated.environment || {};
   const batt = translated.batteries?.house;
   const engines = translated.engines || {};
@@ -91,7 +91,7 @@ function evaluateAlerts(translated, boatId) {
   }
 
   // ── Wind alert (high wind) ──
-  const windSpeed = env.windSpeedTrue || env.windSpeed;
+  const windSpeed = env.windSpeedTrue ?? env.windSpeed;
   if (windSpeed != null && windSpeed > 30) {
     fire('high_wind', 'warning',
       `⚠️ High wind: ${windSpeed.toFixed(0)} kts`, 600000);
@@ -155,7 +155,7 @@ function evaluateAdvisor(translated) {
 
   // Anchor watch
   if (nav.position && nav.sog != null && nav.sog < 1) {
-    const windSpeed = env.windSpeedTrue || env.windSpeed;
+    const windSpeed = env.windSpeedTrue ?? env.windSpeed;
     if (windSpeed != null && windSpeed > 20) {
       recs.push({
         id: 'anchor_wind',
@@ -286,7 +286,7 @@ function translateSnapshot(raw) {
     environment: {
       depth: n.depth_m,
       waterTemp: n.water_temp_c,
-      windSpeed: n.wind_speed_apparent || n.wind_speed_kts,
+      windSpeed: n.wind_speed_apparent ?? n.wind_speed_kts,
       windAngle: n.wind_angle_apparent,
       windSpeedTrue: n.wind_speed_kts,
       windAngleTrue: n.wind_dir_true,
@@ -333,7 +333,8 @@ export function createIngestion(app) {
 
     // Validate API key
     const expectedKey = process.env.MC_BOAT_API_KEY;
-    if (!expectedKey || api_key !== expectedKey) {
+    if (!expectedKey || typeof api_key !== 'string' ||
+        !crypto.timingSafeEqual(Buffer.from(api_key), Buffer.from(expectedKey))) {
       return res.status(401).json({ error: 'Invalid API key' });
     }
 
@@ -411,7 +412,10 @@ export function createIngestion(app) {
         return res.status(404).json({ error: 'No telemetry for this boat' });
       }
       const row = result.rows[0];
-      res.json({ boat_id: row.boat_id, ts: row.ts, snapshot: translateSnapshot(row.snapshot) });
+      const snap = translateSnapshot(row.snapshot);
+      snap._alerts = evaluateAlerts(snap, row.boat_id);
+      snap._advisor = evaluateAdvisor(snap);
+      res.json({ boat_id: row.boat_id, ts: row.ts, snapshot: snap });
     } catch (err) {
       console.error('[boat-ingestion] Query failed:', err.message);
       res.status(500).json({ error: 'Database error' });
@@ -473,7 +477,11 @@ export function createIngestion(app) {
 
     ingestionEvents.on(`boat:${boatId}`, onData);
 
+    // SSE keepalive to prevent proxy idle timeout
+    const heartbeat = setInterval(() => res.write(':keepalive\n\n'), 30000);
+
     req.on('close', () => {
+      clearInterval(heartbeat);
       ingestionEvents.off(`boat:${boatId}`, onData);
     });
   });

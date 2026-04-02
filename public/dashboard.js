@@ -619,15 +619,23 @@
       var now = Date.now();
       var keys = Object.keys(_loggedAlerts);
       for (var i = 0; i < keys.length; i++) {
-        if (now - _loggedAlerts[keys[i]] > 7200000) delete _loggedAlerts[keys[i]];
+        if (now - _loggedAlerts[keys[i]].t > 7200000) delete _loggedAlerts[keys[i]];
       }
     }
     var changed = false;
     for (var i = 0; i < alerts.length; i++) {
       var a = alerts[i];
-      var key = (a.id || a.message) + '|' + a.timestamp;
-      if (_loggedAlerts[key]) continue;
-      _loggedAlerts[key] = Date.now();
+      // Dedup by alert ID only (not timestamp) — groups repeated alerts
+      var key = a.id || a.message;
+      var existing = _loggedAlerts[key];
+      if (existing) {
+        // Update count but don't create new log entry
+        existing.n = (existing.n || 1) + 1;
+        existing.last = a.message;
+        changed = true;
+        continue;
+      }
+      _loggedAlerts[key] = { t: Date.now(), n: 1, last: a.message };
       changed = true;
       apiPost('/api/boats/' + boatId + '/logs', {
         log_type: 'alert',
@@ -723,6 +731,27 @@
     } else {
       _telemClient.connect();
     }
+
+    // ── Show "no data" fallback if no update within 15s ──
+    var _noDataTimer = setTimeout(function() {
+      var panels = document.querySelectorAll('.telem-panel');
+      for (var i = 0; i < panels.length; i++) {
+        if (!panels[i].innerHTML) {
+          panels[i].innerHTML = '<div style="color:var(--slate);font-size:.9rem;text-align:center;padding:20px">No data — waiting for hardware</div>';
+        }
+      }
+      var alertEl = document.getElementById('telem-alerts');
+      if (alertEl && alertEl.querySelector('.alert-empty')) {
+        alertEl.innerHTML = '<div class="alert-empty">No live alerts — hardware not connected</div>';
+      }
+    }, 15000);
+    // Cancel fallback once first update arrives
+    var _origOnUpdate = _telemClient._cb;
+    _telemClient._cb = function(snap) {
+      if (_noDataTimer) { clearTimeout(_noDataTimer); _noDataTimer = null; }
+      _telemClient._cb = _origOnUpdate;
+      if (_origOnUpdate) _origOnUpdate(snap);
+    };
 
     // ── Battery panel click → energy flow modal ──
     _battBindTimer = setTimeout(function() {
